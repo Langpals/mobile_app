@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { ArrowLeft, Play, CircleCheck as CheckCircle } from 'lucide-react-native';
+import { ArrowLeft, Play, CheckCircle } from 'lucide-react-native';
 import { mockSeasons } from '@/data/mockData';
 import { globalStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';

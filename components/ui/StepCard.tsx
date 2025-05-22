@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { CircleCheck as CheckCircle, Circle, Play } from 'lucide-react-native';
+import { CheckCircle, Circle, Play } from 'lucide-react-native';
 import { Step } from '@/types';
 import { globalStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';

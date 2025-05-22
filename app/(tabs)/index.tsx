@@ -9,9 +9,15 @@ import ProgressPath from '@/components/ui/ProgressPath';
 import SeasonCard from '@/components/ui/SeasonCard';
 import ProgressSummary from '@/components/ui/ProgressSummary';
 import { Episode } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTeddy } from '@/contexts/TeddyContext';
+import { useLearning } from '@/contexts/LearningContext';
 
 export default function LearningDashboard() {
   const [currentSeason] = useState(mockSeasons[0]);
+  const { currentUser, logout } = useAuth();
+  const { teddy, isConnected } = useTeddy();
+  const { progress } = useLearning();
 
   const handleEpisodePress = (episode: Episode) => {
     router.push({
@@ -24,10 +30,10 @@ export default function LearningDashboard() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         <View style={styles.header}>
-          <Text style={styles.welcomeText}>Welcome back!</Text>
+          <Text style={styles.welcomeText}>Welcome back{currentUser?.displayName ? `, ${currentUser.displayName}` : ''}!</Text>
           <Text style={styles.title}>Learning Dashboard</Text>
           <TeddyMascot 
-            message="Ready to continue our learning journey?" 
+            message={isConnected ? "Ready to continue our learning journey?" : "Let's connect your teddy bear!"}
             size="small"
           />
         </View>
@@ -69,6 +75,13 @@ export default function LearningDashboard() {
                 <Text style={styles.startButtonText}>START</Text>
               </View>
             </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Quick logout for testing */}
+        <View style={styles.debugSection}>
+          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+            <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -170,6 +183,21 @@ const styles = StyleSheet.create({
   },
   startButtonText: {
     fontFamily: 'LilitaOne',
+    fontSize: 14,
+    color: '#FFFFFF',
+  },
+  debugSection: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  logoutButton: {
+    backgroundColor: Colors.light.error,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  logoutButtonText: {
+    fontFamily: 'Poppins-Regular',
     fontSize: 14,
     color: '#FFFFFF',
   },

@@ -35,3 +35,16 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Server specific
+server/.env
+server/firebase-service-account.json
+server/logs
+server/*.log
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production

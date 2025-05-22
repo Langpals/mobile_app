@@ -1,20 +1,25 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
+import { AuthProvider } from './contexts/AuthContext';
+import { LearningProvider } from './contexts/LearningContext';
+import { TeddyProvider } from './contexts/TeddyContext';
+import { useFrameworkReady } from './hooks/useFrameworkReady';
 
 export default function App() {
+  // Use the framework ready hook
+  useFrameworkReady();
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <AuthProvider>
+      <TeddyProvider>
+        <LearningProvider>
+          <View style={{ flex: 1 }}>
+            {/* We'll keep the existing App content here */}
+            {/* This is just a temporary View until we configure the router */}
+            <StatusBar style="auto" />
+          </View>
+        </LearningProvider>
+      </TeddyProvider>
+    </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

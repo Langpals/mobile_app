@@ -7,25 +7,18 @@ const dotenv = require('dotenv');
 const path = require('path');
 const admin = require('firebase-admin');
 
+console.log('🔄 Starting server with real Firebase...');
+
 // Load environment variables
 dotenv.config();
 
-// Initialize Express app first
-const app = express();
-
-// Middleware
-app.use(cors({
-  origin: ['http://localhost:8081', 'http://localhost:19006', 'exp://localhost:8081', 'http://localhost:3000'],
-  credentials: true
-}));
-app.use(express.json());
-app.use(helmet());
-app.use(morgan('dev'));
-
-// Initialize Firebase Admin
+// Initialize Firebase Admin BEFORE creating the app
 let db;
+console.log('🔄 Initializing Firebase Admin...');
+
 try {
   const serviceAccountPath = path.join(__dirname, 'firebase-service-account.json');
+  console.log('📁 Looking for service account at:', serviceAccountPath);
   
   // Check if service account file exists
   const fs = require('fs');
@@ -33,13 +26,16 @@ try {
     throw new Error('firebase-service-account.json not found. Please download it from Firebase Console.');
   }
   
+  console.log('✅ Service account file found!');
   const serviceAccount = require(serviceAccountPath);
+  console.log('📋 Project ID:', serviceAccount.project_id);
   
   // Initialize Firebase Admin only if not already initialized
   if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
+    console.log('🔥 Firebase Admin app initialized');
   }
   
   db = admin.firestore();
@@ -53,6 +49,21 @@ try {
   console.log('   3. Save the file as "firebase-service-account.json" in the server folder');
   process.exit(1); // Exit if Firebase setup fails
 }
+
+// NOW export them before requiring routes
+module.exports = { admin, db };
+
+// Initialize Express app
+const app = express();
+
+// Middleware
+app.use(cors({
+  origin: ['http://localhost:8081', 'http://localhost:19006', 'exp://localhost:8081', 'http://localhost:3000'],
+  credentials: true
+}));
+app.use(express.json());
+app.use(helmet());
+app.use(morgan('dev'));
 
 // Test route
 app.get('/api/test', (req, res) => {
@@ -73,7 +84,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Routes
+// Routes - require AFTER exports are set
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/teddy', require('./routes/teddy'));
 app.use('/api/learning', require('./routes/learning'));
@@ -110,6 +121,3 @@ process.on('SIGTERM', () => {
     console.log('Process terminated');
   });
 });
-
-// Export for use in other files
-module.exports = { admin, db };

@@ -22,11 +22,31 @@ export const AuthProvider = ({ children }) => {
 
   // Listen for auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    console.log('🔄 Setting up auth state listener...');
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('🔥 Auth state changed:', user ? user.uid : 'No user');
+      
+      if (user) {
+        // User is signed in, get fresh token
+        try {
+          const token = await user.getIdToken(true);
+          await SecureStore.setItemAsync('auth_token', token);
+          console.log('✅ Token saved to secure storage');
+        } catch (error) {
+          console.error('❌ Error saving token:', error);
+        }
+      } else {
+        // User is signed out, remove token
+        try {
+          await SecureStore.deleteItemAsync('auth_token');
+          console.log('🗑️ Token removed from secure storage');
+        } catch (error) {
+          console.error('❌ Error removing token:', error);
+        }
+      }
+      
       setCurrentUser(user);
       setLoading(false);
-      
-      // We'll fetch the additional user data only when needed, not on initial load
     });
 
     return unsubscribe;
@@ -38,10 +58,13 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     
     try {
+      console.log('📝 Registering user:', email);
       const user = await registerUser(email, password, displayName);
+      console.log('✅ User registered successfully:', user.uid);
       setLoading(false);
       return user;
     } catch (err) {
+      console.error('❌ Registration error:', err.message);
       setError(err.message);
       setLoading(false);
       throw err;
@@ -54,10 +77,13 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     
     try {
+      console.log('🔑 Logging in user:', email);
       const user = await loginUser(email, password);
+      console.log('✅ User logged in successfully:', user.uid);
       setLoading(false);
       return user;
     } catch (err) {
+      console.error('❌ Login error:', err.message);
       setError(err.message);
       setLoading(false);
       throw err;
@@ -69,9 +95,12 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
+      console.log('🚪 Logging out user');
       await logoutUser();
       setCurrentUser(null);
+      console.log('✅ User logged out successfully');
     } catch (err) {
+      console.error('❌ Logout error:', err.message);
       setError(err.message);
       throw err;
     }
@@ -83,9 +112,12 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     
     try {
+      console.log('🔄 Resetting password for:', email);
       await resetPassword(email);
       setLoading(false);
+      console.log('✅ Password reset email sent');
     } catch (err) {
+      console.error('❌ Password reset error:', err.message);
       setError(err.message);
       setLoading(false);
       throw err;
@@ -96,7 +128,9 @@ export const AuthProvider = ({ children }) => {
   const isAuthenticated = async () => {
     try {
       const token = await SecureStore.getItemAsync('auth_token');
-      return !!token;
+      const hasToken = !!token;
+      console.log('🔍 Checking authentication:', hasToken ? 'Has token' : 'No token');
+      return hasToken;
     } catch (err) {
       console.error('Error checking authentication:', err);
       return false;

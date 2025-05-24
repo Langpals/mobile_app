@@ -10,11 +10,13 @@ const router = express.Router();
 router.get('/progress', protect, async (req, res) => {
   try {
     const uid = req.user.uid;
+    console.log('📚 Getting learning progress for user:', uid);
     
     // Get learning progress from Firestore
     const progressDoc = await db.collection('learning').doc(uid).get();
     
     if (!progressDoc.exists) {
+      console.log('📝 No existing progress found, returning defaults');
       // Return default progress
       return res.status(200).json({
         success: true,
@@ -33,12 +35,13 @@ router.get('/progress', protect, async (req, res) => {
       });
     }
     
+    console.log('✅ Learning progress retrieved successfully');
     res.status(200).json({
       success: true,
       data: progressDoc.data()
     });
   } catch (error) {
-    console.error('Error fetching learning progress:', error);
+    console.error('❌ Error fetching learning progress:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch learning progress'
@@ -53,6 +56,7 @@ router.post('/progress', protect, async (req, res) => {
   try {
     const uid = req.user.uid;
     const { currentEpisode, progress, metrics } = req.body;
+    console.log('📝 Updating learning progress for user:', uid);
     
     // Prepare learning data
     const learningData = {
@@ -73,6 +77,10 @@ router.post('/progress', protect, async (req, res) => {
       if (!currentEpisode) learningData.currentEpisode = 1;
       if (!progress) learningData.progress = { completedSteps: [], currentStep: 1 };
       if (!metrics) learningData.metrics = { proficiency: 'EASY', englishCapacity: null, foreignLanguageCapacity: null };
+      
+      console.log('📝 Creating new learning record');
+    } else {
+      console.log('📝 Updating existing learning record');
     }
     
     // Save learning progress
@@ -81,12 +89,13 @@ router.post('/progress', protect, async (req, res) => {
     // Get updated learning progress
     const updatedLearningDoc = await db.collection('learning').doc(uid).get();
     
+    console.log('✅ Learning progress updated successfully');
     res.status(200).json({
       success: true,
       data: updatedLearningDoc.data()
     });
   } catch (error) {
-    console.error('Error saving learning progress:', error);
+    console.error('❌ Error saving learning progress:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to save learning progress'
@@ -101,6 +110,7 @@ router.post('/step/:stepId/complete', protect, async (req, res) => {
   try {
     const uid = req.user.uid;
     const stepId = parseInt(req.params.stepId);
+    console.log('✅ Completing step', stepId, 'for user:', uid);
     
     // Get learning progress
     const learningDoc = await db.collection('learning').doc(uid).get();
@@ -115,6 +125,7 @@ router.post('/step/:stepId/complete', protect, async (req, res) => {
       const completedSteps = learningData.progress?.completedSteps || [];
       if (!completedSteps.includes(stepId)) {
         completedSteps.push(stepId);
+        console.log('📚 Added step to completed steps:', completedSteps);
       }
       
       await db.collection('learning').doc(uid).update({
@@ -139,18 +150,20 @@ router.post('/step/:stepId/complete', protect, async (req, res) => {
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
       
+      console.log('📝 Creating new learning record with completed step');
       await db.collection('learning').doc(uid).set(learningData);
     }
     
     // Get updated learning progress
     const updatedLearningDoc = await db.collection('learning').doc(uid).get();
     
+    console.log('✅ Step completed successfully');
     res.status(200).json({
       success: true,
       data: updatedLearningDoc.data()
     });
   } catch (error) {
-    console.error('Error completing step:', error);
+    console.error('❌ Error completing step:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to complete step'

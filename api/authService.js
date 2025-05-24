@@ -10,6 +10,21 @@ import * as SecureStore from 'expo-secure-store';
 import { auth } from '../firebase/firebaseConfig';
 import apiClient from './axiosConfig';
 
+// Get fresh ID token
+const getFreshToken = async () => {
+  try {
+    if (auth.currentUser) {
+      const token = await auth.currentUser.getIdToken(true); // Force refresh
+      await SecureStore.setItemAsync('auth_token', token);
+      return token;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting fresh token:', error);
+    return null;
+  }
+};
+
 // Register a new user
 export const registerUser = async (email, password, displayName) => {
   try {
@@ -19,14 +34,15 @@ export const registerUser = async (email, password, displayName) => {
     // Update profile with display name
     await updateProfile(userCredential.user, { displayName });
     
-    // Get ID token
-    const idToken = await userCredential.user.getIdToken();
-    
-    // Store token in secure storage
-    await SecureStore.setItemAsync('auth_token', idToken);
+    // Get fresh ID token
+    const idToken = await getFreshToken();
     
     // Set default role as 'parent'
-    await apiClient.post('/auth/set-role', { role: 'parent' });
+    try {
+      await apiClient.post('/auth/set-role', { role: 'parent' });
+    } catch (error) {
+      console.log('Role setting failed (this is OK for testing):', error.message);
+    }
     
     return userCredential.user;
   } catch (error) {
@@ -41,11 +57,8 @@ export const loginUser = async (email, password) => {
     // Sign in with Firebase Auth
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     
-    // Get ID token
-    const idToken = await userCredential.user.getIdToken();
-    
-    // Store token in secure storage
-    await SecureStore.setItemAsync('auth_token', idToken);
+    // Get fresh ID token
+    const idToken = await getFreshToken();
     
     return userCredential.user;
   } catch (error) {
@@ -99,3 +112,6 @@ export const setUserRole = async (role) => {
     throw error;
   }
 };
+
+// Export the token refresh function
+export { getFreshToken };

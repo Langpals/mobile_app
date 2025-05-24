@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { router } from 'expo-router';
 import { globalStyles } from '@/constants/Styles';
@@ -15,9 +15,30 @@ import { useLearning } from '@/contexts/LearningContext';
 
 export default function LearningDashboard() {
   const [currentSeason] = useState(mockSeasons[0]);
+  const [apiTest, setApiTest] = useState('Testing...');
   const { currentUser, logout } = useAuth();
   const { teddy, isConnected } = useTeddy();
   const { progress } = useLearning();
+
+  // Test API connection
+  useEffect(() => {
+    const testAPI = async () => {
+      try {
+        console.log('Testing API connection...');
+        // Use the same IP as your .env file
+        const response = await fetch('http://192.168.29.132:5000/api/test'); // Replace with your IP
+        const data = await response.json();
+        setApiTest('✅ API Connected: ' + data.message);
+        console.log('API test successful:', data);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setApiTest('❌ API Failed: ' + errorMessage);
+        console.error('API test failed:', error);
+      }
+    };
+
+    testAPI();
+  }, []);
 
   const handleEpisodePress = (episode: Episode) => {
     router.push({
@@ -32,6 +53,12 @@ export default function LearningDashboard() {
         <View style={styles.header}>
           <Text style={styles.welcomeText}>Welcome back{currentUser?.displayName ? `, ${currentUser.displayName}` : ''}!</Text>
           <Text style={styles.title}>Learning Dashboard</Text>
+          
+          {/* API Test Status */}
+          <View style={styles.apiTestContainer}>
+            <Text style={styles.apiTestText}>{apiTest}</Text>
+          </View>
+          
           <TeddyMascot 
             message={isConnected ? "Ready to continue our learning journey?" : "Let's connect your teddy bear!"}
             size="small"
@@ -125,6 +152,20 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: Colors.light.text,
     marginBottom: 16,
+  },
+  apiTestContainer: {
+    backgroundColor: Colors.light.cardBackground,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  apiTestText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: Colors.light.text,
+    textAlign: 'center',
   },
   episodeSection: {
     marginTop: 8,

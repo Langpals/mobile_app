@@ -1,6 +1,6 @@
 // routes/teddy.js
 const express = require('express');
-const { db } = require('../server');
+const { db, admin } = require('../server');
 const { protect } = require('../middleware/auth');
 const router = express.Router();
 
@@ -11,7 +11,31 @@ router.get('/', protect, async (req, res) => {
   try {
     const uid = req.user.uid;
     
-    // Get teddy from Firestore
+    // Handle mock database
+    if (global.mockFirebaseAdmin) {
+      // Mock response for testing - return a default teddy
+      console.log('Mock: Getting teddy for user', uid);
+      return res.status(200).json({
+        success: true,
+        data: {
+          name: 'Bernie',
+          appearance: {
+            color: 'brown',
+            accessories: [],
+            outfit: 'default'
+          },
+          connectionStatus: {
+            isConnected: false,
+            batteryLevel: 0,
+            lastSyncTime: new Date().toISOString()
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      });
+    }
+    
+    // Real Firestore logic
     const teddyDoc = await db.collection('teddies').doc(uid).get();
     
     if (!teddyDoc.exists) {
@@ -40,39 +64,66 @@ router.get('/', protect, async (req, res) => {
 router.post('/', protect, async (req, res) => {
   try {
     const uid = req.user.uid;
-    const { name, appearance } = req.body;
+    const { name, appearance, connectionStatus } = req.body;
     
     // Validate request
-    if (!name) {
+    if (!name && !appearance && !connectionStatus) {
       return res.status(400).json({
         success: false,
-        message: 'Name is required'
+        message: 'At least one field (name, appearance, or connectionStatus) is required'
       });
     }
     
-    // Prepare teddy data
+    if (global.mockFirebaseAdmin) {
+      // Mock response for testing
+      console.log('Mock: Saving teddy for user', uid, req.body);
+      return res.status(200).json({
+        success: true,
+        data: {
+          name: name || 'Bernie',
+          appearance: appearance || {
+            color: 'brown',
+            accessories: [],
+            outfit: 'default'
+          },
+          connectionStatus: connectionStatus || {
+            isConnected: false,
+            batteryLevel: 0,
+            lastSyncTime: new Date().toISOString()
+          },
+          updatedAt: new Date().toISOString()
+        }
+      });
+    }
+    
+    // Real Firestore logic
     const teddyData = {
-      name,
-      appearance: appearance || {
+      updatedAt: new Date().toISOString()
+    };
+    
+    if (name) teddyData.name = name;
+    if (appearance) teddyData.appearance = appearance;
+    if (connectionStatus) teddyData.connectionStatus = connectionStatus;
+    
+    const existingTeddyDoc = await db.collection('teddies').doc(uid).get();
+    
+    if (!existingTeddyDoc.exists) {
+      teddyData.createdAt = new Date().toISOString();
+      // Set defaults if not provided
+      if (!name) teddyData.name = 'Bernie';
+      if (!appearance) teddyData.appearance = {
         color: 'brown',
         accessories: [],
         outfit: 'default'
-      },
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    };
-    
-    // Check if teddy exists
-    const teddyDoc = await db.collection('teddies').doc(uid).get();
-    
-    if (!teddyDoc.exists) {
-      // Create new teddy
-      teddyData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+      };
+      if (!connectionStatus) teddyData.connectionStatus = {
+        isConnected: false,
+        batteryLevel: 0,
+        lastSyncTime: new Date().toISOString()
+      };
     }
     
-    // Save teddy
     await db.collection('teddies').doc(uid).set(teddyData, { merge: true });
-    
-    // Get updated teddy
     const updatedTeddyDoc = await db.collection('teddies').doc(uid).get();
     
     res.status(200).json({

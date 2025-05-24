@@ -9,10 +9,23 @@ const router = express.Router();
 // @access  Private
 router.get('/user', protect, async (req, res) => {
   try {
-    // User ID is available from the middleware
     const uid = req.user.uid;
     
-    // Get user from Firebase Auth
+    if (global.mockFirebaseAdmin) {
+      // Mock response for testing
+      console.log('Mock: Getting user data for', uid);
+      return res.status(200).json({
+        success: true,
+        data: {
+          uid: uid,
+          email: req.user.email || 'mock@example.com',
+          displayName: req.user.name || 'Mock User',
+          role: 'user'
+        }
+      });
+    }
+    
+    // Real Firebase Auth logic
     const userRecord = await admin.auth().getUser(uid);
     
     res.status(200).json({
@@ -49,7 +62,16 @@ router.post('/set-role', protect, async (req, res) => {
       });
     }
     
-    // Set custom claims
+    if (global.mockFirebaseAdmin) {
+      // Mock response for testing
+      console.log('Mock: Setting role', role, 'for user', uid);
+      return res.status(200).json({
+        success: true,
+        message: `Role set to ${role} successfully`
+      });
+    }
+    
+    // Real Firebase Auth logic
     await admin.auth().setCustomUserClaims(uid, { role });
     
     res.status(200).json({

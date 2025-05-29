@@ -1,4 +1,4 @@
-// server.js
+// server/server.js
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -69,7 +69,7 @@ app.use(morgan('dev'));
 app.get('/api/test', (req, res) => {
   res.json({
     success: true,
-    message: 'API is working with real Firebase!',
+    message: 'API is working with real Firebase and Users collection!',
     firebase: 'Real Firestore connected',
     timestamp: new Date().toISOString()
   });
@@ -80,12 +80,14 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'Server is running',
     firebase: 'Real Firestore connected',
+    usersCollection: 'Available',
     timestamp: new Date().toISOString()
   });
 });
 
 // Routes - require AFTER exports are set
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
 app.use('/api/teddy', require('./routes/teddy'));
 app.use('/api/learning', require('./routes/learning'));
 
@@ -112,6 +114,7 @@ const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/health`);
   console.log(`🧪 Test endpoint: http://localhost:${PORT}/api/test`);
+  console.log(`👥 Users API: http://localhost:${PORT}/api/users`);
 });
 
 // Graceful shutdown

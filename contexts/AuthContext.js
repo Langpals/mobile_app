@@ -8,7 +8,8 @@ import {
   loginUser, 
   logoutUser, 
   resetPassword,
-  getCurrentUser 
+  getCurrentUser,
+  getCurrentUserDocument
 } from '../api/authService';
 
 // Create context
@@ -16,7 +17,8 @@ const AuthContext = createContext();
 
 // Provider component
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null); // Firebase user
+  const [currentUserDocument, setCurrentUserDocument] = useState(null); // Firestore user document
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -32,17 +34,28 @@ export const AuthProvider = ({ children }) => {
           const token = await user.getIdToken(true);
           await SecureStore.setItemAsync('auth_token', token);
           console.log('✅ Token saved to secure storage');
+          
+          // Get user's Firestore document
+          try {
+            const userDocument = await getCurrentUserDocument();
+            setCurrentUserDocument(userDocument);
+            console.log('✅ User document loaded:', userDocument.id);
+          } catch (error) {
+            console.error('❌ Error loading user document:', error);
+            // Don't set error state here, as the user is still authenticated
+          }
         } catch (error) {
           console.error('❌ Error saving token:', error);
         }
       } else {
-        // User is signed out, remove token
+        // User is signed out, remove token and clear user document
         try {
           await SecureStore.deleteItemAsync('auth_token');
           console.log('🗑️ Token removed from secure storage');
         } catch (error) {
           console.error('❌ Error removing token:', error);
         }
+        setCurrentUserDocument(null);
       }
       
       setCurrentUser(user);
@@ -59,10 +72,14 @@ export const AuthProvider = ({ children }) => {
     
     try {
       console.log('📝 Registering user:', email);
-      const user = await registerUser(email, password, displayName);
-      console.log('✅ User registered successfully:', user.uid);
+      const result = await registerUser(email, password, displayName);
+      console.log('✅ User registered successfully:', result.firebaseUser.uid);
+      
+      // Set the Firestore user document
+      setCurrentUserDocument(result.firestoreUser);
+      
       setLoading(false);
-      return user;
+      return result;
     } catch (err) {
       console.error('❌ Registration error:', err.message);
       setError(err.message);
@@ -78,10 +95,14 @@ export const AuthProvider = ({ children }) => {
     
     try {
       console.log('🔑 Logging in user:', email);
-      const user = await loginUser(email, password);
-      console.log('✅ User logged in successfully:', user.uid);
+      const result = await loginUser(email, password);
+      console.log('✅ User logged in successfully:', result.firebaseUser.uid);
+      
+      // Set the Firestore user document
+      setCurrentUserDocument(result.firestoreUser);
+      
       setLoading(false);
-      return user;
+      return result;
     } catch (err) {
       console.error('❌ Login error:', err.message);
       setError(err.message);
@@ -98,6 +119,7 @@ export const AuthProvider = ({ children }) => {
       console.log('🚪 Logging out user');
       await logoutUser();
       setCurrentUser(null);
+      setCurrentUserDocument(null);
       console.log('✅ User logged out successfully');
     } catch (err) {
       console.error('❌ Logout error:', err.message);
@@ -137,15 +159,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Refresh user document from Firestore
+  const refreshUserDocument = async () => {
+    if (!currentUser) return null;
+    
+    try {
+      const userDocument = await getCurrentUserDocument();
+      setCurrentUserDocument(userDocument);
+      return userDocument;
+    } catch (error) {
+      console.error('❌ Error refreshing user document:', error);
+      throw error;
+    }
+  };
+
   const value = {
     currentUser,
+    currentUserDocument,
     loading,
     error,
     register,
     login,
     logout,
     resetUserPassword,
-    isAuthenticated
+    isAuthenticated,
+    refreshUserDocument
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

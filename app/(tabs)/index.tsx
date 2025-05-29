@@ -1,3 +1,4 @@
+// app/(tabs)/index.tsx - Updated with user document display
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { router } from 'expo-router';
@@ -16,7 +17,7 @@ import { useLearning } from '@/contexts/LearningContext';
 export default function LearningDashboard() {
   const [currentSeason] = useState(mockSeasons[0]);
   const [apiTest, setApiTest] = useState('Testing...');
-  const { currentUser, logout } = useAuth();
+  const { currentUser, currentUserDocument, logout } = useAuth();
   const { teddy, isConnected } = useTeddy();
   const { progress } = useLearning();
 
@@ -51,8 +52,29 @@ export default function LearningDashboard() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         <View style={styles.header}>
-          <Text style={styles.welcomeText}>Welcome back{currentUser?.displayName ? `, ${currentUser.displayName}` : ''}!</Text>
+          <Text style={styles.welcomeText}>
+            Welcome back{currentUser?.displayName ? `, ${currentUser.displayName}` : ''}!
+          </Text>
           <Text style={styles.title}>Learning Dashboard</Text>
+          
+          {/* User Document Info */}
+          {currentUserDocument && (
+            <View style={styles.userInfoContainer}>
+              <Text style={styles.userInfoTitle}>User Profile</Text>
+              <Text style={styles.userInfoText}>
+                User ID: {currentUserDocument.id}
+              </Text>
+              <Text style={styles.userInfoText}>
+                Email: {currentUserDocument.email}
+              </Text>
+              <Text style={styles.userInfoText}>
+                Role: {currentUserDocument.role}
+              </Text>
+              <Text style={styles.userInfoText}>
+                Firebase UID: {currentUserDocument.firebaseUID.substring(0, 8)}...
+              </Text>
+            </View>
+          )}
           
           {/* API Test Status */}
           <View style={styles.apiTestContainer}>
@@ -105,8 +127,19 @@ export default function LearningDashboard() {
           </TouchableOpacity>
         </View>
 
-        {/* Quick logout for testing */}
+        {/* Debug Section */}
         <View style={styles.debugSection}>
+          <Text style={styles.debugTitle}>Debug Info</Text>
+          <Text style={styles.debugText}>
+            Firebase User: {currentUser ? '✅' : '❌'}
+          </Text>
+          <Text style={styles.debugText}>
+            Firestore Document: {currentUserDocument ? '✅' : '❌'}
+          </Text>
+          <Text style={styles.debugText}>
+            Teddy Connected: {isConnected ? '✅' : '❌'}
+          </Text>
+          
           <TouchableOpacity style={styles.logoutButton} onPress={logout}>
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
@@ -152,6 +185,26 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: Colors.light.text,
     marginBottom: 16,
+  },
+  userInfoContainer: {
+    backgroundColor: Colors.light.primary + '15',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.primary + '30',
+  },
+  userInfoTitle: {
+    fontFamily: 'LilitaOne',
+    fontSize: 14,
+    color: Colors.light.primary,
+    marginBottom: 8,
+  },
+  userInfoText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: Colors.light.text,
+    marginBottom: 2,
   },
   apiTestContainer: {
     backgroundColor: Colors.light.cardBackground,
@@ -229,13 +282,31 @@ const styles = StyleSheet.create({
   },
   debugSection: {
     marginTop: 20,
-    alignItems: 'center',
+    backgroundColor: Colors.light.cardBackground,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+  },
+  debugTitle: {
+    fontFamily: 'LilitaOne',
+    fontSize: 16,
+    color: Colors.light.text,
+    marginBottom: 12,
+  },
+  debugText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: Colors.light.text,
+    marginBottom: 4,
   },
   logoutButton: {
     backgroundColor: Colors.light.error,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
+    marginTop: 12,
+    alignSelf: 'flex-start',
   },
   logoutButtonText: {
     fontFamily: 'Poppins-Regular',

@@ -1,314 +1,522 @@
-import { Season, ProgressStats, ChildProfile, TeddyBear } from '@/types';
+// data/mockData.ts
+import { Season, ProgressStats, ChildProfile, TeddyBear, ProficiencyMetrics } from '@/types';
 
 export const mockSeasons: Season[] = [
   {
-    id: '1',
+    id: 'season-1',
     number: 1,
-    title: 'Journey to Iceland',
-    description: 'Begin the language adventure with basic concepts and simple words',
-    learningObjectives: [
-      'Recognize 20 common objects',
-      'Understand basic greetings',
-      'Respond to simple instructions',
-      'Identify family members'
+    title: 'Magic Island Adventures',
+    theme: 'Foundational Discovery',
+    setting: 'A magical island with different regions (beach, forest, mountain, village)',
+    characterRole: 'Bern guides the child as an explorer discovering the island',
+    narrativeHook: 'Finding magical objects that reveal new parts of the island',
+    description: 'Begin your magical journey with Bern! Explore a wonderful island and discover your first Spanish words through exciting adventures.',
+    learningFocus: ['Basic greetings', 'Self-introduction', 'Colors', 'Numbers 1-10', 'Simple objects', 'Basic feelings'],
+    learningOutcomes: [
+      {
+        id: 'greeting-1',
+        description: 'Recognize and respond to basic greetings',
+        achieved: true,
+        category: 'conversation'
+      },
+      {
+        id: 'intro-1',
+        description: 'Introduce oneself with "Me llamo..."',
+        achieved: true,
+        category: 'conversation'
+      },
+      {
+        id: 'objects-1',
+        description: 'Identify 20+ common objects by name',
+        achieved: false,
+        category: 'vocabulary'
+      },
+      {
+        id: 'numbers-1',
+        description: 'Count from 1-10',
+        achieved: false,
+        category: 'vocabulary'
+      },
+      {
+        id: 'colors-1',
+        description: 'Recognize and name 8 colors',
+        achieved: false,
+        category: 'vocabulary'
+      },
+      {
+        id: 'feelings-1',
+        description: 'Express basic feelings (happy, sad, tired)',
+        achieved: false,
+        category: 'vocabulary'
+      }
     ],
     completed: false,
     locked: false,
+    totalDuration: 126, // 7 episodes * 18 minutes average
+    progressPercentage: 25,
     episodes: [
       {
-        id: '1-1',
+        id: 'ep-1-1',
         number: 1,
-        title: 'First Words',
-        description: 'Learn to recognize and say your first words',
-        duration: 20,
+        title: 'Welcome to Magic Island',
+        description: 'Meet Bern and take your first steps on the magical island. Learn how to say hello and introduce yourself!',
+        setting: 'Beach landing area with sparkling sand and gentle waves',
+        narrativeHook: 'A magical compass appears, pointing to different parts of the island',
+        duration: 15,
+        type: 'standard',
         completed: true,
         locked: false,
-        difficulty: 'easy',
+        difficulty: 'veryEasy',
+        vocabularyFocus: ['Hola', 'Me llamo', 'Adiós', 'Gracias'],
+        learningOutcomes: ['greeting-1', 'intro-1'],
+        completionRate: 100,
+        lastPlayed: '2024-01-15',
         steps: [
           {
-            id: '1-1-1',
-            title: 'Say Hello',
-            description: 'Learn basic greetings and how to say hello',
+            id: 'step-1-1-1',
+            title: 'Magic Island Landing',
+            description: 'Arrive on the magical island and meet Bern',
+            type: 'introduction',
             completed: true,
-            difficulty: 'easy'
+            difficulty: 'veryEasy',
+            vocabularyWords: ['Hola'],
+            estimatedDuration: 3,
+            interactionCount: 2
           },
           {
-            id: '1-1-2',
-            title: 'Family Names',
-            description: 'Learn to recognize family member names',
+            id: 'step-1-1-2',
+            title: 'First Greetings',
+            description: 'Learn to say hello in Spanish',
+            type: 'vocabulary',
             completed: true,
-            difficulty: 'easy'
+            difficulty: 'veryEasy',
+            vocabularyWords: ['Hola', 'Buenos días'],
+            estimatedDuration: 5,
+            interactionCount: 4
           },
           {
-            id: '1-1-3',
-            title: 'My First Objects',
-            description: 'Point to and name common objects around you',
+            id: 'step-1-1-3',
+            title: 'My Name Is...',
+            description: 'Practice introducing yourself',
+            type: 'interaction',
             completed: true,
-            difficulty: 'easy'
+            difficulty: 'veryEasy',
+            vocabularyWords: ['Me llamo'],
+            estimatedDuration: 5,
+            interactionCount: 3
+          },
+          {
+            id: 'step-1-1-4',
+            title: 'Magical Thank You',
+            description: 'Learn to say thank you and goodbye',
+            type: 'review',
+            completed: true,
+            difficulty: 'veryEasy',
+            vocabularyWords: ['Gracias', 'Adiós'],
+            estimatedDuration: 2,
+            interactionCount: 2
           }
         ]
       },
       {
-        id: '1-2',
+        id: 'ep-1-2',
         number: 2,
-        title: 'Building a Circle',
-        description: 'Learn about shapes and colors',
-        duration: 25,
+        title: 'Rainbow Forest Discovery',
+        description: 'Venture into the colorful forest and discover magical colors while learning their Spanish names.',
+        setting: 'Enchanted forest with trees that change colors',
+        narrativeHook: 'A rainbow bridge appears, but we need to name each color to cross',
+        duration: 18,
+        type: 'standard',
         completed: false,
         locked: false,
         difficulty: 'easy',
+        vocabularyFocus: ['Rojo', 'Azul', 'Verde', 'Amarillo', 'Rosa', 'Morado', 'Naranja', 'Blanco'],
+        learningOutcomes: ['colors-1'],
+        completionRate: 0,
         steps: [
           {
-            id: '1-2-1',
-            title: 'Circle, Square, Triangle',
-            description: 'Identify basic shapes around you',
+            id: 'step-1-2-1',
+            title: 'Forest Entrance',
+            description: 'Enter the magical rainbow forest',
+            type: 'introduction',
             completed: false,
-            difficulty: 'easy'
+            difficulty: 'easy',
+            vocabularyWords: ['Bosque', 'Colores'],
+            estimatedDuration: 3,
+            interactionCount: 2
           },
           {
-            id: '1-2-2',
-            title: 'Colors Everywhere',
-            description: 'Learn to name and identify colors',
+            id: 'step-1-2-2',
+            title: 'Primary Colors',
+            description: 'Learn the three primary colors',
+            type: 'vocabulary',
             completed: false,
-            difficulty: 'easy'
+            difficulty: 'easy',
+            vocabularyWords: ['Rojo', 'Azul', 'Amarillo'],
+            estimatedDuration: 6,
+            interactionCount: 5
           },
           {
-            id: '1-2-3',
-            title: 'Match and Sort',
-            description: 'Practice matching shapes with colors',
+            id: 'step-1-2-3',
+            title: 'More Magical Colors',
+            description: 'Discover more colors in the forest',
+            type: 'vocabulary',
             completed: false,
-            difficulty: 'medium'
+            difficulty: 'easy',
+            vocabularyWords: ['Verde', 'Rosa', 'Morado', 'Naranja'],
+            estimatedDuration: 6,
+            interactionCount: 5
+          },
+          {
+            id: 'step-1-2-4',
+            title: 'Rainbow Bridge Challenge',
+            description: 'Name all colors to cross the rainbow bridge',
+            type: 'assessment',
+            completed: false,
+            difficulty: 'easy',
+            vocabularyWords: ['Rojo', 'Azul', 'Verde', 'Amarillo', 'Rosa', 'Morado', 'Naranja', 'Blanco'],
+            estimatedDuration: 3,
+            interactionCount: 8
           }
         ]
       },
       {
-        id: '1-3',
+        id: 'ep-1-3',
         number: 3,
-        title: 'Animals and Sounds',
-        description: 'Discover animal names and the sounds they make',
-        duration: 30,
+        title: 'Counting Mountain Treasures',
+        description: 'Climb the magical mountain and discover treasure chests while learning to count in Spanish.',
+        setting: 'Mystical mountain with glowing caves and treasure chests',
+        narrativeHook: 'Each treasure chest is locked with a number - count to unlock them!',
+        duration: 18,
+        type: 'standard',
         completed: false,
-        locked: false,
-        difficulty: 'medium',
-        steps: [
-          {
-            id: '1-3-1',
-            title: 'Farm Animals',
-            description: 'Learn about common farm animals and their sounds',
-            completed: false,
-            difficulty: 'easy'
-          },
-          {
-            id: '1-3-2',
-            title: 'Wild Animals',
-            description: 'Discover jungle and safari animals',
-            completed: false,
-            difficulty: 'medium'
-          },
-          {
-            id: '1-3-3',
-            title: 'Animal Actions',
-            description: 'Learn verbs associated with animal movements',
-            completed: false,
-            difficulty: 'medium'
-          }
-        ]
+        locked: true,
+        difficulty: 'easy',
+        vocabularyFocus: ['Uno', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis', 'Siete', 'Ocho', 'Nueve', 'Diez'],
+        learningOutcomes: ['numbers-1'],
+        completionRate: 0,
+        steps: []
       },
       {
-        id: '1-4',
+        id: 'ep-1-4',
         number: 4,
-        title: 'Daily Routines',
-        description: 'Learn words for everyday activities',
-        duration: 25,
+        title: 'Village of Friendly Objects',
+        description: 'Visit the island village and meet friendly objects that want to teach you their names.',
+        setting: 'Charming village with talking houses, trees, and everyday objects',
+        narrativeHook: 'The village objects are shy - say their names to become friends!',
+        duration: 20,
+        type: 'standard',
         completed: false,
         locked: true,
         difficulty: 'medium',
-        steps: [
-          {
-            id: '1-4-1',
-            title: 'Morning Routine',
-            description: 'Words for waking up, eating breakfast, and getting dressed',
-            completed: false,
-            difficulty: 'medium'
-          },
-          {
-            id: '1-4-2',
-            title: 'Mealtime Words',
-            description: 'Learn food names and eating-related words',
-            completed: false,
-            difficulty: 'medium'
-          },
-          {
-            id: '1-4-3',
-            title: 'Bedtime Routine',
-            description: 'Words for evening activities and going to sleep',
-            completed: false,
-            difficulty: 'medium'
-          }
-        ]
+        vocabularyFocus: ['Casa', 'Árbol', 'Mesa', 'Silla', 'Libro', 'Pelota', 'Gato', 'Perro'],
+        learningOutcomes: ['objects-1'],
+        completionRate: 0,
+        steps: []
       },
       {
-        id: '1-5',
+        id: 'ep-1-5',
         number: 5,
-        title: 'Feelings and Emotions',
-        description: 'Express how you feel with words',
-        duration: 30,
+        title: 'Feelings Festival',
+        description: 'Join the island creatures in a festival of emotions and learn to express how you feel.',
+        setting: 'Festival grounds with various emotion-themed areas',
+        narrativeHook: 'The festival can only begin when everyone shares how they feel!',
+        duration: 18,
+        type: 'standard',
         completed: false,
         locked: true,
-        difficulty: 'hard',
-        steps: [
-          {
-            id: '1-5-1',
-            title: 'Happy or Sad',
-            description: 'Basic emotion words and facial expressions',
-            completed: false,
-            difficulty: 'medium'
-          },
-          {
-            id: '1-5-2',
-            title: 'More Feelings',
-            description: 'Learn to express excited, tired, scared and surprised',
-            completed: false,
-            difficulty: 'hard'
-          },
-          {
-            id: '1-5-3',
-            title: 'How Do You Feel?',
-            description: 'Practice identifying and naming emotions',
-            completed: false,
-            difficulty: 'hard'
-          }
-        ]
+        difficulty: 'medium',
+        vocabularyFocus: ['Feliz', 'Triste', 'Cansado', 'Emocionado', 'Asustado'],
+        learningOutcomes: ['feelings-1'],
+        completionRate: 0,
+        steps: []
       },
       {
-        id: '1-6',
+        id: 'ep-1-6',
         number: 6,
-        title: 'Outside Adventures',
-        description: 'Words for places, weather, and outdoor activities',
-        duration: 35,
+        title: 'Magic Show Spectacular',
+        description: 'Put on a magic show using all the Spanish words you\'ve learned on the island.',
+        setting: 'Grand theater stage in the center of the island',
+        narrativeHook: 'You\'re the star of the magic show - use your Spanish words to create magic!',
+        duration: 18,
+        type: 'standard',
         completed: false,
         locked: true,
         difficulty: 'hard',
-        steps: [
-          {
-            id: '1-6-1',
-            title: 'Weather Words',
-            description: 'Learn words for sunny, rainy, windy, and snowy days',
-            completed: false,
-            difficulty: 'medium'
-          },
-          {
-            id: '1-6-2',
-            title: 'Places to Go',
-            description: 'Words for park, store, home, and other locations',
-            completed: false,
-            difficulty: 'hard'
-          },
-          {
-            id: '1-6-3',
-            title: 'Transportation',
-            description: 'Learn words for car, bus, train, and airplane',
-            completed: false,
-            difficulty: 'hard'
-          }
-        ]
+        vocabularyFocus: ['Review of all previous vocabulary'],
+        learningOutcomes: ['All Season 1 outcomes'],
+        completionRate: 0,
+        steps: []
       },
       {
-        id: '1-7',
+        id: 'ep-1-7',
         number: 7,
-        title: 'Story Time',
-        description: 'Put it all together with simple stories',
-        duration: 40,
+        title: 'Island Adventure Celebration',
+        description: 'Celebrate your amazing progress with a special island-wide party featuring games and songs.',
+        setting: 'Entire island celebrating with decorations and festivities',
+        narrativeHook: 'The whole island wants to celebrate your Spanish learning journey!',
+        duration: 22,
+        type: 'weekend_special',
         completed: false,
         locked: true,
-        difficulty: 'veryHard',
-        steps: [
-          {
-            id: '1-7-1',
-            title: 'Beginning, Middle, End',
-            description: 'Understand story sequence with simple tales',
-            completed: false,
-            difficulty: 'hard'
-          },
-          {
-            id: '1-7-2',
-            title: 'Characters and Actions',
-            description: 'Talk about who and what in stories',
-            completed: false,
-            difficulty: 'hard'
-          },
-          {
-            id: '1-7-3',
-            title: 'Tell Your Story',
-            description: 'Practice telling a simple story with beginning and end',
-            completed: false,
-            difficulty: 'veryHard'
-          }
-        ]
+        difficulty: 'medium',
+        vocabularyFocus: ['Review + celebration vocabulary'],
+        learningOutcomes: ['Completion celebration'],
+        completionRate: 0,
+        steps: []
       }
     ]
   },
+  
   {
-    id: '2',
+    id: 'season-2',
     number: 2,
-    title: 'Nordic Adventures',
-    description: 'Expand vocabulary and begin forming simple sentences',
-    learningObjectives: [
-      'Form basic 2-3 word sentences',
-      'Ask and answer simple questions',
-      'Expand vocabulary to 50+ words',
-      'Follow multi-step instructions'
+    title: 'City of Friends',
+    theme: 'Practical Application',
+    setting: 'A bustling city with various locations (park, market, school, home)',
+    characterRole: 'Bern as a city guide helping navigate urban adventures',
+    narrativeHook: 'Helping friends around the city with daily activities',
+    description: 'Explore the busy city with Bern and learn practical Spanish for everyday situations!',
+    learningFocus: ['Daily routines', 'Transportation', 'Food', 'Clothing', 'Directions'],
+    learningOutcomes: [
+      {
+        id: 'sentences-1',
+        description: 'Construct simple sentences with subject-verb-object',
+        achieved: false,
+        category: 'grammar'
+      },
+      {
+        id: 'directions-1',
+        description: 'Follow simple directions (left, right, forward)',
+        achieved: false,
+        category: 'vocabulary'
+      },
+      {
+        id: 'questions-1',
+        description: 'Ask basic questions (what, where, how many)',
+        achieved: false,
+        category: 'conversation'
+      },
+      {
+        id: 'preferences-1',
+        description: 'Express preferences (like/dislike)',
+        achieved: false,
+        category: 'conversation'
+      },
+      {
+        id: 'adjectives-1',
+        description: 'Describe objects with simple adjectives',
+        achieved: false,
+        category: 'grammar'
+      },
+      {
+        id: 'numbers-2',
+        description: 'Count from 11-20',
+        achieved: false,
+        category: 'vocabulary'
+      }
     ],
     completed: false,
     locked: true,
+    totalDuration: 140,
+    progressPercentage: 0,
+    episodes: []
+  },
+  
+  {
+    id: 'season-3',
+    number: 3,
+    title: 'Fantastic Journey',
+    theme: 'Creative Expression',
+    setting: 'Imaginative travel through different environments (space, underwater, jungle)',
+    characterRole: 'Bern as a brave explorer with special equipment for each journey',
+    narrativeHook: 'Collecting stories and artifacts from fantastical places',
+    description: 'Join Bern on incredible adventures through space, underwater worlds, and magical jungles!',
+    learningFocus: ['Descriptive language', 'Emotions', 'Comparisons', 'Storytelling elements'],
+    learningOutcomes: [
+      {
+        id: 'descriptive-1',
+        description: 'Use descriptive language with multiple adjectives',
+        achieved: false,
+        category: 'grammar'
+      },
+      {
+        id: 'opinions-1',
+        description: 'Express opinions with simple reasons',
+        achieved: false,
+        category: 'conversation'
+      },
+      {
+        id: 'complex-sentences-1',
+        description: 'Construct more complex sentences with conjunctions',
+        achieved: false,
+        category: 'grammar'
+      },
+      {
+        id: 'past-tense-1',
+        description: 'Understand and use past tense for simple actions',
+        achieved: false,
+        category: 'grammar'
+      },
+      {
+        id: 'complex-questions-1',
+        description: 'Ask more complex questions (why, when, how)',
+        achieved: false,
+        category: 'conversation'
+      },
+      {
+        id: 'comparisons-1',
+        description: 'Compare objects using comparative forms',
+        achieved: false,
+        category: 'grammar'
+      }
+    ],
+    completed: false,
+    locked: true,
+    totalDuration: 154,
+    progressPercentage: 0,
+    episodes: []
+  },
+  
+  {
+    id: 'season-4',
+    number: 4,
+    title: 'World Celebrations',
+    theme: 'Cultural Immersion',
+    setting: 'Different countries and cultural events',
+    characterRole: 'Bern as a cultural ambassador discovering traditions',
+    narrativeHook: 'Preparing for and participating in celebrations around the world',
+    description: 'Travel the world with Bern and discover amazing celebrations while mastering advanced Spanish!',
+    learningFocus: ['Cultural expressions', 'Traditions', 'Specialized vocabulary', 'Complex phrases'],
+    learningOutcomes: [
+      {
+        id: 'conversations-1',
+        description: 'Engage in simple conversations with multiple exchanges',
+        achieved: false,
+        category: 'conversation'
+      },
+      {
+        id: 'cultural-1',
+        description: 'Understand cultural expressions and idioms',
+        achieved: false,
+        category: 'cultural'
+      },
+      {
+        id: 'future-tense-1',
+        description: 'Use future tense for simple planning',
+        achieved: false,
+        category: 'grammar'
+      },
+      {
+        id: 'complex-emotions-1',
+        description: 'Express complex emotions and thoughts',
+        achieved: false,
+        category: 'conversation'
+      },
+      {
+        id: 'conditional-1',
+        description: 'Understand and use conditional phrases',
+        achieved: false,
+        category: 'grammar'
+      },
+      {
+        id: 'cultural-awareness-1',
+        description: 'Demonstrate cultural awareness through language',
+        achieved: false,
+        category: 'cultural'
+      }
+    ],
+    completed: false,
+    locked: true,
+    totalDuration: 168,
+    progressPercentage: 0,
     episodes: []
   }
 ];
 
+export const mockProficiencyMetrics: ProficiencyMetrics = {
+  vocabularyMastery: {
+    learning: 8,
+    reviewing: 12,
+    mastered: 15,
+    total: 35
+  },
+  pronunciationAccuracy: 78,
+  responseAppropriatenesss: 85,
+  engagementLevel: 92,
+  overallProficiency: 'easy',
+  lastAssessment: '2024-01-15'
+};
+
 export const mockProgressStats: ProgressStats = {
-  totalEpisodes: 14,
+  totalSeasons: 4,
+  completedSeasons: 0,
+  totalEpisodes: 28,
   completedEpisodes: 1,
-  totalSteps: 42,
-  completedSteps: 3,
-  totalTimeSpent: 60,
-  lastSessionDate: '2023-10-15'
+  totalSteps: 112,
+  completedSteps: 4,
+  totalTimeSpent: 85,
+  lastSessionDate: '2024-01-15',
+  currentStreak: 3,
+  proficiency: mockProficiencyMetrics,
+  weeklyGoalMinutes: 120,
+  weeklyCompletedMinutes: 45
 };
 
 export const mockChildProfile: ChildProfile = {
   id: '1',
   name: 'Emma',
-  age: 2,
-  languages: ['English', 'Spanish'],
+  age: 4,
+  languages: ['English', 'Spanish (Learning)'],
+  preferredDifficulty: 'easy',
+  adaptiveSettings: {
+    responseTimeExtension: 2,
+    repetitionCount: 2,
+    vocabularyPerEpisode: 8,
+    visualAidsEnabled: true
+  },
+  goals: {
+    dailyMinutes: 15,
+    weeklyEpisodes: 3,
+    focusAreas: ['vocabulary', 'pronunciation']
+  }
 };
 
 export const mockTeddyBear: TeddyBear = {
   id: 'teddy-01',
-  name: 'Bernie',
+  name: 'Bern',
+  appearance: {
+    color: 'warm brown',
+    accessories: ['magical compass', 'explorer hat'],
+    outfit: 'adventure vest'
+  },
   connected: true,
   batteryLevel: 78,
-  lastSyncDate: '2023-10-15T14:30:00'
+  lastSyncDate: '2024-01-15T14:30:00',
+  mood: 'excited'
 };
 
 export const mockMetricsData = {
   weeklyActivity: [
-    { day: 'Mon', minutes: 15 },
-    { day: 'Tue', minutes: 20 },
-    { day: 'Wed', minutes: 10 },
-    { day: 'Thu', minutes: 25 },
-    { day: 'Fri', minutes: 15 },
-    { day: 'Sat', minutes: 30 },
-    { day: 'Sun', minutes: 5 },
+    { day: 'Mon', minutes: 18, episodes: 1 },
+    { day: 'Tue', minutes: 0, episodes: 0 },
+    { day: 'Wed', minutes: 15, episodes: 1 },
+    { day: 'Thu', minutes: 12, episodes: 0 },
+    { day: 'Fri', minutes: 0, episodes: 0 },
+    { day: 'Sat', minutes: 0, episodes: 0 },
+    { day: 'Sun', minutes: 0, episodes: 0 },
   ],
   vocabularyGrowth: [
-    { week: 1, words: 5 },
-    { week: 2, words: 12 },
-    { week: 3, words: 18 },
-    { week: 4, words: 25 },
+    { week: 1, words: 8 },
+    { week: 2, words: 15 },
+    { week: 3, words: 23 },
+    { week: 4, words: 35 },
   ],
   proficiencyScores: {
-    understanding: 75,
-    speaking: 60,
-    recognition: 85,
-    engagement: 90,
+    vocabulary: 85,
+    pronunciation: 78,
+    conversation: 65,
+    cultural: 45,
   },
+  enjoymentRatings: [5, 4, 5, 5, 4], // Last 5 sessions
 };

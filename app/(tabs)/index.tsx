@@ -1,10 +1,12 @@
-// app/(tabs)/index.tsx - Updated with user document display
+// app/(tabs)/index.tsx - Enhanced Learning Dashboard
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar, Animated, Dimensions } from 'react-native';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Sparkles, MapPin, Trophy, Target, Zap } from 'lucide-react-native';
 import { globalStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
-import { mockSeasons, mockProgressStats } from '@/data/mockData';
+import { mockSeasons, mockProgressStats, mockChildProfile } from '@/data/mockData';
 import TeddyMascot from '@/components/ui/TeddyMascot';
 import ProgressPath from '@/components/ui/ProgressPath';
 import SeasonCard from '@/components/ui/SeasonCard';
@@ -14,31 +16,29 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTeddy } from '@/contexts/TeddyContext';
 import { useLearning } from '@/contexts/LearningContext';
 
+const { width } = Dimensions.get('window');
+
 export default function LearningDashboard() {
   const [currentSeason] = useState(mockSeasons[0]);
-  const [apiTest, setApiTest] = useState('Testing...');
-  const { currentUser, currentUserDocument, logout } = useAuth();
+  const [nextEpisode, setNextEpisode] = useState<Episode | null>(null);
+  const [streakAnimation] = useState(new Animated.Value(0));
+  const { currentUser, currentUserDocument } = useAuth();
   const { teddy, isConnected } = useTeddy();
   const { progress } = useLearning();
 
-  // Test API connection
   useEffect(() => {
-    const testAPI = async () => {
-      try {
-        console.log('Testing API connection...');
-        // Use the same IP as your .env file
-        const response = await fetch('http://192.168.29.132:5000/api/test'); // Replace with your IP
-        const data = await response.json();
-        setApiTest('✅ API Connected: ' + data.message);
-        console.log('API test successful:', data);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        setApiTest('❌ API Failed: ' + errorMessage);
-        console.error('API test failed:', error);
-      }
-    };
+    // Find the next episode to play
+    const nextEp = currentSeason.episodes.find(ep => !ep.completed && !ep.locked);
+    setNextEpisode(nextEp || null);
 
-    testAPI();
+    // Animate streak counter
+    if (mockProgressStats.currentStreak > 0) {
+      Animated.spring(streakAnimation, {
+        toValue: 1,
+        useNativeDriver: true,
+        delay: 500
+      }).start();
+    }
   }, []);
 
   const handleEpisodePress = (episode: Episode) => {
@@ -48,103 +48,270 @@ export default function LearningDashboard() {
     });
   };
 
+  const handleSeasonPress = (seasonNumber: number) => {
+    router.push({
+      pathname: "/season/[id]",
+      params: { id: seasonNumber.toString() }
+    });
+  };
+
+  const getBernMessage = () => {
+    if (!isConnected) {
+      return "¡Hola! Let's connect so we can start our magical adventure!";
+    }
+    if (nextEpisode) {
+      return `Ready for "${nextEpisode.title}"? ¡Vamos a aprender!`;
+    }
+    return "¡Excelente! You're doing amazing with your Spanish learning!";
+  };
+
+  const getTeddyMood = () => {
+    if (!isConnected) return 'thinking';
+    if (mockProgressStats.currentStreak >= 3) return 'excited';
+    return 'happy';
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-        <View style={styles.header}>
-          <Text style={styles.welcomeText}>
-            Welcome back{currentUser?.displayName ? `, ${currentUser.displayName}` : ''}!
-          </Text>
-          <Text style={styles.title}>Learning Dashboard</Text>
-          
-          {/* User Document Info */}
-          {currentUserDocument && (
-            <View style={styles.userInfoContainer}>
-              <Text style={styles.userInfoTitle}>User Profile</Text>
-              <Text style={styles.userInfoText}>
-                User ID: {currentUserDocument.id}
-              </Text>
-              <Text style={styles.userInfoText}>
-                Email: {currentUserDocument.email}
-              </Text>
-              <Text style={styles.userInfoText}>
-                Role: {currentUserDocument.role}
-              </Text>
-              <Text style={styles.userInfoText}>
-                Firebase UID: {currentUserDocument.firebaseUID.substring(0, 8)}...
-              </Text>
-            </View>
-          )}
-          
-          {/* API Test Status */}
-          <View style={styles.apiTestContainer}>
-            <Text style={styles.apiTestText}>{apiTest}</Text>
-          </View>
-          
-          <TeddyMascot 
-            message={isConnected ? "Ready to continue our learning journey?" : "Let's connect your teddy bear!"}
-            size="small"
-          />
-        </View>
-
-        <ProgressSummary stats={mockProgressStats} />
-
-        <SeasonCard season={currentSeason} />
-
-        <View style={styles.episodeSection}>
-          <Text style={styles.sectionTitle}>Episodes</Text>
-          <View style={styles.pathContainer}>
-            <ProgressPath 
-              episodes={currentSeason.episodes} 
-              onEpisodePress={handleEpisodePress}
-            />
-          </View>
-        </View>
-
-        <View style={styles.recommendedSection}>
-          <Text style={styles.sectionTitle}>Continue Learning</Text>
-          
-          <TouchableOpacity
-            style={styles.continueCard}
-            onPress={() => handleEpisodePress(currentSeason.episodes[1])}
-          >
-            <View style={styles.continueCardContent}>
+      <LinearGradient
+        colors={[Colors.light.background, '#FFE4E1', Colors.light.background]}
+        style={styles.gradientBackground}
+      >
+        <ScrollView 
+          style={styles.container} 
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Personalized Header */}
+          <View style={styles.header}>
+            <View style={styles.headerTop}>
               <View>
-                <Text style={styles.continueTitle}>
-                  Episode {currentSeason.episodes[1].number}: {currentSeason.episodes[1].title}
+                <Text style={styles.welcomeText}>
+                  ¡Hola, {mockChildProfile.name}! 👋
                 </Text>
-                <Text style={styles.continueDescription}>
-                  {currentSeason.episodes[1].description}
-                </Text>
-                <Text style={styles.continueStats}>
-                  {currentSeason.episodes[1].duration} MINS • {currentSeason.episodes[1].steps.length} STEPS
-                </Text>
+                <Text style={styles.subtitle}>Ready for more Spanish adventures?</Text>
               </View>
-              <View style={styles.startButton}>
-                <Text style={styles.startButtonText}>START</Text>
+              
+              {/* Streak Counter */}
+              {mockProgressStats.currentStreak > 0 && (
+                <Animated.View 
+                  style={[
+                    styles.streakContainer,
+                    {
+                      transform: [{
+                        scale: streakAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.8, 1]
+                        })
+                      }]
+                    }
+                  ]}
+                >
+                  <Zap size={20} color={Colors.light.warning} />
+                  <Text style={styles.streakText}>{mockProgressStats.currentStreak}</Text>
+                  <Text style={styles.streakLabel}>day streak!</Text>
+                </Animated.View>
+              )}
+            </View>
+            
+            {/* Bern's Message */}
+            <View style={styles.mascotContainer}>
+              <TeddyMascot 
+                message={getBernMessage()}
+                mood={getTeddyMood()}
+                size="medium"
+              />
+            </View>
+          </View>
+
+          {/* Progress Summary - Enhanced */}
+          <View style={styles.progressCard}>
+            <View style={styles.progressHeader}>
+              <Trophy size={24} color={Colors.light.primary} />
+              <Text style={styles.progressTitle}>Your Learning Journey</Text>
+            </View>
+            
+            <View style={styles.progressGrid}>
+              <View style={styles.progressItem}>
+                <Text style={styles.progressNumber}>{mockProgressStats.completedEpisodes}</Text>
+                <Text style={styles.progressLabel}>Episodes</Text>
+                <Text style={styles.progressSubLabel}>Completed</Text>
+              </View>
+              
+              <View style={styles.progressItem}>
+                <Text style={styles.progressNumber}>{mockProgressStats.proficiency.vocabularyMastery.mastered}</Text>
+                <Text style={styles.progressLabel}>Words</Text>
+                <Text style={styles.progressSubLabel}>Mastered</Text>
+              </View>
+              
+              <View style={styles.progressItem}>
+                <Text style={styles.progressNumber}>{Math.round(mockProgressStats.totalTimeSpent)}</Text>
+                <Text style={styles.progressLabel}>Minutes</Text>
+                <Text style={styles.progressSubLabel}>Learning</Text>
               </View>
             </View>
-          </TouchableOpacity>
-        </View>
 
-        {/* Debug Section */}
-        <View style={styles.debugSection}>
-          <Text style={styles.debugTitle}>Debug Info</Text>
-          <Text style={styles.debugText}>
-            Firebase User: {currentUser ? '✅' : '❌'}
-          </Text>
-          <Text style={styles.debugText}>
-            Firestore Document: {currentUserDocument ? '✅' : '❌'}
-          </Text>
-          <Text style={styles.debugText}>
-            Teddy Connected: {isConnected ? '✅' : '❌'}
-          </Text>
-          
-          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+            {/* Weekly Goal Progress */}
+            <View style={styles.weeklyGoal}>
+              <View style={styles.goalHeader}>
+                <Target size={16} color={Colors.light.secondary} />
+                <Text style={styles.goalTitle}>Weekly Goal</Text>
+              </View>
+              <View style={styles.goalProgressBar}>
+                <View 
+                  style={[
+                    styles.goalProgress, 
+                    { width: `${(mockProgressStats.weeklyCompletedMinutes / mockProgressStats.weeklyGoalMinutes) * 100}%` }
+                  ]} 
+                />
+              </View>
+              <Text style={styles.goalText}>
+                {mockProgressStats.weeklyCompletedMinutes} / {mockProgressStats.weeklyGoalMinutes} minutes
+              </Text>
+            </View>
+          </View>
+
+          {/* Continue Learning Card */}
+          {nextEpisode && (
+            <TouchableOpacity
+              style={styles.continueCard}
+              onPress={() => handleEpisodePress(nextEpisode)}
+              activeOpacity={0.9}
+            >
+              <LinearGradient
+                colors={[Colors.light.primary, Colors.light.secondary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.continueGradient}
+              >
+                <View style={styles.continueContent}>
+                  <View style={styles.continueIcon}>
+                    <Sparkles size={24} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.continueText}>
+                    <Text style={styles.continueTitle}>Continue Learning</Text>
+                    <Text style={styles.continueEpisode}>
+                      Episode {nextEpisode.number}: {nextEpisode.title}
+                    </Text>
+                    <Text style={styles.continueDuration}>
+                      {nextEpisode.duration} minutes • {nextEpisode.setting}
+                    </Text>
+                  </View>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
+          {/* Season Overview */}
+          <View style={styles.seasonSection}>
+            <View style={styles.sectionHeader}>
+              <MapPin size={20} color={Colors.light.text} />
+              <Text style={styles.sectionTitle}>Current Adventure</Text>
+            </View>
+            
+            <SeasonCard season={currentSeason} />
+          </View>
+
+          {/* Episode Progress Path */}
+          <View style={styles.episodeSection}>
+            <Text style={styles.sectionTitle}>Episode Adventures</Text>
+            <Text style={styles.sectionDescription}>
+              Follow the magical path through {currentSeason.title}
+            </Text>
+            
+            <View style={styles.pathContainer}>
+              <ProgressPath 
+                episodes={currentSeason.episodes} 
+                onEpisodePress={handleEpisodePress}
+              />
+            </View>
+          </View>
+
+          {/* All Seasons Preview */}
+          <View style={styles.allSeasonsSection}>
+            <Text style={styles.sectionTitle}>All Adventures</Text>
+            <Text style={styles.sectionDescription}>
+              Discover all the amazing places you'll explore with Bern!
+            </Text>
+            
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.seasonsScroll}
+            >
+              {mockSeasons.map((season, index) => (
+                <TouchableOpacity
+                  key={season.id}
+                  style={[
+                    styles.seasonPreview,
+                    season.locked && styles.seasonLocked,
+                    index === 0 && styles.seasonActive
+                  ]}
+                  onPress={() => !season.locked && handleSeasonPress(season.number)}
+                  activeOpacity={season.locked ? 1 : 0.7}
+                >
+                  <View style={styles.seasonNumber}>
+                    <Text style={styles.seasonNumberText}>{season.number}</Text>
+                  </View>
+                  <Text style={styles.seasonPreviewTitle}>{season.title}</Text>
+                  <Text style={styles.seasonPreviewTheme}>{season.theme}</Text>
+                  {season.locked && (
+                    <View style={styles.lockedOverlay}>
+                      <Text style={styles.lockedText}>Coming Soon!</Text>
+                    </View>
+                  )}
+                  {index === 0 && (
+                    <View style={styles.currentBadge}>
+                      <Text style={styles.currentBadgeText}>Current</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Quick Actions */}
+          <View style={styles.quickActions}>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            
+            <View style={styles.actionGrid}>
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => router.push('/(tabs)/metrics')}
+              >
+                <Text style={styles.actionEmoji}>📊</Text>
+                <Text style={styles.actionText}>View Progress</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => router.push('/(tabs)/account')}
+              >
+                <Text style={styles.actionEmoji}>🎯</Text>
+                <Text style={styles.actionText}>Settings</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.actionButton}>
+                <Text style={styles.actionEmoji}>🎵</Text>
+                <Text style={styles.actionText}>Practice Songs</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.actionButton}>
+                <Text style={styles.actionEmoji}>🏆</Text>
+                <Text style={styles.actionText}>Achievements</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Connection Status */}
+          <View style={styles.connectionStatus}>
+            <View style={[styles.connectionDot, { backgroundColor: isConnected ? Colors.light.success : Colors.light.error }]} />
+            <Text style={styles.connectionText}>
+              Bern is {isConnected ? 'connected and ready!' : 'waiting to connect'}
+            </Text>
+          </View>
+        </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
@@ -152,12 +319,14 @@ export default function LearningDashboard() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.light.background,
     paddingTop: Platform.select({
       android: StatusBar.currentHeight,
       ios: 0,
       web: 0,
     }),
+  },
+  gradientBackground: {
+    flex: 1,
   },
   container: {
     flex: 1,
@@ -169,148 +338,339 @@ const styles = StyleSheet.create({
       android: 16,
       web: 60,
     }),
+    paddingBottom: 40,
   },
   header: {
     marginBottom: 24,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
   welcomeText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 16,
+    fontFamily: 'LilitaOne',
+    fontSize: 24,
     color: Colors.light.text,
-    opacity: 0.7,
     marginBottom: 4,
   },
-  title: {
-    fontFamily: 'LilitaOne',
-    fontSize: 28,
-    color: Colors.light.text,
-    marginBottom: 16,
-  },
-  userInfoContainer: {
-    backgroundColor: Colors.light.primary + '15',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.light.primary + '30',
-  },
-  userInfoTitle: {
-    fontFamily: 'LilitaOne',
+  subtitle: {
+    fontFamily: 'Poppins-Regular',
     fontSize: 14,
-    color: Colors.light.primary,
-    marginBottom: 8,
+    color: Colors.light.text,
+    opacity: 0.8,
   },
-  userInfoText: {
+  streakContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.warning + '20',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: Colors.light.warning,
+  },
+  streakText: {
+    fontFamily: 'LilitaOne',
+    fontSize: 18,
+    color: Colors.light.warning,
+    marginHorizontal: 4,
+  },
+  streakLabel: {
     fontFamily: 'Poppins-Regular',
     fontSize: 12,
     color: Colors.light.text,
-    marginBottom: 2,
   },
-  apiTestContainer: {
+  mascotContainer: {
+    alignItems: 'center',
+  },
+  progressCard: {
     backgroundColor: Colors.light.cardBackground,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  apiTestText: {
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  progressTitle: {
+    fontFamily: 'LilitaOne',
+    fontSize: 18,
+    color: Colors.light.text,
+    marginLeft: 8,
+  },
+  progressGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  progressItem: {
+    alignItems: 'center',
+  },
+  progressNumber: {
+    fontFamily: 'LilitaOne',
+    fontSize: 28,
+    color: Colors.light.primary,
+  },
+  progressLabel: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 14,
+    color: Colors.light.text,
+  },
+  progressSubLabel: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: Colors.light.text,
+    opacity: 0.7,
+  },
+  weeklyGoal: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.light.border,
+    paddingTop: 16,
+  },
+  goalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  goalTitle: {
+    fontFamily: 'LilitaOne',
+    fontSize: 14,
+    color: Colors.light.text,
+    marginLeft: 6,
+  },
+  goalProgressBar: {
+    height: 8,
+    backgroundColor: Colors.light.border,
+    borderRadius: 4,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  goalProgress: {
+    height: '100%',
+    backgroundColor: Colors.light.secondary,
+    borderRadius: 4,
+  },
+  goalText: {
     fontFamily: 'Poppins-Regular',
     fontSize: 12,
     color: Colors.light.text,
     textAlign: 'center',
   },
-  episodeSection: {
-    marginTop: 8,
+  continueCard: {
+    borderRadius: 20,
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  continueGradient: {
+    borderRadius: 20,
+    padding: 20,
+  },
+  continueContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  continueIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  continueText: {
+    flex: 1,
+  },
+  continueTitle: {
+    fontFamily: 'LilitaOne',
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  continueEpisode: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  continueDuration: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  seasonSection: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
     fontFamily: 'LilitaOne',
     fontSize: 20,
     color: Colors.light.text,
+    marginLeft: 8,
+  },
+  sectionDescription: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: Colors.light.text,
+    opacity: 0.8,
     marginBottom: 16,
+  },
+  episodeSection: {
+    marginBottom: 32,
   },
   pathContainer: {
-    marginBottom: 16,
+    marginTop: 8,
   },
-  recommendedSection: {
-    marginBottom: 40,
+  allSeasonsSection: {
+    marginBottom: 32,
   },
-  continueCard: {
+  seasonsScroll: {
+    paddingHorizontal: 8,
+  },
+  seasonPreview: {
+    width: 140,
+    height: 160,
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 16,
-    overflow: 'hidden',
+    padding: 16,
+    marginHorizontal: 8,
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    position: 'relative',
+  },
+  seasonLocked: {
+    opacity: 0.6,
+  },
+  seasonActive: {
+    borderWidth: 2,
+    borderColor: Colors.light.primary,
+  },
+  seasonNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.light.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  seasonNumberText: {
+    fontFamily: 'LilitaOne',
+    fontSize: 18,
+    color: Colors.light.primary,
+  },
+  seasonPreviewTitle: {
+    fontFamily: 'LilitaOne',
+    fontSize: 14,
+    color: Colors.light.text,
+    textAlign: 'center',
+  },
+  seasonPreviewTheme: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: Colors.light.text,
+    opacity: 0.7,
+    textAlign: 'center',
+  },
+  lockedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lockedText: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 12,
+    color: Colors.light.text,
+  },
+  currentBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: Colors.light.success,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  currentBadgeText: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 10,
+    color: '#FFFFFF',
+  },
+  quickActions: {
+    marginBottom: 24,
+  },
+  actionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    width: (width - 48) / 2,
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
   },
-  continueCardContent: {
-    padding: 16,
-  },
-  continueTitle: {
-    fontFamily: 'LilitaOne',
-    fontSize: 18,
-    color: Colors.light.text,
+  actionEmoji: {
+    fontSize: 32,
     marginBottom: 8,
   },
-  continueDescription: {
-    fontFamily: 'Poppins-Regular',
+  actionText: {
+    fontFamily: 'Poppins-SemiBold',
     fontSize: 14,
     color: Colors.light.text,
-    opacity: 0.7,
-    marginBottom: 12,
+    textAlign: 'center',
   },
-  continueStats: {
-    fontFamily: 'Outfit-Medium',
-    fontSize: 12,
-    color: Colors.light.primary,
-    marginBottom: 16,
-  },
-  startButton: {
-    backgroundColor: Colors.light.primary,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  startButtonText: {
-    fontFamily: 'LilitaOne',
-    fontSize: 14,
-    color: '#FFFFFF',
-  },
-  debugSection: {
-    marginTop: 20,
+  connectionStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
     backgroundColor: Colors.light.cardBackground,
-    padding: 16,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
+    marginTop: 8,
   },
-  debugTitle: {
-    fontFamily: 'LilitaOne',
-    fontSize: 16,
-    color: Colors.light.text,
-    marginBottom: 12,
+  connectionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
   },
-  debugText: {
+  connectionText: {
     fontFamily: 'Poppins-Regular',
     fontSize: 12,
     color: Colors.light.text,
-    marginBottom: 4,
-  },
-  logoutButton: {
-    backgroundColor: Colors.light.error,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginTop: 12,
-    alignSelf: 'flex-start',
-  },
-  logoutButtonText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: '#FFFFFF',
   },
 });

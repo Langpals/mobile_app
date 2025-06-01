@@ -1,4 +1,4 @@
-// app/(tabs)/account.tsx - Enhanced Account Screen
+// app/(tabs)/account.tsx - Fixed Account Screen
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, SafeAreaView, Switch, Platform, StatusBar, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,7 +10,8 @@ import {
 import { globalStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
 import { mockChildProfile, mockTeddyBear, mockProgressStats } from '@/data/mockData';
-import { mockAchievements, AchievementBadge } from './achievements_system';
+import { AchievementBadge } from '@/components/achievements/AchievementComponents';
+import { achievementsList, getRecentAchievements, getTotalPoints } from '@/data/achievementsData';
 import TeddyMascot from '@/components/ui/TeddyMascot';
 
 export default function AccountScreen() {
@@ -19,9 +20,15 @@ export default function AccountScreen() {
   const [autoPlayEnabled, setAutoPlayEnabled] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showTeddyCustomization, setShowTeddyCustomization] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
 
-  const recentAchievements = mockAchievements.filter(a => a.unlocked).slice(0, 3);
-  const totalPoints = mockAchievements.filter(a => a.unlocked).reduce((sum, a) => sum + a.points, 0);
+  const recentAchievements = getRecentAchievements(3);
+  const totalPoints = getTotalPoints();
+
+  const handleAchievementPress = (achievementId: string) => {
+    // Handle individual achievement press
+    console.log('Achievement pressed:', achievementId);
+  };
 
   const renderProfileModal = () => (
     <Modal visible={showProfileModal} animationType="slide" presentationStyle="pageSheet">
@@ -211,7 +218,7 @@ export default function AccountScreen() {
                   ))}
                 </View>
               </View>
-            </View>
+            </div>
           </View>
         </ScrollView>
       </View>
@@ -278,7 +285,7 @@ export default function AccountScreen() {
           <View style={styles.achievementsSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Recent Achievements</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowAchievements(true)}>
                 <Text style={styles.sectionViewAll}>View All</Text>
               </TouchableOpacity>
             </View>
@@ -286,10 +293,19 @@ export default function AccountScreen() {
             <View style={styles.achievementsList}>
               {recentAchievements.map((achievement) => (
                 <View key={achievement.id} style={styles.achievementItem}>
-                  <AchievementBadge achievement={achievement} size="medium" />
+                  <AchievementBadge 
+                    achievement={achievement} 
+                    size="medium" 
+                    onPress={() => handleAchievementPress(achievement.id)}
+                  />
                   <Text style={styles.achievementTitle}>{achievement.title}</Text>
                 </View>
               ))}
+              {recentAchievements.length === 0 && (
+                <View style={styles.noAchievements}>
+                  <Text style={styles.noAchievementsText}>Complete episodes to earn achievements!</Text>
+                </View>
+              )}
             </View>
           </View>
           
@@ -663,6 +679,19 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Colors.light.text,
     marginTop: 8,
+    textAlign: 'center',
+  },
+  noAchievements: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  noAchievementsText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: Colors.light.text,
+    opacity: 0.6,
     textAlign: 'center',
   },
   teddySection: {

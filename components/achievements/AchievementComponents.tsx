@@ -1,134 +1,10 @@
-// types/achievements.ts and components/achievements - Achievement System
+// components/achievements/AchievementComponents.tsx
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Trophy, Star, Zap, Target, BookOpen, Clock, Heart, Award, X, Lock } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-
-// Achievement Types
-export interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  category: 'learning' | 'streak' | 'vocabulary' | 'time' | 'special';
-  icon: any;
-  color: string;
-  requirement: number;
-  progress: number;
-  unlocked: boolean;
-  unlockedDate?: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
-  points: number;
-}
-
-export interface Badge {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  color: string;
-  unlocked: boolean;
-  unlockedDate?: string;
-}
-
-// Mock Achievements Data
-export const mockAchievements: Achievement[] = [
-  {
-    id: 'first_episode',
-    title: 'First Adventure',
-    description: 'Complete your first episode with Bern',
-    category: 'learning',
-    icon: Star,
-    color: Colors.light.primary,
-    requirement: 1,
-    progress: 1,
-    unlocked: true,
-    unlockedDate: '2024-01-15',
-    rarity: 'common',
-    points: 10
-  },
-  {
-    id: 'vocabulary_master_10',
-    title: 'Word Collector',
-    description: 'Learn 10 new Spanish words',
-    category: 'vocabulary',
-    icon: BookOpen,
-    color: Colors.light.secondary,
-    requirement: 10,
-    progress: 15,
-    unlocked: true,
-    unlockedDate: '2024-01-16',
-    rarity: 'common',
-    points: 25
-  },
-  {
-    id: 'streak_3',
-    title: 'Learning Streak',
-    description: 'Practice Spanish for 3 days in a row',
-    category: 'streak',
-    icon: Zap,
-    color: Colors.light.warning,
-    requirement: 3,
-    progress: 3,
-    unlocked: true,
-    unlockedDate: '2024-01-17',
-    rarity: 'rare',
-    points: 50
-  },
-  {
-    id: 'time_spent_60',
-    title: 'Dedicated Learner',
-    description: 'Spend 60 minutes learning Spanish',
-    category: 'time',
-    icon: Clock,
-    color: Colors.light.accent,
-    requirement: 60,
-    progress: 85,
-    unlocked: true,
-    unlockedDate: '2024-01-18',
-    rarity: 'rare',
-    points: 75
-  },
-  {
-    id: 'perfect_episode',
-    title: 'Perfect Performance',
-    description: 'Complete an episode with 100% accuracy',
-    category: 'learning',
-    icon: Target,
-    color: Colors.light.success,
-    requirement: 1,
-    progress: 0,
-    unlocked: false,
-    rarity: 'epic',
-    points: 100
-  },
-  {
-    id: 'vocabulary_master_50',
-    title: 'Vocabulary Wizard',
-    description: 'Master 50 Spanish words',
-    category: 'vocabulary',
-    icon: Trophy,
-    color: Colors.light.warning,
-    requirement: 50,
-    progress: 15,
-    unlocked: false,
-    rarity: 'epic',
-    points: 150
-  },
-  {
-    id: 'streak_7',
-    title: 'Week Warrior',
-    description: 'Practice Spanish for 7 days straight',
-    category: 'streak',
-    icon: Award,
-    color: Colors.light.error,
-    requirement: 7,
-    progress: 3,
-    unlocked: false,
-    rarity: 'legendary',
-    points: 200
-  },
-];
+import { Achievement } from '@/types/achievements';
 
 // Achievement Badge Component
 interface AchievementBadgeProps {
@@ -150,14 +26,18 @@ export function AchievementBadge({ achievement, size = 'medium', onPress, showPr
     return configs[size];
   };
 
+  type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
   const getRarityConfig = (rarity: string) => {
-    const configs = {
+    const configs: Record<Rarity, { borderColor: string; glowColor: string }> = {
       common: { borderColor: '#B0BEC5', glowColor: '#ECEFF1' },
       rare: { borderColor: '#42A5F5', glowColor: '#E3F2FD' },
       epic: { borderColor: '#AB47BC', glowColor: '#F3E5F5' },
       legendary: { borderColor: '#FF7043', glowColor: '#FFF3E0' }
     };
-    return configs[rarity] || configs.common;
+    if (['common', 'rare', 'epic', 'legendary'].includes(rarity)) {
+      return configs[rarity as Rarity];
+    }
+    return configs.common;
   };
 
   const handlePress = () => {
@@ -229,7 +109,6 @@ export function AchievementDetailModal({ achievement, visible, onClose }: Achiev
   if (!achievement) return null;
 
   const progressPercentage = (achievement.progress / achievement.requirement) * 100;
-  const [barWidth, setBarWidth] = useState(0);
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -273,15 +152,12 @@ export function AchievementDetailModal({ achievement, visible, onClose }: Achiev
           {!achievement.unlocked && (
             <View style={styles.progressSection}>
               <Text style={styles.progressLabel}>Progress to unlock</Text>
-              <View
-                style={styles.progressBarLarge}
-                onLayout={e => setBarWidth(e.nativeEvent.layout.width)}
-              >
+              <View style={styles.progressBarLarge}>
                 <View 
                   style={[
                     styles.progressFillLarge,
                     { 
-                      width: barWidth * Math.min(progressPercentage, 100) / 100,
+                      width: `${Math.min(progressPercentage, 100)}%`,
                       backgroundColor: achievement.color
                     }
                   ]}
@@ -307,225 +183,135 @@ export function AchievementDetailModal({ achievement, visible, onClose }: Achiev
   );
 }
 
-// Main Achievements Screen Component
-export function AchievementsScreen() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+// Achievement Progress Card
+interface AchievementProgressCardProps {
+  achievement: Achievement;
+  onPress?: () => void;
+}
 
-  const categories = [
-    { id: 'all', label: 'All', icon: Trophy },
-    { id: 'learning', label: 'Learning', icon: Star },
-    { id: 'vocabulary', label: 'Vocabulary', icon: BookOpen },
-    { id: 'streak', label: 'Streaks', icon: Zap },
-    { id: 'time', label: 'Time', icon: Clock },
-    { id: 'special', label: 'Special', icon: Heart },
-  ];
-
-  const filteredAchievements = selectedCategory === 'all' 
-    ? mockAchievements 
-    : mockAchievements.filter(a => a.category === selectedCategory);
-
-  const unlockedCount = mockAchievements.filter(a => a.unlocked).length;
-  const totalPoints = mockAchievements.filter(a => a.unlocked).reduce((sum, a) => sum + a.points, 0);
-
-  const handleAchievementPress = (achievement: Achievement) => {
-    setSelectedAchievement(achievement);
-    setModalVisible(true);
-  };
+export function AchievementProgressCard({ achievement, onPress }: AchievementProgressCardProps) {
+  const progressPercentage = (achievement.progress / achievement.requirement) * 100;
+  const IconComponent = achievement.icon;
 
   return (
-    <View style={styles.container}>
-      {/* Header Stats */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Achievements</Text>
-        <View style={styles.headerStats}>
-          <View style={styles.headerStat}>
-            <Trophy size={20} color={Colors.light.warning} />
-            <Text style={styles.headerStatValue}>{unlockedCount}/{mockAchievements.length}</Text>
-            <Text style={styles.headerStatLabel}>Unlocked</Text>
+    <TouchableOpacity style={styles.progressCard} onPress={onPress} activeOpacity={0.8}>
+      <LinearGradient
+        colors={achievement.unlocked ? 
+          [achievement.color + '10', Colors.light.cardBackground] :
+          [Colors.light.cardBackground, Colors.light.background]
+        }
+        style={styles.progressCardGradient}
+      >
+        <View style={styles.progressCardHeader}>
+          <View style={[
+            styles.progressCardIcon,
+            { backgroundColor: achievement.unlocked ? achievement.color : Colors.light.border }
+          ]}>
+            {achievement.unlocked ? (
+              <IconComponent size={20} color="#FFFFFF" />
+            ) : (
+              <Lock size={20} color={Colors.light.text} />
+            )}
           </View>
-          <View style={styles.headerStat}>
-            <Star size={20} color={Colors.light.primary} />
-            <Text style={styles.headerStatValue}>{totalPoints}</Text>
-            <Text style={styles.headerStatLabel}>Points</Text>
+          
+          <View style={styles.progressCardInfo}>
+            <Text style={[
+              styles.progressCardTitle,
+              !achievement.unlocked && styles.progressCardTitleLocked
+            ]}>
+              {achievement.title}
+            </Text>
+            <Text style={[
+              styles.progressCardDescription,
+              !achievement.unlocked && styles.progressCardDescriptionLocked
+            ]}>
+              {achievement.description}
+            </Text>
           </View>
+          
+          <View style={styles.progressCardPoints}>
+            <Text style={[
+              styles.pointsText,
+              { color: achievement.unlocked ? achievement.color : Colors.light.text }
+            ]}>
+              {achievement.points}
+            </Text>
+            <Text style={styles.pointsLabel}>pts</Text>
+          </View>
+        </View>
+        
+        {!achievement.unlocked && (
+          <View style={styles.progressCardProgress}>
+            <View style={styles.progressCardBar}>
+              <View 
+                style={[
+                  styles.progressCardFill,
+                  { 
+                    width: `${progressPercentage}%`,
+                    backgroundColor: achievement.color
+                  }
+                ]}
+              />
+            </View>
+            <Text style={styles.progressCardText}>
+              {achievement.progress}/{achievement.requirement} - {Math.round(progressPercentage)}%
+            </Text>
+          </View>
+        )}
+        
+        {achievement.unlocked && achievement.unlockedDate && (
+          <View style={styles.progressCardUnlocked}>
+            <Star size={14} color={achievement.color} />
+            <Text style={[styles.unlockedText, { color: achievement.color }]}>
+              Unlocked {new Date(achievement.unlockedDate).toLocaleDateString()}
+            </Text>
+          </View>
+        )}
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+}
+
+// Achievement Category Header
+interface AchievementCategoryHeaderProps {
+  category: string;
+  achievements: Achievement[];
+  color: string;
+  icon: any;
+}
+
+export function AchievementCategoryHeader({ category, achievements, color, icon }: AchievementCategoryHeaderProps) {
+  const unlockedCount = achievements.filter(a => a.unlocked).length;
+  const totalCount = achievements.length;
+  const percentage = totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0;
+  const IconComponent = icon;
+
+  return (
+    <View style={styles.categoryHeader}>
+      <View style={styles.categoryHeaderLeft}>
+        <View style={[styles.categoryHeaderIcon, { backgroundColor: color + '20' }]}>
+          <IconComponent size={20} color={color} />
+        </View>
+        <View style={styles.categoryHeaderInfo}>
+          <Text style={styles.categoryHeaderTitle}>
+            {category.charAt(0).toUpperCase() + category.slice(1)}
+          </Text>
+          <Text style={styles.categoryHeaderCount}>
+            {unlockedCount}/{totalCount} completed
+          </Text>
         </View>
       </View>
-
-      {/* Category Filter */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryScroll}
-        contentContainerStyle={styles.categoryScrollContent}
-      >
-        {categories.map((category) => {
-          const IconComponent = category.icon;
-          const isSelected = selectedCategory === category.id;
-          
-          return (
-            <TouchableOpacity
-              key={category.id}
-              style={[
-                styles.categoryButton,
-                isSelected && styles.categoryButtonActive
-              ]}
-              onPress={() => setSelectedCategory(category.id)}
-            >
-              <IconComponent 
-                size={16} 
-                color={isSelected ? '#FFFFFF' : Colors.light.text} 
-              />
-              <Text style={[
-                styles.categoryButtonText,
-                isSelected && styles.categoryButtonTextActive
-              ]}>
-                {category.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      {/* Achievements Grid */}
-      <ScrollView style={styles.achievementsScroll}>
-        <View style={styles.achievementsGrid}>
-          {filteredAchievements.map((achievement) => (
-            <View key={achievement.id} style={styles.achievementItem}>
-              <AchievementBadge 
-                achievement={achievement}
-                size="large"
-                showProgress
-                onPress={() => handleAchievementPress(achievement)}
-              />
-              <Text style={styles.achievementItemTitle} numberOfLines={2}>
-                {achievement.title}
-              </Text>
-              <Text style={styles.achievementItemProgress}>
-                {achievement.unlocked ? 'Unlocked!' : `${achievement.progress}/${achievement.requirement}`}
-              </Text>
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-
-      {/* Achievement Detail Modal */}
-      <AchievementDetailModal 
-        achievement={selectedAchievement}
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-      />
+      
+      <View style={styles.categoryHeaderRight}>
+        <Text style={[styles.categoryHeaderPercentage, { color }]}>
+          {Math.round(percentage)}%
+        </Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-    padding: 16,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  headerTitle: {
-    fontFamily: 'LilitaOne',
-    fontSize: 28,
-    color: Colors.light.text,
-    marginBottom: 12,
-  },
-  headerStats: {
-    flexDirection: 'row',
-    gap: 20,
-  },
-  headerStat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.cardBackground,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
-  headerStatValue: {
-    fontFamily: 'LilitaOne',
-    fontSize: 16,
-    color: Colors.light.text,
-    marginHorizontal: 6,
-  },
-  headerStatLabel: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 12,
-    color: Colors.light.text,
-    opacity: 0.7,
-  },
-  categoryScroll: {
-    marginBottom: 20,
-  },
-  categoryScrollContent: {
-    paddingHorizontal: 4,
-  },
-  categoryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.cardBackground,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  categoryButtonActive: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
-  },
-  categoryButtonText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 12,
-    color: Colors.light.text,
-    marginLeft: 6,
-  },
-  categoryButtonTextActive: {
-    color: '#FFFFFF',
-    fontFamily: 'Poppins-SemiBold',
-  },
-  achievementsScroll: {
-    flex: 1,
-  },
-  achievementsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  achievementItem: {
-    width: '48%',
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  achievementItemTitle: {
-    fontFamily: 'LilitaOne',
-    fontSize: 14,
-    color: Colors.light.text,
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  achievementItemProgress: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 11,
-    color: Colors.light.text,
-    opacity: 0.7,
-    textAlign: 'center',
-  },
   achievementBadge: {
     position: 'relative',
   },
@@ -668,7 +454,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 6,
-    flexDirection: 'row',
   },
   progressFillLarge: {
     height: '100%',
@@ -695,5 +480,143 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.success,
     marginTop: 4,
+  },
+  progressCard: {
+    marginBottom: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
+  },
+  progressCardGradient: {
+    padding: 16,
+  },
+  progressCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  progressCardIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  progressCardInfo: {
+    flex: 1,
+  },
+  progressCardTitle: {
+    fontFamily: 'LilitaOne',
+    fontSize: 16,
+    color: Colors.light.text,
+    marginBottom: 2,
+  },
+  progressCardTitleLocked: {
+    opacity: 0.6,
+  },
+  progressCardDescription: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: Colors.light.text,
+    opacity: 0.8,
+  },
+  progressCardDescriptionLocked: {
+    opacity: 0.5,
+  },
+  progressCardPoints: {
+    alignItems: 'center',
+  },
+  pointsText: {
+    fontFamily: 'LilitaOne',
+    fontSize: 18,
+  },
+  pointsLabel: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 10,
+    color: Colors.light.text,
+    opacity: 0.6,
+  },
+  progressCardProgress: {
+    marginTop: 8,
+  },
+  progressCardBar: {
+    height: 4,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  progressCardFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  progressCardText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 11,
+    color: Colors.light.text,
+    opacity: 0.7,
+  },
+  progressCardUnlocked: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  unlockedText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 11,
+    marginLeft: 4,
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  categoryHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  categoryHeaderIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  categoryHeaderInfo: {
+    flex: 1,
+  },
+  categoryHeaderTitle: {
+    fontFamily: 'LilitaOne',
+    fontSize: 16,
+    color: Colors.light.text,
+  },
+  categoryHeaderCount: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: Colors.light.text,
+    opacity: 0.7,
+  },
+  categoryHeaderRight: {
+    alignItems: 'center',
+  },
+  categoryHeaderPercentage: {
+    fontFamily: 'LilitaOne',
+    fontSize: 18,
   },
 });

@@ -138,10 +138,13 @@ export default function ProgressSummary({ stats, showDetailed = false, onViewMor
                   styles.progressBar,
                   { 
                     backgroundColor: Colors.light.primary,
-                    width: animations.stats.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0%', `${episodeProgress}%`]
-                    })
+                    transform: [{
+                      scaleX: animations.stats.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 1]
+                      })
+                    }],
+                    width: `${episodeProgress}%`
                   }
                 ]} 
               />
@@ -178,10 +181,13 @@ export default function ProgressSummary({ stats, showDetailed = false, onViewMor
                   styles.progressBar,
                   { 
                     backgroundColor: Colors.light.secondary,
-                    width: animations.stats.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0%', `${stepProgress}%`]
-                    })
+                    transform: [{
+                      scaleX: animations.stats.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 1]
+                      })
+                    }],
+                    width: `${stepProgress}%`
                   }
                 ]} 
               />
@@ -232,10 +238,13 @@ export default function ProgressSummary({ stats, showDetailed = false, onViewMor
                 style={[
                   styles.goalProgressFill,
                   { 
-                    width: animations.proficiency.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0%', `${weeklyProgress}%`]
-                    })
+                    transform: [{
+                      scaleX: animations.proficiency.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 1]
+                      })
+                    }],
+                    width: `${weeklyProgress}%`
                   }
                 ]} 
               />

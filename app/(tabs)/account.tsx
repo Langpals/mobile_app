@@ -13,6 +13,8 @@ import { mockChildProfile, mockTeddyBear, mockProgressStats } from '@/data/mockD
 import { AchievementBadge } from '@/components/achievements/AchievementComponents';
 import { achievementsList, getRecentAchievements, getTotalPoints } from '@/data/achievementsData';
 import TeddyMascot from '@/components/ui/TeddyMascot';
+import { useAuth } from '@/contexts/AuthContext';
+import { router } from 'expo-router';
 
 export default function AccountScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -24,10 +26,20 @@ export default function AccountScreen() {
 
   const recentAchievements = getRecentAchievements(3);
   const totalPoints = getTotalPoints();
+  const { logout } = useAuth();
 
   const handleAchievementPress = (achievementId: string) => {
     // Handle individual achievement press
     console.log('Achievement pressed:', achievementId);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/(auth)/login');
+    } catch (err) {
+      alert('Error logging out. Please try again.');
+    }
   };
 
   const renderProfileModal = () => (
@@ -218,7 +230,7 @@ export default function AccountScreen() {
                   ))}
                 </View>
               </View>
-            </div>
+            </View>
           </View>
         </ScrollView>
       </View>
@@ -509,7 +521,7 @@ export default function AccountScreen() {
               <ChevronRight size={16} color={Colors.light.text} />
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.logoutButton}>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
               <LogOut size={20} color={Colors.light.error} />
               <Text style={styles.logoutButtonText}>Log Out</Text>
             </TouchableOpacity>
@@ -524,6 +536,7 @@ export default function AccountScreen() {
   );
 }
 
+// All the styles remain the same as the original file
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,

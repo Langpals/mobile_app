@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, Platform, StatusBar, TouchableOpacity, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { TrendingUp, Target, BookOpen, Mic, Heart, Award, Calendar, Zap } from 'lucide-react-native';
+import { TrendingUp, Target, BookOpen, Mic, Heart, Award, Calendar, Zap, Clock, Star } from 'lucide-react-native';
 import { globalStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
 import { mockMetricsData, mockChildProfile, mockProgressStats } from '@/data/mockData';
@@ -330,6 +330,87 @@ export default function MetricsScreen() {
                 <Text style={styles.goalText}>Practice daily for 7 days</Text>
                 <Text style={styles.goalStatus}>6/7 days</Text>
               </View>
+            </View>
+          </View>
+
+          {/* Word Bank */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <BookOpen size={20} color={Colors.light.primary} />
+              <Text style={styles.cardTitle}>Word Bank</Text>
+            </View>
+            <View style={styles.wordBankList}>
+              {["hola", "adiós", "gracias", "perro", "gato", "rojo", "azul"].map((word, idx) => (
+                <View key={idx} style={styles.wordChip}>
+                  <Text style={styles.wordText}>{word}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Topic Bank */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Award size={20} color={Colors.light.secondary} />
+              <Text style={styles.cardTitle}>Topic Bank</Text>
+            </View>
+            <View style={styles.topicBankList}>
+              {["Body", "Kitchen", "Colors", "Animals", "Greetings"].map((topic, idx) => (
+                <View key={idx} style={styles.topicChip}>
+                  <Text style={styles.topicText}>{topic}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Downtime */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Clock size={20} color={Colors.light.warning} />
+              <Text style={styles.cardTitle}>Total Downtime</Text>
+            </View>
+            <Text style={styles.downtimeText}>2 hours 15 minutes away from screen this week</Text>
+          </View>
+
+          {/* Language Badges */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Star size={20} color={Colors.light.success} />
+              <Text style={styles.cardTitle}>Language Badges</Text>
+            </View>
+            <View style={styles.badgeList}>
+              {["Starter", "Explorer", "Achiever"].map((badge, idx) => (
+                <View key={idx} style={styles.badgeChip}>
+                  <Text style={styles.badgeText}>{badge}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Parent Praise */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Heart size={20} color={Colors.light.error} />
+              <Text style={styles.cardTitle}>Parent Praise</Text>
+            </View>
+            <TouchableOpacity style={styles.praiseButton} onPress={() => alert('Praise sent!')}>
+              <Text style={styles.praiseButtonText}>Send Praise</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Report Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <TrendingUp size={20} color={Colors.light.accent} />
+              <Text style={styles.cardTitle}>Report Card</Text>
+            </View>
+            <View style={styles.reportCardSummary}>
+              <Text style={styles.reportCardScore}>Score: 87/100</Text>
+              <Text style={styles.reportCardDesc}>Great progress! Keep up the good work.</Text>
+              <Text style={styles.reportCardQuote}>
+                "Loves learning new words and is very engaged in activities!"
+              </Text>
+              <Text style={styles.reportCardLevel}>Learning Level: Intermediate</Text>
             </View>
           </View>
         </ScrollView>
@@ -727,5 +808,92 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.light.text,
     opacity: 0.7,
+  },
+  wordBankList: {
+    marginTop: 8,
+  },
+  wordChip: {
+    backgroundColor: Colors.light.primary + '10',
+    borderRadius: 16,
+    padding: 8,
+    marginRight: 8,
+  },
+  wordText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: Colors.light.text,
+  },
+  topicBankList: {
+    marginTop: 8,
+  },
+  topicChip: {
+    backgroundColor: Colors.light.secondary + '10',
+    borderRadius: 16,
+    padding: 8,
+    marginRight: 8,
+  },
+  topicText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: Colors.light.text,
+  },
+  downtimeText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: Colors.light.text,
+    textAlign: 'center',
+  },
+  badgeList: {
+    marginTop: 8,
+  },
+  badgeChip: {
+    backgroundColor: Colors.light.success + '10',
+    borderRadius: 16,
+    padding: 8,
+    marginRight: 8,
+  },
+  badgeText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: Colors.light.text,
+  },
+  praiseButton: {
+    backgroundColor: Colors.light.primary,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  praiseButtonText: {
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  reportCardSummary: {
+    alignItems: 'center',
+  },
+  reportCardScore: {
+    fontFamily: 'LilitaOne',
+    fontSize: 48,
+    color: Colors.light.warning,
+    marginBottom: 8,
+  },
+  reportCardDesc: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: Colors.light.text,
+    textAlign: 'center',
+  },
+  reportCardQuote: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: Colors.light.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  reportCardLevel: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: Colors.light.text,
+    textAlign: 'center',
   },
 });

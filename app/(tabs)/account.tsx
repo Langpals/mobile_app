@@ -23,6 +23,9 @@ export default function AccountScreen() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showTeddyCustomization, setShowTeddyCustomization] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
+  const [reminderTime, setReminderTime] = useState(new Date());
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const recentAchievements = getRecentAchievements(3);
   const totalPoints = getTotalPoints();

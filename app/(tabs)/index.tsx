@@ -472,7 +472,10 @@ export default function EnhancedLearningDashboard() {
 
           {/* Episode Progress Path */}
           <View style={styles.episodeSection}>
-            <Text style={styles.sectionTitle}>Episode Adventures</Text>
+            <View style={styles.sectionHeader}>
+              <MapPin size={20} color={Colors.light.text} />
+              <Text style={styles.sectionTitle}>Episode Adventures</Text>
+            </View>
             <Text style={styles.sectionDescription}>
               Follow the magical path through {currentSeason.title}
             </Text>
@@ -932,9 +935,20 @@ const styles = StyleSheet.create({
   },
   episodeSection: {
     marginBottom: 32,
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
   },
   pathContainer: {
-    marginTop: 8,
+    marginTop: 16,
+    backgroundColor: Colors.light.background,
+    borderRadius: 16,
+    paddingVertical: 8,
   },
   quickActions: {
     marginBottom: 24,

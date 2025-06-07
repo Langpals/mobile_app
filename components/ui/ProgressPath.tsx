@@ -1,6 +1,6 @@
 // components/ui/ProgressPath.tsx - Enhanced Version
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Play, CheckCircle, Lock, Star, Clock, Users, Sparkles, Target } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
@@ -57,13 +57,7 @@ export default function ProgressPath({ episodes, onEpisodePress, showPreview = f
     return 'START';
   };
 
-  const getPathDirection = (index: number) => {
-    // Alternating left and right pattern
-    return index % 2 === 0 ? 'left' : 'right';
-  };
-
   const renderEpisodeNode = (episode: Episode, index: number) => {
-    const direction = getPathDirection(index);
     const IconComponent = getEpisodeIcon(episode);
     const color = getEpisodeColor(episode);
     const label = getEpisodeLabel(episode);
@@ -74,36 +68,20 @@ export default function ProgressPath({ episodes, onEpisodePress, showPreview = f
         style={[
           styles.episodeContainer,
           {
-            marginLeft: direction === 'right' ? width * 0.4 : 0,
             opacity: animations[index],
             transform: [{
               translateY: animations[index].interpolate({
                 inputRange: [0, 1],
-                outputRange: [50, 0]
+                outputRange: [30, 0]
               })
             }]
           }
         ]}
       >
-        {/* Connection Line */}
-        {index > 0 && (
-          <View style={[
-            styles.connectionLine,
-            {
-              left: direction === 'left' ? width * 0.25 : -width * 0.25,
-              backgroundColor: episode.completed || episodes[index - 1].completed ? 
-                Colors.light.success : Colors.light.border,
-            }
-          ]} />
-        )}
-
         {/* Episode Button */}
         <TouchableOpacity
           disabled={episode.locked}
-          style={[
-            styles.episodeButton,
-            { borderColor: color }
-          ]}
+          style={styles.episodeButton}
           onPress={() => onEpisodePress(episode)}
           activeOpacity={episode.locked ? 1 : 0.8}
         >
@@ -119,7 +97,7 @@ export default function ProgressPath({ episodes, onEpisodePress, showPreview = f
             style={styles.episodeButtonGradient}
           >
             <IconComponent 
-              size={28} 
+              size={22} 
               color={episode.locked ? Colors.light.text : '#FFFFFF'} 
               strokeWidth={2.5}
             />
@@ -142,10 +120,7 @@ export default function ProgressPath({ episodes, onEpisodePress, showPreview = f
         </TouchableOpacity>
 
         {/* Episode Info Card */}
-        <View style={[
-          styles.episodeInfo,
-          direction === 'right' ? styles.episodeInfoRight : styles.episodeInfoLeft
-        ]}>
+        <View style={styles.episodeInfo}>
           <View style={styles.episodeInfoHeader}>
             <Text style={[styles.episodeLabel, { color }]}>{label}</Text>
             {episode.type === 'weekend_special' && (
@@ -220,23 +195,15 @@ export default function ProgressPath({ episodes, onEpisodePress, showPreview = f
             </View>
           )}
         </View>
-
-        {/* Setting Badge */}
-        <View style={[
-          styles.settingBadge,
-          direction === 'right' ? styles.settingBadgeRight : styles.settingBadgeLeft
-        ]}>
-          <Text style={styles.settingText}>{episode.setting}</Text>
-        </View>
       </Animated.View>
     );
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.pathContainer}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
         {episodes.map((episode, index) => renderEpisodeNode(episode, index))}
-      </View>
+      </ScrollView>
       
       {/* Path Legend */}
       <View style={styles.legend}>
@@ -266,54 +233,49 @@ export default function ProgressPath({ episodes, onEpisodePress, showPreview = f
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 20,
+    paddingVertical: 10,
   },
-  pathContainer: {
-    paddingHorizontal: 20,
-    minHeight: 400,
+  horizontalScroll: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 16,
+    paddingHorizontal: 8,
   },
   episodeContainer: {
-    position: 'relative',
-    marginVertical: 30,
-    width: width * 0.5,
-  },
-  connectionLine: {
-    position: 'absolute',
-    top: -30,
-    width: width * 0.2,
-    height: 4,
-    borderRadius: 2,
-    zIndex: 1,
+    width: 170,
+    marginRight: 8,
+    alignItems: 'center',
   },
   episodeButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 4,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 4,
     zIndex: 3,
     alignSelf: 'center',
+    marginBottom: 4,
   },
   episodeButtonGradient: {
     width: '100%',
     height: '100%',
-    borderRadius: 36,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   progressRing: {
     position: 'absolute',
-    top: -6,
-    left: -6,
-    right: -6,
-    bottom: -6,
-    borderRadius: 46,
-    borderWidth: 3,
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: 39,
+    borderWidth: 2.5,
     borderColor: 'transparent',
   },
   progressSegment: {
@@ -322,38 +284,30 @@ const styles = StyleSheet.create({
     left: '50%',
     width: 0,
     height: 0,
-    borderLeftWidth: 3,
-    borderRightWidth: 3,
-    borderTopWidth: 46,
+    borderLeftWidth: 2.5,
+    borderRightWidth: 2.5,
+    borderTopWidth: 39,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     transformOrigin: 'bottom',
   },
   episodeInfo: {
-    position: 'absolute',
-    top: -20,
-    width: width * 0.4,
+    width: 150,
     backgroundColor: Colors.light.cardBackground,
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: 14,
+    padding: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
-    zIndex: 2,
-  },
-  episodeInfoLeft: {
-    right: width * 0.15,
-  },
-  episodeInfoRight: {
-    left: width * 0.15,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    marginTop: 2,
   },
   episodeInfoHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   episodeLabel: {
     fontFamily: 'Poppins-SemiBold',
@@ -364,8 +318,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.light.warning + '20',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
     borderRadius: 8,
   },
   specialBadgeText: {
@@ -376,30 +330,30 @@ const styles = StyleSheet.create({
   },
   episodeNumber: {
     fontFamily: 'Poppins-SemiBold',
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.light.primary,
     marginBottom: 2,
   },
   episodeTitle: {
     fontFamily: 'LilitaOne',
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.light.text,
-    marginBottom: 6,
-    lineHeight: 16,
+    marginBottom: 2,
+    lineHeight: 14,
   },
   episodeDescription: {
     fontFamily: 'Poppins-Regular',
-    fontSize: 11,
+    fontSize: 10,
     color: Colors.light.text,
     opacity: 0.8,
-    lineHeight: 14,
-    marginBottom: 8,
+    lineHeight: 12,
+    marginBottom: 4,
   },
   episodeMeta: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 8,
-    gap: 6,
+    marginBottom: 4,
+    gap: 4,
   },
   metaItem: {
     flexDirection: 'row',
@@ -407,20 +361,20 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontFamily: 'Poppins-Regular',
-    fontSize: 10,
+    fontSize: 9,
     color: Colors.light.text,
     opacity: 0.7,
-    marginLeft: 3,
+    marginLeft: 2,
   },
   episodeProgress: {
-    marginTop: 8,
+    marginTop: 4,
   },
   episodeProgressBar: {
-    height: 4,
+    height: 3,
     backgroundColor: '#E0E0E0',
     borderRadius: 2,
     overflow: 'hidden',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   episodeProgressFill: {
     height: '100%',
@@ -429,22 +383,22 @@ const styles = StyleSheet.create({
   },
   episodeProgressText: {
     fontFamily: 'Poppins-Regular',
-    fontSize: 9,
+    fontSize: 8,
     color: Colors.light.text,
     opacity: 0.7,
     textAlign: 'center',
   },
   vocabularyPreview: {
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: 4,
+    paddingTop: 4,
     borderTopWidth: 1,
     borderTopColor: Colors.light.border,
   },
   vocabularyTitle: {
     fontFamily: 'Poppins-SemiBold',
-    fontSize: 10,
+    fontSize: 9,
     color: Colors.light.text,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   vocabularyChips: {
     flexDirection: 'row',
@@ -453,52 +407,30 @@ const styles = StyleSheet.create({
   },
   vocabularyChip: {
     backgroundColor: Colors.light.primary + '15',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
     borderRadius: 6,
   },
   vocabularyWord: {
     fontFamily: 'Poppins-Regular',
-    fontSize: 9,
+    fontSize: 8,
     color: Colors.light.primary,
   },
   vocabularyMore: {
     fontFamily: 'Poppins-Regular',
-    fontSize: 9,
+    fontSize: 8,
     color: Colors.light.text,
     opacity: 0.6,
     alignSelf: 'center',
-  },
-  settingBadge: {
-    position: 'absolute',
-    top: 90,
-    backgroundColor: Colors.light.secondary + '20',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.light.secondary + '40',
-  },
-  settingBadgeLeft: {
-    right: width * 0.05,
-  },
-  settingBadgeRight: {
-    left: width * 0.05,
-  },
-  settingText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 9,
-    color: Colors.light.text,
-    textAlign: 'center',
   },
   legend: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: Colors.light.cardBackground,
-    marginHorizontal: 20,
-    marginTop: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
+    marginHorizontal: 8,
+    marginTop: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -510,8 +442,8 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontFamily: 'Poppins-Regular',
-    fontSize: 10,
+    fontSize: 9,
     color: Colors.light.text,
-    marginTop: 4,
+    marginTop: 2,
   },
 });

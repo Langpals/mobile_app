@@ -1,259 +1,143 @@
-// app/(tabs)/metrics.tsx
+// app/(tabs)/metrics.tsx - Simplified Metrics Page
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
-  Target, Zap, BookOpen, Clock, TrendingUp, BarChart3, Brain, 
-  Mic, Heart, Star, CheckCircle, Calendar, Award
+  BarChart3, TrendingUp, Clock, Star, Heart, Brain, 
+  ChevronDown, Mic, CheckCircle, Target, BookOpen, Trophy,
+  Calendar, Volume, Zap, Globe
 } from 'lucide-react-native';
 import { globalStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
-import { mockProgressStats, mockChildProfile } from '@/data/mockData';
-import { AdaptiveDifficultyDisplay, AdaptiveDifficultyEngine } from '@/components/adaptive/AdaptiveDifficultySystem';
-import ProgressSummary from '@/components/ui/ProgressSummary';
-import { useAuth } from '@/contexts/AuthContext';
-import { useLearning } from '@/contexts/LearningContext';
+import { mockProgressStats } from '@/data/mockData';
+import TeddyMascot from '@/components/ui/TeddyMascot';
 
-const { width } = Dimensions.get('window');
+interface CollapsibleMetricsSectionProps {
+  title: string;
+  icon: any;
+  color: string;
+  summary: string;
+  children: React.ReactNode;
+  defaultExpanded?: boolean;
+}
 
-export default function MetricsDashboard() {
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'day' | 'week' | 'month'>('week');
-  const [streakAnimation] = useState(new Animated.Value(0));
-  const [fadeAnimation] = useState(new Animated.Value(0));
-  
-  // Initialize with default metrics to prevent undefined errors
-  const defaultMetrics = {
-    responseAccuracy: 85,
-    averageResponseTime: 4.2,
-    completionRate: 92,
-    engagementLevel: 88,
-    consecutiveCorrect: 5,
-    consecutiveIncorrect: 0,
-    sessionProgress: 75,
-    vocabularyRetention: 82
-  };
-  
-  const [adaptiveMetrics, setAdaptiveMetrics] = useState(defaultMetrics);
-  
-  const { currentUserDocument } = useAuth();
-  const { progress } = useLearning();
+const CollapsibleMetricsSection: React.FC<CollapsibleMetricsSectionProps> = ({ 
+  title, 
+  icon: IconComponent, 
+  color, 
+  summary,
+  children, 
+  defaultExpanded = false 
+}) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [animation] = useState(new Animated.Value(defaultExpanded ? 1 : 0));
 
-  useEffect(() => {
-    // Animate streak counter
-    if (mockProgressStats.currentStreak > 0) {
-      Animated.spring(streakAnimation, {
-        toValue: 1,
-        useNativeDriver: true,
-        delay: 500
-      }).start();
-    }
-
-    // Fade in animation
-    Animated.timing(fadeAnimation, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
+  const toggleExpansion = () => {
+    const toValue = isExpanded ? 0 : 1;
+    setIsExpanded(!isExpanded);
+    
+    Animated.timing(animation, {
+      toValue,
+      duration: 300,
+      easing: Easing.bezier(0.4, 0.0, 0.2, 1),
+      useNativeDriver: false,
     }).start();
-  }, []);
+  };
 
-  const renderStreakSection = () => (
-    <Animated.View style={[
-      styles.streakSection,
-      {
-        transform: [{
-          scale: streakAnimation.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0.8, 1]
-          })
-        }]
-      }
-    ]}>
+  const rotateInterpolate = animation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  return (
+    <View style={styles.collapsibleContainer}>
+      <TouchableOpacity style={styles.sectionHeader} onPress={toggleExpansion}>
+        <View style={styles.sectionHeaderLeft}>
+          <View style={[styles.sectionIcon, { backgroundColor: color + '20' }]}>
+            <IconComponent size={20} color={color} />
+          </View>
+          <View style={styles.sectionInfo}>
+            <Text style={styles.sectionTitle}>{title}</Text>
+            <Text style={styles.sectionSummary}>{summary}</Text>
+          </View>
+        </View>
+        <Animated.View style={[styles.expandIcon, { transform: [{ rotate: rotateInterpolate }] }]}>
+          <ChevronDown size={20} color={Colors.light.text} />
+        </Animated.View>
+      </TouchableOpacity>
+      
+      <Animated.View
+        style={[
+          styles.sectionContent,
+          {
+            opacity: animation,
+            maxHeight: animation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 1000],
+            }),
+          },
+        ]}
+      >
+        {children}
+      </Animated.View>
+    </View>
+  );
+};
+
+export default function MetricsScreen() {
+  const [selectedTimeframe, setSelectedTimeframe] = useState('week');
+
+  // Mock adaptive metrics based on timeframe
+  const getAdaptiveMetrics = () => ({
+    responseAccuracy: selectedTimeframe === 'week' ? 85 : selectedTimeframe === 'month' ? 82 : 78,
+    averageResponseTime: selectedTimeframe === 'week' ? 4.2 : selectedTimeframe === 'month' ? 4.5 : 4.8,
+    completionRate: selectedTimeframe === 'week' ? 92 : selectedTimeframe === 'month' ? 89 : 85,
+    vocabularyRetention: selectedTimeframe === 'week' ? 82 : selectedTimeframe === 'month' ? 80 : 76,
+    pronunciationAccuracy: selectedTimeframe === 'week' ? 78 : selectedTimeframe === 'month' ? 75 : 72,
+    engagementLevel: selectedTimeframe === 'week' ? 88 : selectedTimeframe === 'month' ? 85 : 82,
+    weeklyMinutes: selectedTimeframe === 'week' ? 85 : selectedTimeframe === 'month' ? 320 : 1200,
+    weeklyWords: selectedTimeframe === 'week' ? 24 : selectedTimeframe === 'month' ? 95 : 380,
+  });
+
+  const metrics = getAdaptiveMetrics();
+
+  const renderOverallProgress = () => (
+    <View style={styles.progressCard}>
       <LinearGradient
         colors={[Colors.light.primary, Colors.light.secondary]}
-        style={styles.streakGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.progressGradient}
       >
-        <View style={styles.streakContent}>
-          <View style={styles.streakHeader}>
-            <Zap size={32} color="#FFFFFF" />
-            <Text style={styles.streakNumber}>{mockProgressStats.currentStreak}</Text>
-            <Text style={styles.streakLabel}>Day Streak!</Text>
+        <View style={styles.progressHeader}>
+          <TeddyMascot mood="proud" size="small" />
+          <View style={styles.progressInfo}>
+            <Text style={styles.progressTitle}>Amazing Progress!</Text>
+            <Text style={styles.progressMessage}>Your child is doing great this {selectedTimeframe}</Text>
           </View>
-          <Text style={styles.streakMessage}>
-            {mockProgressStats.currentStreak >= 7 ? "¡Increíble! You're on fire!" : "Keep it up!"}
-          </Text>
-          <View style={styles.streakProgress}>
-            <View style={styles.streakProgressBar}>
-              <View 
-                style={[
-                  styles.streakProgressFill,
-                  { width: `${(mockProgressStats.currentStreak % 7) * 14.28}%` }
-                ]}
-              />
-            </View>
-            <Text style={styles.streakProgressText}>
-              {7 - (mockProgressStats.currentStreak % 7)} days to next milestone
-            </Text>
+        </View>
+        
+        <View style={styles.quickStats}>
+          <View style={styles.quickStat}>
+            <Text style={styles.quickStatValue}>{metrics.responseAccuracy}%</Text>
+            <Text style={styles.quickStatLabel}>Accuracy</Text>
+          </View>
+          <View style={styles.quickStat}>
+            <Text style={styles.quickStatValue}>{Math.round(metrics.weeklyMinutes / (selectedTimeframe === 'week' ? 1 : selectedTimeframe === 'month' ? 4 : 52))}min</Text>
+            <Text style={styles.quickStatLabel}>Daily Avg</Text>
+          </View>
+          <View style={styles.quickStat}>
+            <Text style={styles.quickStatValue}>{metrics.weeklyWords}</Text>
+            <Text style={styles.quickStatLabel}>New Words</Text>
           </View>
         </View>
       </LinearGradient>
-    </Animated.View>
+    </View>
   );
 
-  const renderGoalsProgress = () => {
-    // Calculate weekly progress from available data
-    const weeklyEpisodes = mockProgressStats.completedEpisodes || 1;
-    const weeklyMinutes = mockProgressStats.weeklyCompletedMinutes || 45;
-    const weeklyWords = mockProgressStats.proficiency?.vocabularyMastery?.mastered || 15;
-
-    return (
-      <View style={styles.goalsSection}>
-        <View style={styles.sectionHeader}>
-          <Target size={20} color={Colors.light.text} />
-          <Text style={styles.sectionTitle}>Weekly Goals Progress</Text>
-        </View>
-        
-        <View style={styles.goalsGrid}>
-          <View style={styles.goalItem}>
-            <View style={styles.goalIconContainer}>
-              <BookOpen size={20} color={Colors.light.primary} />
-            </View>
-            <Text style={styles.goalValue}>{weeklyEpisodes}/5</Text>
-            <Text style={styles.goalLabel}>Episodes</Text>
-            <View style={styles.goalProgress}>
-              <View 
-                style={[
-                  styles.goalProgressFill,
-                  { width: `${(weeklyEpisodes / 5) * 100}%` }
-                ]}
-              />
-            </View>
-          </View>
-
-          <View style={styles.goalItem}>
-            <View style={styles.goalIconContainer}>
-              <Clock size={20} color={Colors.light.primary} />
-            </View>
-            <Text style={styles.goalValue}>{weeklyMinutes}</Text>
-            <Text style={styles.goalLabel}>Minutes</Text>
-            <View style={styles.goalProgress}>
-              <View 
-                style={[
-                  styles.goalProgressFill,
-                  { width: `${Math.min((weeklyMinutes / mockProgressStats.weeklyGoalMinutes) * 100, 100)}%` }
-                ]}
-              />
-            </View>
-          </View>
-
-          <View style={styles.goalItem}>
-            <View style={styles.goalIconContainer}>
-              <Star size={20} color={Colors.light.primary} />
-            </View>
-            <Text style={styles.goalValue}>{weeklyWords}</Text>
-            <Text style={styles.goalLabel}>New Words</Text>
-            <View style={styles.goalProgress}>
-              <View 
-                style={[
-                  styles.goalProgressFill,
-                  { width: `${Math.min((weeklyWords / 50) * 100, 100)}%` }
-                ]}
-              />
-            </View>
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  const renderLearningInsights = () => {
-    // Calculate insights from available data
-    const pronunciationAccuracy = mockProgressStats.proficiency?.pronunciationAccuracy || 78;
-    const engagementLevel = mockProgressStats.proficiency?.engagementLevel || 88;
-    const vocabularyMastered = mockProgressStats.proficiency?.vocabularyMastery?.mastered || 15;
-
-    return (
-      <View style={styles.insightsSection}>
-        <View style={styles.sectionHeader}>
-          <Brain size={20} color={Colors.light.text} />
-          <Text style={styles.sectionTitle}>Learning Insights</Text>
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.insightCard}>
-            <LinearGradient
-              colors={['#FF6B6B', '#FF8E8E']}
-              style={styles.insightGradient}
-            >
-              <Mic size={24} color="#FFFFFF" />
-              <Text style={styles.insightTitle}>Speaking Champion!</Text>
-              <Text style={styles.insightValue}>{pronunciationAccuracy}%</Text>
-              <Text style={styles.insightDescription}>
-                Pronunciation accuracy improved by 15% this week
-              </Text>
-            </LinearGradient>
-          </View>
-
-          <View style={styles.insightCard}>
-            <LinearGradient
-              colors={['#4ECDC4', '#6FDDD8']}
-              style={styles.insightGradient}
-            >
-              <Heart size={24} color="#FFFFFF" />
-              <Text style={styles.insightTitle}>Engagement Star</Text>
-              <Text style={styles.insightValue}>{engagementLevel}%</Text>
-              <Text style={styles.insightDescription}>
-                Completing episodes faster with high enthusiasm
-              </Text>
-            </LinearGradient>
-          </View>
-
-          <View style={styles.insightCard}>
-            <LinearGradient
-              colors={['#95A5F9', '#B2BCFF']}
-              style={styles.insightGradient}
-            >
-              <TrendingUp size={24} color="#FFFFFF" />
-              <Text style={styles.insightTitle}>Quick Learner</Text>
-              <Text style={styles.insightValue}>+{vocabularyMastered}</Text>
-              <Text style={styles.insightDescription}>
-                New words mastered this week
-              </Text>
-            </LinearGradient>
-          </View>
-        </ScrollView>
-      </View>
-    );
-  };
-
-  const renderAdaptiveDifficulty = () => {
-    // Ensure we have valid metrics
-    const metrics = adaptiveMetrics || defaultMetrics;
-
-    const currentDifficulty = mockChildProfile?.currentProficiency || 
-                             mockChildProfile?.preferredDifficulty || 
-                             'easy';
-
-    return (
-      <View style={styles.adaptiveSection}>
-        <View style={styles.sectionHeader}>
-          <Zap size={20} color={Colors.light.text} />
-          <Text style={styles.sectionTitle}>Adaptive Difficulty</Text>
-        </View>
-        
-        <AdaptiveDifficultyDisplay
-          currentMetrics={metrics}
-          currentLevel={currentDifficulty}
-          onAdjustmentAccepted={(newDifficulty) => {
-            console.log('Difficulty changed to:', newDifficulty);
-          }}
-        />
-      </View>
-    );
-  };
-
   const renderTimeframeSelector = () => (
-    <View style={styles.timeframeContainer}>
-      {(['day', 'week', 'month'] as const).map((timeframe) => (
+    <View style={styles.timeframeSelector}>
+      {['week', 'month', 'all'].map(timeframe => (
         <TouchableOpacity
           key={timeframe}
           style={[
@@ -273,171 +157,295 @@ export default function MetricsDashboard() {
     </View>
   );
 
-  const renderDetailedMetrics = () => {
-    // Ensure we have valid data
-    const metrics = adaptiveMetrics || {
-      responseAccuracy: 85,
-      averageResponseTime: 4.2,
-      completionRate: 92,
-      vocabularyRetention: 82
-    };
-
-    return (
-      <View style={styles.metricsSection}>
-        <View style={styles.sectionHeader}>
-          <BarChart3 size={20} color={Colors.light.text} />
-          <Text style={styles.sectionTitle}>Performance Metrics</Text>
+  const renderPerformanceMetrics = () => (
+    <View style={styles.metricsContent}>
+      {renderTimeframeSelector()}
+      
+      <View style={styles.metricsGrid}>
+        <View style={styles.metricCard}>
+          <View style={styles.metricHeader}>
+            <CheckCircle size={16} color={Colors.light.success} />
+            <Text style={styles.metricLabel}>Response Accuracy</Text>
+          </View>
+          <Text style={styles.metricValue}>{metrics.responseAccuracy}%</Text>
+          <View style={styles.metricTrend}>
+            <TrendingUp size={12} color={Colors.light.success} />
+            <Text style={styles.metricTrendText}>+5% improvement</Text>
+          </View>
         </View>
 
-        {renderTimeframeSelector()}
+        <View style={styles.metricCard}>
+          <View style={styles.metricHeader}>
+            <Clock size={16} color={Colors.light.primary} />
+            <Text style={styles.metricLabel}>Response Time</Text>
+          </View>
+          <Text style={styles.metricValue}>{metrics.averageResponseTime}s</Text>
+          <View style={styles.metricTrend}>
+            <TrendingUp size={12} color={Colors.light.success} />
+            <Text style={styles.metricTrendText}>0.5s faster</Text>
+          </View>
+        </View>
 
-        <View style={styles.metricsGrid}>
-          <View style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <CheckCircle size={16} color={Colors.light.success} />
-              <Text style={styles.metricLabel}>Accuracy</Text>
-            </View>
-            <Text style={styles.metricValue}>{metrics.responseAccuracy}%</Text>
-            <View style={styles.metricTrend}>
-              <TrendingUp size={12} color={Colors.light.success} />
-              <Text style={styles.metricTrendText}>+5%</Text>
+        <View style={styles.metricCard}>
+          <View style={styles.metricHeader}>
+            <BookOpen size={16} color={Colors.light.accent} />
+            <Text style={styles.metricLabel}>Vocabulary Retention</Text>
+          </View>
+          <Text style={styles.metricValue}>{metrics.vocabularyRetention}%</Text>
+          <View style={styles.metricTrend}>
+            <TrendingUp size={12} color={Colors.light.success} />
+            <Text style={styles.metricTrendText}>+3% better</Text>
+          </View>
+        </View>
+
+        <View style={styles.metricCard}>
+          <View style={styles.metricHeader}>
+            <Target size={16} color={Colors.light.warning} />
+            <Text style={styles.metricLabel}>Completion Rate</Text>
+          </View>
+          <Text style={styles.metricValue}>{metrics.completionRate}%</Text>
+          <View style={styles.metricTrend}>
+            <TrendingUp size={12} color={Colors.light.success} />
+            <Text style={styles.metricTrendText}>+2% higher</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderLearningInsights = () => (
+    <View style={styles.insightsContent}>
+      <View style={styles.insightCards}>
+        <View style={styles.insightCard}>
+          <LinearGradient
+            colors={['#FF6B6B', '#FF8E8E']}
+            style={styles.insightGradient}
+          >
+            <Mic size={24} color="#FFFFFF" />
+            <Text style={styles.insightTitle}>Speaking Star!</Text>
+            <Text style={styles.insightValue}>{metrics.pronunciationAccuracy}%</Text>
+            <Text style={styles.insightDescription}>
+              Pronunciation accuracy improved by 15% this {selectedTimeframe}
+            </Text>
+          </LinearGradient>
+        </View>
+
+        <View style={styles.insightCard}>
+          <LinearGradient
+            colors={['#4ECDC4', '#6FDDD8']}
+            style={styles.insightGradient}
+          >
+            <Heart size={24} color="#FFFFFF" />
+            <Text style={styles.insightTitle}>Super Engaged!</Text>
+            <Text style={styles.insightValue}>{metrics.engagementLevel}%</Text>
+            <Text style={styles.insightDescription}>
+              High enthusiasm and participation in lessons
+            </Text>
+          </LinearGradient>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderWeeklyGoals = () => (
+    <View style={styles.goalsContent}>
+      <View style={styles.goalsList}>
+        <View style={styles.goalItem}>
+          <View style={styles.goalIconContainer}>
+            <Clock size={20} color={Colors.light.primary} />
+          </View>
+          <View style={styles.goalInfo}>
+            <Text style={styles.goalValue}>{metrics.weeklyMinutes} min</Text>
+            <Text style={styles.goalLabel}>Learning Time</Text>
+            <View style={styles.goalProgress}>
+              <View 
+                style={[
+                  styles.goalProgressFill,
+                  { width: `${Math.min((metrics.weeklyMinutes / 100) * 100, 100)}%` }
+                ]}
+              />
             </View>
           </View>
+        </View>
 
-          <View style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <Clock size={16} color={Colors.light.primary} />
-              <Text style={styles.metricLabel}>Response Time</Text>
-            </View>
-            <Text style={styles.metricValue}>{metrics.averageResponseTime}s</Text>
-            <View style={styles.metricTrend}>
-              <TrendingUp size={12} color={Colors.light.success} />
-              <Text style={styles.metricTrendText}>-0.5s</Text>
-            </View>
+        <View style={styles.goalItem}>
+          <View style={styles.goalIconContainer}>
+            <Star size={20} color={Colors.light.warning} />
           </View>
-
-          <View style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <BookOpen size={16} color={Colors.light.primary} />
-              <Text style={styles.metricLabel}>Retention</Text>
-            </View>
-            <Text style={styles.metricValue}>{metrics.vocabularyRetention}%</Text>
-            <View style={styles.metricTrend}>
-              <TrendingUp size={12} color={Colors.light.success} />
-              <Text style={styles.metricTrendText}>+12%</Text>
-            </View>
-          </View>
-
-          <View style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <Star size={16} color={Colors.light.warning} />
-              <Text style={styles.metricLabel}>Completion</Text>
-            </View>
-            <Text style={styles.metricValue}>{metrics.completionRate}%</Text>
-            <View style={styles.metricTrend}>
-              <TrendingUp size={12} color={Colors.light.success} />
-              <Text style={styles.metricTrendText}>+8%</Text>
+          <View style={styles.goalInfo}>
+            <Text style={styles.goalValue}>{metrics.weeklyWords}</Text>
+            <Text style={styles.goalLabel}>New Words Learned</Text>
+            <View style={styles.goalProgress}>
+              <View 
+                style={[
+                  styles.goalProgressFill,
+                  { width: `${Math.min((metrics.weeklyWords / 50) * 100, 100)}%` }
+                ]}
+              />
             </View>
           </View>
         </View>
       </View>
-    );
-  };
+    </View>
+  );
 
-  const renderAchievementPreview = () => (
-    <View style={styles.achievementSection}>
-      <View style={styles.sectionHeader}>
-        <Award size={20} color={Colors.light.text} />
-        <Text style={styles.sectionTitle}>Recent Achievements</Text>
+  const renderSkillBreakdown = () => (
+    <View style={styles.skillsContent}>
+      <View style={styles.skillsList}>
+        <View style={styles.skillItem}>
+          <View style={styles.skillInfo}>
+            <Volume size={16} color={Colors.light.primary} />
+            <Text style={styles.skillLabel}>Pronunciation</Text>
+          </View>
+          <View style={styles.skillProgressBar}>
+            <View 
+              style={[
+                styles.skillProgressFill,
+                { 
+                  width: `${metrics.pronunciationAccuracy}%`,
+                  backgroundColor: Colors.light.primary
+                }
+              ]}
+            />
+          </View>
+          <Text style={styles.skillValue}>{metrics.pronunciationAccuracy}%</Text>
+        </View>
+
+        <View style={styles.skillItem}>
+          <View style={styles.skillInfo}>
+            <BookOpen size={16} color={Colors.light.success} />
+            <Text style={styles.skillLabel}>Vocabulary</Text>
+          </View>
+          <View style={styles.skillProgressBar}>
+            <View 
+              style={[
+                styles.skillProgressFill,
+                { 
+                  width: `${metrics.vocabularyRetention}%`,
+                  backgroundColor: Colors.light.success
+                }
+              ]}
+            />
+          </View>
+          <Text style={styles.skillValue}>{metrics.vocabularyRetention}%</Text>
+        </View>
+
+        <View style={styles.skillItem}>
+          <View style={styles.skillInfo}>
+            <Zap size={16} color={Colors.light.warning} />
+            <Text style={styles.skillLabel}>Response Speed</Text>
+          </View>
+          <View style={styles.skillProgressBar}>
+            <View 
+              style={[
+                styles.skillProgressFill,
+                { 
+                  width: `${100 - (metrics.averageResponseTime * 10)}%`,
+                  backgroundColor: Colors.light.warning
+                }
+              ]}
+            />
+          </View>
+          <Text style={styles.skillValue}>{metrics.averageResponseTime}s avg</Text>
+        </View>
+
+        <View style={styles.skillItem}>
+          <View style={styles.skillInfo}>
+            <Heart size={16} color={Colors.light.accent} />
+            <Text style={styles.skillLabel}>Engagement</Text>
+          </View>
+          <View style={styles.skillProgressBar}>
+            <View 
+              style={[
+                styles.skillProgressFill,
+                { 
+                  width: `${metrics.engagementLevel}%`,
+                  backgroundColor: Colors.light.accent
+                }
+              ]}
+            />
+          </View>
+          <Text style={styles.skillValue}>{metrics.engagementLevel}%</Text>
+        </View>
       </View>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={styles.achievementCard}>
-          <View style={styles.achievementIcon}>
-            <Star size={24} color={Colors.light.warning} />
-          </View>
-          <Text style={styles.achievementTitle}>First Week Complete!</Text>
-          <Text style={styles.achievementDate}>Earned 2 days ago</Text>
-        </View>
-
-        <View style={styles.achievementCard}>
-          <View style={styles.achievementIcon}>
-            <Zap size={24} color={Colors.light.primary} />
-          </View>
-          <Text style={styles.achievementTitle}>7 Day Streak</Text>
-          <Text style={styles.achievementDate}>Earned today</Text>
-        </View>
-
-        <View style={styles.achievementCard}>
-          <View style={styles.achievementIcon}>
-            <BookOpen size={24} color={Colors.light.success} />
-          </View>
-          <Text style={styles.achievementTitle}>50 Words Learned</Text>
-          <Text style={styles.achievementDate}>Earned 4 days ago</Text>
-        </View>
-      </ScrollView>
     </View>
   );
 
   return (
-    <SafeAreaView style={[styles.safeArea, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+    <SafeAreaView style={[globalStyles.container, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+      <StatusBar backgroundColor={Colors.light.background} barStyle="dark-content" />
+      
       <ScrollView 
-        style={styles.container} 
-        contentContainerStyle={styles.scrollContent}
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <Animated.View style={{ opacity: fadeAnimation }}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Learning Metrics</Text>
-            <Text style={styles.headerSubtitle}>
-              Track {currentUserDocument?.childName || 'your'} progress
-            </Text>
-          </View>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Learning Metrics</Text>
+          <Text style={styles.headerSubtitle}>Track your child's amazing progress</Text>
+        </View>
 
-          {/* Progress Summary */}
-          <View style={styles.summarySection}>
-            <ProgressSummary stats={mockProgressStats} />
-          </View>
+        {/* Overall Progress Card */}
+        {renderOverallProgress()}
 
-          {/* Streak Section */}
-          {renderStreakSection()}
+        {/* Collapsible Metrics Sections */}
+        <View style={styles.sectionsContainer}>
+          <CollapsibleMetricsSection
+            title="Performance Metrics"
+            icon={BarChart3}
+            color={Colors.light.primary}
+            summary={`${metrics.responseAccuracy}% accuracy this ${selectedTimeframe}`}
+            defaultExpanded={true}
+          >
+            {renderPerformanceMetrics()}
+          </CollapsibleMetricsSection>
 
-          {/* Adaptive Difficulty System */}
-          {renderAdaptiveDifficulty()}
+          <CollapsibleMetricsSection
+            title="Learning Insights"
+            icon={Brain}
+            color={Colors.light.accent}
+            summary="Pronunciation and engagement highlights"
+            defaultExpanded={false}
+          >
+            {renderLearningInsights()}
+          </CollapsibleMetricsSection>
 
-          {/* Goals Progress */}
-          {renderGoalsProgress()}
+          <CollapsibleMetricsSection
+            title="Weekly Goals"
+            icon={Trophy}
+            color={Colors.light.success}
+            summary={`${metrics.weeklyMinutes} minutes of learning time`}
+            defaultExpanded={false}
+          >
+            {renderWeeklyGoals()}
+          </CollapsibleMetricsSection>
 
-          {/* Learning Insights */}
-          {renderLearningInsights()}
-
-          {/* Detailed Metrics */}
-          {renderDetailedMetrics()}
-
-          {/* Achievement Preview */}
-          {renderAchievementPreview()}
-        </Animated.View>
+          <CollapsibleMetricsSection
+            title="Skill Breakdown"
+            icon={Target}
+            color={Colors.light.warning}
+            summary="Detailed skill progress analysis"
+            defaultExpanded={false}
+          >
+            {renderSkillBreakdown()}
+          </CollapsibleMetricsSection>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.light.background,
-  },
-  container: {
+  scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 20,
+    marginBottom: 24,
   },
   headerTitle: {
     fontFamily: 'LilitaOne',
@@ -451,171 +459,131 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     opacity: 0.7,
   },
-  summarySection: {
-    paddingHorizontal: 24,
+
+  // Progress Card
+  progressCard: {
     marginBottom: 24,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  streakSection: {
-    marginHorizontal: 24,
-    marginBottom: 24,
-  },
-  streakGradient: {
-    borderRadius: 20,
+  progressGradient: {
     padding: 20,
   },
-  streakContent: {
-    alignItems: 'center',
-  },
-  streakHeader: {
+  progressHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  streakNumber: {
-    fontFamily: 'LilitaOne',
-    fontSize: 48,
-    color: '#FFFFFF',
-    marginHorizontal: 12,
-  },
-  streakLabel: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 18,
-    color: '#FFFFFF',
-  },
-  streakMessage: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
     marginBottom: 16,
   },
-  streakProgress: {
-    width: '100%',
+  progressInfo: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  progressTitle: {
+    fontFamily: 'LilitaOne',
+    fontSize: 18,
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  progressMessage: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    color: '#FFFFFF',
+    opacity: 0.9,
+  },
+  quickStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 12,
+    padding: 16,
+  },
+  quickStat: {
     alignItems: 'center',
   },
-  streakProgressBar: {
-    width: '80%',
-    height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 4,
-    marginBottom: 8,
+  quickStatValue: {
+    fontFamily: 'LilitaOne',
+    fontSize: 20,
+    color: '#FFFFFF',
+    marginBottom: 2,
   },
-  streakProgressFill: {
-    height: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 4,
-  },
-  streakProgressText: {
+  quickStatLabel: {
     fontFamily: 'Poppins-Regular',
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#FFFFFF',
+    opacity: 0.8,
   },
-  adaptiveSection: {
-    marginHorizontal: 24,
-    marginBottom: 24,
+
+  // Collapsible Sections
+  sectionsContainer: {
+    gap: 12,
+  },
+  collapsibleContainer: {
+    backgroundColor: Colors.light.background,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    overflow: 'hidden',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: Colors.light.background,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  sectionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  sectionInfo: {
+    flex: 1,
   },
   sectionTitle: {
-    fontFamily: 'LilitaOne',
-    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 16,
     color: Colors.light.text,
-    marginLeft: 8,
+    marginBottom: 2,
   },
-  goalsSection: {
-    marginHorizontal: 24,
-    marginBottom: 24,
-  },
-  goalsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  goalItem: {
-    flex: 1,
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    marginHorizontal: 4,
-  },
-  goalIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.light.primary + '20',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  goalValue: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 20,
-    color: Colors.light.text,
-  },
-  goalLabel: {
+  sectionSummary: {
     fontFamily: 'Poppins-Regular',
     fontSize: 12,
     color: Colors.light.text,
     opacity: 0.7,
-    marginBottom: 8,
   },
-  goalProgress: {
-    width: '100%',
-    height: 4,
-    backgroundColor: Colors.light.border,
-    borderRadius: 2,
+  expandIcon: {
+    padding: 4,
+  },
+  sectionContent: {
     overflow: 'hidden',
   },
-  goalProgressFill: {
-    height: '100%',
-    backgroundColor: Colors.light.primary,
-  },
-  insightsSection: {
-    marginBottom: 24,
-  },
-  insightCard: {
-    width: width * 0.7,
-    marginLeft: 24,
-    marginRight: 12,
-  },
-  insightGradient: {
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center',
-  },
-  insightTitle: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  insightValue: {
-    fontFamily: 'LilitaOne',
-    fontSize: 36,
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  insightDescription: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    textAlign: 'center',
-  },
-  timeframeContainer: {
+
+  // Timeframe Selector
+  timeframeSelector: {
     flexDirection: 'row',
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 12,
+    backgroundColor: Colors.light.border + '30',
+    borderRadius: 8,
     padding: 4,
     marginBottom: 16,
   },
   timeframeButton: {
     flex: 1,
     paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
     alignItems: 'center',
   },
   timeframeButtonActive: {
@@ -623,27 +591,27 @@ const styles = StyleSheet.create({
   },
   timeframeText: {
     fontFamily: 'Poppins-Medium',
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.light.text,
   },
   timeframeTextActive: {
     color: '#FFFFFF',
   },
-  metricsSection: {
-    marginHorizontal: 24,
-    marginBottom: 24,
+
+  // Metrics Content
+  metricsContent: {
+    padding: 16,
+    paddingTop: 0,
   },
   metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    gap: 12,
   },
   metricCard: {
-    width: (width - 56) / 2,
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 16,
+    backgroundColor: Colors.light.primary + '05',
     padding: 16,
-    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
   },
   metricHeader: {
     flexDirection: 'row',
@@ -651,14 +619,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   metricLabel: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
+    fontSize: 14,
     color: Colors.light.text,
-    opacity: 0.7,
-    marginLeft: 6,
+    marginLeft: 8,
   },
   metricValue: {
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'LilitaOne',
     fontSize: 24,
     color: Colors.light.text,
     marginBottom: 4,
@@ -668,43 +635,138 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   metricTrendText: {
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Poppins-Regular',
     fontSize: 12,
     color: Colors.light.success,
     marginLeft: 4,
   },
-  achievementSection: {
-    marginBottom: 24,
-  },
-  achievementCard: {
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 16,
+
+  // Insights Content
+  insightsContent: {
     padding: 16,
-    marginLeft: 24,
-    marginRight: 12,
-    alignItems: 'center',
-    width: 140,
+    paddingTop: 0,
   },
-  achievementIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.light.primary + '20',
+  insightCards: {
+    gap: 12,
+  },
+  insightCard: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  insightGradient: {
+    padding: 16,
     alignItems: 'center',
-    justifyContent: 'center',
+  },
+  insightTitle: {
+    fontFamily: 'LilitaOne',
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  insightValue: {
+    fontFamily: 'LilitaOne',
+    fontSize: 24,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
-  achievementTitle: {
+  insightDescription: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    opacity: 0.9,
+  },
+
+  // Goals Content
+  goalsContent: {
+    padding: 16,
+    paddingTop: 0,
+  },
+  goalsList: {
+    gap: 16,
+  },
+  goalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  goalIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.light.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  goalInfo: {
+    flex: 1,
+  },
+  goalValue: {
+    fontFamily: 'LilitaOne',
+    fontSize: 18,
+    color: Colors.light.text,
+    marginBottom: 2,
+  },
+  goalLabel: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: Colors.light.text,
+    opacity: 0.7,
+    marginBottom: 8,
+  },
+  goalProgress: {
+    height: 6,
+    backgroundColor: Colors.light.border,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  goalProgressFill: {
+    height: '100%',
+    backgroundColor: Colors.light.primary,
+    borderRadius: 3,
+  },
+
+  // Skills Content
+  skillsContent: {
+    padding: 16,
+    paddingTop: 0,
+  },
+  skillsList: {
+    gap: 16,
+  },
+  skillItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  skillInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: 120,
+  },
+  skillLabel: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: Colors.light.text,
+    marginLeft: 8,
+  },
+  skillProgressBar: {
+    flex: 1,
+    height: 8,
+    backgroundColor: Colors.light.border,
+    borderRadius: 4,
+    marginHorizontal: 12,
+    overflow: 'hidden',
+  },
+  skillProgressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  skillValue: {
     fontFamily: 'Poppins-SemiBold',
     fontSize: 12,
     color: Colors.light.text,
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  achievementDate: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 10,
-    color: Colors.light.text,
-    opacity: 0.6,
+    width: 50,
+    textAlign: 'right',
   },
 });

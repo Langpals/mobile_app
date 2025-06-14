@@ -1,3 +1,4 @@
+// app/(tabs)/_layout.tsx - Complete Tab Layout with 4 tabs
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { BarChart3, Home, Settings, Sparkles } from 'lucide-react-native';
@@ -10,13 +11,24 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors.light.primary,
         tabBarInactiveTintColor: Colors.light.tabIconDefault,
         tabBarStyle: {
+          backgroundColor: Colors.light.cardBackground,
+          borderTopWidth: 0,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontFamily: 'Poppins-Regular',
+          fontFamily: 'Poppins-SemiBold',
           fontSize: 12,
+          marginTop: 4,
+        },
+        tabBarIconStyle: {
+          marginBottom: 0,
         },
         headerShown: false,
       }}

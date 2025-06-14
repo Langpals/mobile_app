@@ -1,51 +1,40 @@
-// components/ui/TeddyMascot.tsx - Enhanced Version
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, Animated, TouchableOpacity } from 'react-native';
+// components/ui/TeddyMascot.tsx - Simplified Version
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Volume2, Heart, Star, Sparkles } from 'lucide-react-native';
-import { globalStyles } from '@/constants/Styles';
+import { Volume2 } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 
-type MascotMood = 'happy' | 'excited' | 'thinking' | 'sleepy' | 'encouraging' | 'teaching' | 'celebrating' | 'curious';
-
 interface TeddyMascotProps {
-  mood?: MascotMood;
-  message?: string;
+  mood?: 'happy' | 'excited' | 'thinking' | 'sleepy' | 'encouraging' | 'teaching' | 'celebrating' | 'curious';
   size?: 'small' | 'medium' | 'large';
+  message?: string;
   animated?: boolean;
-  showSpeakButton?: boolean;
-  onSpeak?: () => void;
+  onPress?: () => void;
 }
 
 export default function TeddyMascot({ 
   mood = 'happy', 
+  size = 'medium', 
   message, 
-  size = 'medium',
-  animated = true,
-  showSpeakButton = false,
-  onSpeak
+  animated = true, 
+  onPress 
 }: TeddyMascotProps) {
-  const [bounceAnimation] = useState(new Animated.Value(0));
-  const [blinkAnimation] = useState(new Animated.Value(1));
-  const [messageAnimation] = useState(new Animated.Value(0));
-  const [sparkleAnimations] = useState([
-    new Animated.Value(0),
-    new Animated.Value(0),
-    new Animated.Value(0)
-  ]);
+  const [bounceAnim] = useState(new Animated.Value(1));
+  const [messageAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
     if (animated) {
-      // Bouncing animation
+      // Gentle bouncing animation
       const bounceLoop = Animated.loop(
         Animated.sequence([
-          Animated.timing(bounceAnimation, {
-            toValue: 1,
+          Animated.timing(bounceAnim, {
+            toValue: 1.05,
             duration: 2000,
             useNativeDriver: true,
           }),
-          Animated.timing(bounceAnimation, {
-            toValue: 0,
+          Animated.timing(bounceAnim, {
+            toValue: 1,
             duration: 2000,
             useNativeDriver: true,
           }),
@@ -53,99 +42,40 @@ export default function TeddyMascot({
       );
       bounceLoop.start();
 
-      // Blinking animation
-      const blinkLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(blinkAnimation, {
-            toValue: 0.3,
-            duration: 150,
-            useNativeDriver: true,
-          }),
-          Animated.timing(blinkAnimation, {
-            toValue: 1,
-            duration: 150,
-            useNativeDriver: true,
-          }),
-          Animated.delay(3000),
-        ])
-      );
-      blinkLoop.start();
-
-      // Sparkle animations for excited mood
-      if (mood === 'excited' || mood === 'celebrating') {
-        sparkleAnimations.forEach((anim, index) => {
-          const sparkleLoop = Animated.loop(
-            Animated.sequence([
-              Animated.delay(index * 500),
-              Animated.timing(anim, {
-                toValue: 1,
-                duration: 800,
-                useNativeDriver: true,
-              }),
-              Animated.timing(anim, {
-                toValue: 0,
-                duration: 800,
-                useNativeDriver: true,
-              }),
-            ])
-          );
-          sparkleLoop.start();
-        });
-      }
-
-      return () => {
-        bounceLoop.stop();
-        blinkLoop.stop();
-        sparkleAnimations.forEach(anim => anim.stopAnimation());
-      };
+      return () => bounceLoop.stop();
     }
-  }, [animated, mood]);
+  }, [animated]);
 
   useEffect(() => {
     if (message) {
-      // Message entrance animation
-      Animated.spring(messageAnimation, {
+      Animated.spring(messageAnim, {
         toValue: 1,
         useNativeDriver: true,
         tension: 100,
         friction: 8,
       }).start();
+    } else {
+      messageAnim.setValue(0);
     }
   }, [message]);
 
-  const getMascotImages = () => {
-    // In a real app, you'd have different teddy bear images for different moods
-    const baseImage = 'https://images.pexels.com/photos/2767814/pexels-photo-2767814.jpeg';
-    
-    return {
-      happy: baseImage,
-      excited: baseImage,
-      thinking: 'https://images.pexels.com/photos/1019471/pexels-photo-1019471.jpeg',
-      sleepy: 'https://images.pexels.com/photos/175766/pexels-photo-175766.jpeg',
-      encouraging: baseImage,
-      teaching: 'https://images.pexels.com/photos/264917/pexels-photo-264917.jpeg',
-      celebrating: baseImage,
-      curious: baseImage,
-    };
-  };
-
   const getSizeStyles = () => {
     const sizes = {
-      small: { width: 80, height: 80, borderRadius: 40 },
-      medium: { width: 120, height: 120, borderRadius: 60 },
-      large: { width: 160, height: 160, borderRadius: 80 },
+      small: { width: 60, height: 60, borderRadius: 30 },
+      medium: { width: 100, height: 100, borderRadius: 50 },
+      large: { width: 140, height: 140, borderRadius: 70 },
     };
     return sizes[size];
   };
 
   const getMoodEmoji = () => {
     const emojis = {
-      happy: '😊',
+      happy: '🧸',
       excited: '🎉',
       thinking: '🤔',
       sleepy: '😴',
       encouraging: '💪',
-      teaching: '🎓',
+      teaching: '📚',
       celebrating: '🎊',
       curious: '🧐',
     };
@@ -166,143 +96,55 @@ export default function TeddyMascot({
     return colors[mood];
   };
 
-  const getMoodMessage = () => {
-    if (message) return message;
-    
-    const defaultMessages = {
-      happy: "¡Hola! I'm ready to learn with you!",
-      excited: "¡Increíble! This is going to be so much fun!",
-      thinking: "Hmm, let me think about this...",
-      sleepy: "I'm a little sleepy, but ready to learn!",
-      encouraging: "¡Tú puedes! You can do this!",
-      teaching: "Let me show you something amazing!",
-      celebrating: "¡Felicidades! You did it!",
-      curious: "Ooh, what are we going to discover today?",
-    };
-    return defaultMessages[mood];
-  };
-
-  const handleTeddyPress = () => {
-    // Add a little bounce when pressed
-    Animated.sequence([
-      Animated.timing(bounceAnimation, {
-        toValue: 0.8,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(bounceAnimation, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    if (onSpeak) {
-      onSpeak();
-    }
-  };
-
   const sizeStyle = getSizeStyles();
   const moodColor = getMoodColor();
 
   return (
     <View style={styles.container}>
-      {/* Sparkles for excited/celebrating moods */}
-      {(mood === 'excited' || mood === 'celebrating') && (
-        <View style={styles.sparklesContainer}>
-          {sparkleAnimations.map((anim, index) => (
-            <Animated.View
-              key={index}
-              style={[
-                styles.sparkle,
-                {
-                  opacity: anim,
-                  transform: [{
-                    scale: anim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0.5, 1.2]
-                    })
-                  }],
-                  top: `${20 + index * 15}%`,
-                  left: `${30 + index * 20}%`,
-                }
-              ]}
-            >
-              <Sparkles size={16} color={Colors.light.warning} />
-            </Animated.View>
-          ))}
-        </View>
-      )}
-
       {/* Teddy Bear */}
       <TouchableOpacity 
         style={styles.mascotContainer} 
-        onPress={handleTeddyPress}
-        activeOpacity={0.9}
+        onPress={onPress}
+        activeOpacity={0.8}
       >
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.mascotImageContainer,
+            styles.mascot,
             sizeStyle,
             {
-              transform: [{
-                translateY: bounceAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, -10]
-                })
-              }, {
-                scale: bounceAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [1, 1.05]
-                })
-              }]
+              transform: [{ scale: bounceAnim }]
             }
           ]}
         >
+          {/* Glow effect */}
           <LinearGradient
-            colors={[moodColor + '20', moodColor + '10', 'transparent']}
+            colors={[moodColor + '30', moodColor + '10', 'transparent']}
             style={[styles.mascotGlow, sizeStyle]}
           />
           
-          <Animated.Image 
-            source={{ uri: getMascotImages()[mood] }} 
-            style={[
-              styles.mascotImage, 
-              sizeStyle,
-              {
-                opacity: blinkAnimation
-              }
-            ]}
-          />
-          
-          <View style={[styles.moodIndicator, { backgroundColor: moodColor }]}>
-            <Text style={styles.emoji}>{getMoodEmoji()}</Text>
+          {/* Simple Teddy representation */}
+          <View style={[styles.teddyBody, sizeStyle, { backgroundColor: '#D2691E' }]}>
+            <Text style={[styles.teddyEmoji, { fontSize: size === 'large' ? 48 : size === 'medium' ? 36 : 24 }]}>
+              🧸
+            </Text>
           </View>
-
-          {/* Accessories based on mood */}
-          {mood === 'teaching' && (
-            <View style={styles.accessory}>
-              <Text style={styles.accessoryText}>🎓</Text>
-            </View>
-          )}
           
-          {mood === 'celebrating' && (
-            <View style={styles.accessory}>
-              <Text style={styles.accessoryText}>🎉</Text>
-            </View>
-          )}
+          {/* Mood indicator */}
+          <View style={[styles.moodIndicator, { backgroundColor: moodColor }]}>
+            <Text style={styles.moodEmoji}>{getMoodEmoji()}</Text>
+          </View>
         </Animated.View>
       </TouchableOpacity>
       
       {/* Message Bubble */}
-      {getMoodMessage() && (
+      {message && (
         <Animated.View 
           style={[
             styles.messageContainer,
             {
-              opacity: messageAnimation,
+              opacity: messageAnim,
               transform: [{
-                scale: messageAnimation.interpolate({
+                scale: messageAnim.interpolate({
                   inputRange: [0, 1],
                   outputRange: [0.8, 1]
                 })
@@ -315,40 +157,22 @@ export default function TeddyMascot({
               colors={[moodColor + '05', Colors.light.cardBackground]}
               style={styles.messageBubbleGradient}
             >
-              <Text style={styles.messageText}>{getMoodMessage()}</Text>
+              <Text style={styles.messageText}>{message}</Text>
               
-              {showSpeakButton && (
-                <TouchableOpacity 
-                  style={[styles.speakButton, { backgroundColor: moodColor + '20' }]}
-                  onPress={onSpeak}
-                >
-                  <Volume2 size={16} color={moodColor} />
-                  <Text style={[styles.speakButtonText, { color: moodColor }]}>
-                    Listen
-                  </Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity 
+                style={[styles.speakButton, { backgroundColor: moodColor + '20' }]}
+              >
+                <Volume2 size={12} color={moodColor} />
+                <Text style={[styles.speakButtonText, { color: moodColor }]}>
+                  Listen
+                </Text>
+              </TouchableOpacity>
             </LinearGradient>
           </View>
           
-          <View style={[styles.bubbleTriangle, { borderTopColor: moodColor + '30' }]} />
+          {/* Speech bubble triangle */}
+          <View style={[styles.bubbleTriangle, { borderTopColor: Colors.light.cardBackground }]} />
         </Animated.View>
-      )}
-
-      {/* Mood-specific effects */}
-      {mood === 'encouraging' && (
-        <View style={styles.encouragingHearts}>
-          <Heart size={12} color={Colors.light.error} />
-          <Heart size={10} color={Colors.light.error} />
-        </View>
-      )}
-
-      {mood === 'celebrating' && (
-        <View style={styles.celebratingStars}>
-          <Star size={14} color={Colors.light.warning} />
-          <Star size={12} color={Colors.light.warning} />
-          <Star size={16} color={Colors.light.warning} />
-        </View>
       )}
     </View>
   );
@@ -357,52 +181,43 @@ export default function TeddyMascot({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    marginVertical: 16,
-    position: 'relative',
-  },
-  sparklesContainer: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    zIndex: 0,
-  },
-  sparkle: {
-    position: 'absolute',
   },
   mascotContainer: {
-    position: 'relative',
-  },
-  mascotImageContainer: {
-    position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  mascot: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
   mascotGlow: {
     position: 'absolute',
-    top: -10,
-    left: -10,
-    right: -10,
-    bottom: -10,
+    top: 0,
+    left: 0,
   },
-  mascotImage: {
-    borderWidth: 4,
-    borderColor: Colors.light.cardBackground,
+  teddyBody: {
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 8,
   },
+  teddyEmoji: {
+    textAlign: 'center',
+  },
   moodIndicator: {
     position: 'absolute',
     bottom: -5,
     right: -5,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: Colors.light.cardBackground,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -410,16 +225,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
-  emoji: {
-    fontSize: 16,
-  },
-  accessory: {
-    position: 'absolute',
-    top: -10,
-    left: -10,
-  },
-  accessoryText: {
-    fontSize: 20,
+  moodEmoji: {
+    fontSize: 12,
   },
   messageContainer: {
     marginTop: 16,
@@ -427,7 +234,7 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   messageBubble: {
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -446,7 +253,7 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   speakButton: {
     flexDirection: 'row',
@@ -454,12 +261,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    marginTop: 8,
+    gap: 4,
   },
   speakButtonText: {
     fontFamily: 'Poppins-SemiBold',
     fontSize: 12,
-    marginLeft: 4,
   },
   bubbleTriangle: {
     width: 0,
@@ -472,19 +278,5 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     marginTop: -1,
-  },
-  encouragingHearts: {
-    position: 'absolute',
-    top: 20,
-    right: -20,
-    flexDirection: 'column',
-    gap: 4,
-  },
-  celebratingStars: {
-    position: 'absolute',
-    top: 10,
-    left: -25,
-    flexDirection: 'column',
-    gap: 6,
   },
 });

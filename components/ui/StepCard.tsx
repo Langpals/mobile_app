@@ -1,10 +1,9 @@
-// components/ui/StepCard.tsx - Enhanced Version
+// components/ui/StepCard.tsx - Complete Enhanced Version
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle, Circle, Play, Clock, BookOpen, Mic, Target, Star, Users } from 'lucide-react-native';
+import { CheckCircle, Circle, Play, Clock, BookOpen, Mic, Target, Star, Users, Volume2 } from 'lucide-react-native';
 import { Step } from '@/types';
-import { globalStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
 import DifficultyBadge from './DifficultyBadge';
 
@@ -41,6 +40,7 @@ export default function StepCard({ step, stepNumber, onPress, showPreview = fals
       case 'interaction': return Mic;
       case 'assessment': return Target;
       case 'review': return Star;
+      case 'introduction': return Play;
       default: return Play;
     }
   };
@@ -51,6 +51,7 @@ export default function StepCard({ step, stepNumber, onPress, showPreview = fals
       case 'interaction': return Colors.light.secondary;
       case 'assessment': return Colors.light.success;
       case 'review': return Colors.light.accent;
+      case 'introduction': return Colors.light.warning;
       default: return Colors.light.primary;
     }
   };
@@ -96,45 +97,60 @@ export default function StepCard({ step, stepNumber, onPress, showPreview = fals
               {/* Step Status Icon */}
               <View style={[
                 styles.statusIcon,
-                { backgroundColor: step.completed ? Colors.light.success : stepColor + '20' }
+                { 
+                  backgroundColor: step.completed ? Colors.light.success + '20' : 
+                                   isNext ? Colors.light.primary + '20' : Colors.light.border
+                }
               ]}>
                 {step.completed ? (
-                  <CheckCircle size={20} color="#FFFFFF" />
+                  <CheckCircle size={16} color={Colors.light.success} />
+                ) : isNext ? (
+                  <Play size={16} color={Colors.light.primary} />
                 ) : (
-                  <Circle size={20} color={stepColor} />
+                  <Text style={[styles.stepNumberText, { 
+                    color: Colors.light.text, 
+                    opacity: 0.6 
+                  }]}>
+                    {stepNumber}
+                  </Text>
                 )}
               </View>
-              
+
               {/* Step Info */}
               <View style={styles.stepInfo}>
-                <View style={styles.stepNumberContainer}>
-                  <Text style={[styles.stepNumber, { color: stepColor }]}>
-                    STEP {stepNumber}
+                <View style={styles.stepTitleRow}>
+                  <Text style={[
+                    styles.stepTitle,
+                    step.completed && styles.completedText,
+                    isNext && styles.nextText
+                  ]}>
+                    {step.title}
                   </Text>
-                  <View style={[styles.stepTypeBadge, { backgroundColor: stepColor + '15' }]}>
+                  
+                  {/* Step Type Badge */}
+                  <View style={[styles.typeBadge, { backgroundColor: stepColor + '20' }]}>
                     <IconComponent size={12} color={stepColor} />
-                    <Text style={[styles.stepTypeText, { color: stepColor }]}>
+                    <Text style={[styles.typeText, { color: stepColor }]}>
                       {getStepTypeLabel()}
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.stepTitle}>{step.title}</Text>
               </View>
             </View>
-            
-            {/* Right Side - Play Button */}
-            <TouchableOpacity 
-              style={[styles.playButton, { backgroundColor: stepColor }]} 
-              onPress={onPress}
-            >
-              <Play size={18} color="#FFFFFF" />
-            </TouchableOpacity>
+
+            {/* Difficulty Badge */}
+            <DifficultyBadge level={step.difficulty} size="small" />
           </View>
 
           {/* Description */}
-          <Text style={styles.description} numberOfLines={showPreview ? 3 : 2}>
-            {step.description}
-          </Text>
+          {showPreview && (
+            <Text style={[
+              styles.description,
+              { opacity: step.completed ? 0.8 : isNext ? 1 : 0.6 }
+            ]} numberOfLines={2}>
+              {step.description}
+            </Text>
+          )}
 
           {/* Metadata */}
           <View style={styles.metadata}>
@@ -156,8 +172,6 @@ export default function StepCard({ step, stepNumber, onPress, showPreview = fals
                 </View>
               )}
             </View>
-            
-            <DifficultyBadge level={step.difficulty} size="small" />
           </View>
 
           {/* Vocabulary Preview */}
@@ -168,6 +182,9 @@ export default function StepCard({ step, stepNumber, onPress, showPreview = fals
                 {step.vocabularyWords.slice(0, 4).map((word, index) => (
                   <View key={index} style={[styles.vocabularyChip, { borderColor: stepColor + '30' }]}>
                     <Text style={[styles.vocabularyWord, { color: stepColor }]}>{word}</Text>
+                    <TouchableOpacity style={styles.pronunciationIcon}>
+                      <Volume2 size={10} color={stepColor} />
+                    </TouchableOpacity>
                   </View>
                 ))}
                 {step.vocabularyWords.length > 4 && (
@@ -190,27 +207,37 @@ export default function StepCard({ step, stepNumber, onPress, showPreview = fals
               </View>
             ) : isNext ? (
               <View style={styles.nextStatus}>
-                <Star size={14} color={Colors.light.primary} />
+                <Play size={14} color={Colors.light.primary} />
                 <Text style={[styles.statusText, { color: Colors.light.primary }]}>
-                  Up Next
+                  Ready to Start
                 </Text>
               </View>
             ) : (
-              <View style={styles.pendingStatus}>
+              <View style={styles.lockedStatus}>
                 <Circle size={14} color={Colors.light.text} />
-                <Text style={[styles.statusText, { color: Colors.light.text }]}>
-                  Not Started
+                <Text style={[styles.statusText, { color: Colors.light.text, opacity: 0.6 }]}>
+                  Locked
                 </Text>
               </View>
             )}
-            
-            {/* Progress Indicator */}
-            <View style={styles.progressIndicator}>
-              <View style={[
-                styles.progressDot,
-                { backgroundColor: step.completed ? Colors.light.success : Colors.light.border }
-              ]} />
-            </View>
+
+            {/* Quick Action Button */}
+            {(step.completed || isNext) && (
+              <TouchableOpacity 
+                style={[
+                  styles.quickActionButton,
+                  { backgroundColor: step.completed ? Colors.light.success + '20' : Colors.light.primary + '20' }
+                ]}
+                onPress={onPress}
+              >
+                <Text style={[
+                  styles.quickActionText,
+                  { color: step.completed ? Colors.light.success : Colors.light.primary }
+                ]}>
+                  {step.completed ? 'Review' : 'Start'}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -220,103 +247,94 @@ export default function StepCard({ step, stepNumber, onPress, showPreview = fals
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 12,
-    borderRadius: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowRadius: 4,
     elevation: 2,
-    overflow: 'hidden',
   },
   completedContainer: {
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.light.success,
+    borderWidth: 1,
+    borderColor: Colors.light.success + '30',
   },
   nextContainer: {
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.light.primary,
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: Colors.light.primary + '30',
   },
   touchable: {
-    flex: 1,
+    width: '100%',
   },
   cardGradient: {
     padding: 16,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
   leftHeader: {
     flexDirection: 'row',
-    flex: 1,
     alignItems: 'flex-start',
+    flex: 1,
   },
   statusIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
+  stepNumberText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'LilitaOne',
+  },
   stepInfo: {
     flex: 1,
   },
-  stepNumberContainer: {
+  stepTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 4,
   },
-  stepNumber: {
-    fontFamily: 'Poppins-SemiBold',
-    fontSize: 11,
-    letterSpacing: 0.5,
+  stepTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: Colors.light.text,
+    fontFamily: 'LilitaOne',
+    flex: 1,
     marginRight: 8,
   },
-  stepTypeBadge: {
+  completedText: {
+    color: Colors.light.success,
+  },
+  nextText: {
+    color: Colors.light.primary,
+  },
+  typeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
+    gap: 4,
   },
-  stepTypeText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 9,
-    marginLeft: 3,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  stepTitle: {
+  typeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
     fontFamily: 'LilitaOne',
-    fontSize: 16,
-    color: Colors.light.text,
-    lineHeight: 20,
-  },
-  playButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
   },
   description: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 13,
+    fontSize: 14,
     color: Colors.light.text,
-    opacity: 0.8,
-    lineHeight: 18,
+    fontFamily: 'Poppins-Regular',
+    lineHeight: 20,
     marginBottom: 12,
   },
   metadata: {
@@ -324,35 +342,28 @@ const styles = StyleSheet.create({
   },
   metaRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    flexWrap: 'wrap',
-    gap: 12,
+    gap: 16,
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
   metaText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 11,
-    color: Colors.light.text,
-    opacity: 0.7,
-    marginLeft: 4,
-  },
-  vocabularyPreview: {
-    backgroundColor: Colors.light.background,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  vocabularyTitle: {
-    fontFamily: 'Poppins-SemiBold',
     fontSize: 12,
     color: Colors.light.text,
-    marginBottom: 8,
+    opacity: 0.6,
+    fontFamily: 'Poppins-Regular',
+  },
+  vocabularyPreview: {
+    marginBottom: 12,
+  },
+  vocabularyTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.light.text,
+    fontFamily: 'Outfit-Medium',
+    marginBottom: 6,
   },
   vocabularyChips: {
     flexDirection: 'row',
@@ -361,55 +372,61 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   vocabularyChip: {
-    backgroundColor: Colors.light.cardBackground,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
+    gap: 4,
   },
   vocabularyWord: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 11,
+    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
+  },
+  pronunciationIcon: {
+    padding: 2,
   },
   vocabularyMore: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 11,
     color: Colors.light.text,
     opacity: 0.6,
-    fontStyle: 'italic',
+    fontFamily: 'Poppins-Regular',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-    paddingTop: 8,
   },
   completedStatus: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
   nextStatus: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
-  pendingStatus: {
+  lockedStatus: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
   statusText: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 12,
-    marginLeft: 6,
+    fontWeight: '600',
+    fontFamily: 'Outfit-Medium',
   },
-  progressIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  quickActionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  quickActionText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: 'LilitaOne',
   },
 });

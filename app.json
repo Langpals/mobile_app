@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "Bern Learning",
+    "slug": "bern-learning-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -37,6 +37,9 @@
           "color": "#FF6B6B"
         }
       ]
+    ],
+    "assetBundlePatterns": [
+      "assets/fonts/*"
     ]
   }
 }

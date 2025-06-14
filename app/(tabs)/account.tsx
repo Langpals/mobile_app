@@ -1,11 +1,40 @@
-// app/(tabs)/account.tsx - ULTRA SIMPLE Account Page
+// app/(tabs)/account.tsx - Account Page with Logout
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform, StatusBar, ScrollView } from 'react-native';
-import { Settings, User, Wifi, Battery, Heart } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Platform, StatusBar, ScrollView, Alert } from 'react-native';
+import { Settings, User, Wifi, Battery, Heart, LogOut } from 'lucide-react-native';
+import { router } from 'expo-router';
 import Colors from '@/constants/Colors';
 import { mockChildProfile, mockTeddyBear } from '@/data/mockData';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AccountScreen() {
+  const { logout, currentUser } = useAuth();
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace('/(auth)/login');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
       <StatusBar backgroundColor={Colors.light.background} barStyle="dark-content" />
@@ -14,6 +43,9 @@ export default function AccountScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Settings</Text>
+          {currentUser && (
+            <Text style={styles.userEmail}>{currentUser.email}</Text>
+          )}
         </View>
 
         {/* Child Profile */}
@@ -53,7 +85,7 @@ export default function AccountScreen() {
           </View>
         </View>
 
-        {/* Simple Settings */}
+        {/* Settings */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
           
@@ -70,6 +102,16 @@ export default function AccountScreen() {
           <TouchableOpacity style={styles.settingItem}>
             <Settings size={20} color={Colors.light.secondary} />
             <Text style={styles.settingText}>App Settings</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Account Actions */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          
+          <TouchableOpacity style={[styles.settingItem, styles.logoutButton]} onPress={handleLogout}>
+            <LogOut size={20} color={Colors.light.error} />
+            <Text style={[styles.settingText, styles.logoutText]}>Logout</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -95,6 +137,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.light.text,
     fontFamily: 'LilitaOne',
+  },
+  userEmail: {
+    fontSize: 14,
+    color: Colors.light.text,
+    opacity: 0.7,
+    fontFamily: 'Poppins-Regular',
+    marginTop: 4,
   },
   section: {
     marginBottom: 30,
@@ -188,5 +237,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.light.text,
     fontFamily: 'Poppins-Regular',
+  },
+  logoutButton: {
+    borderColor: Colors.light.error + '30',
+    borderWidth: 1,
+  },
+  logoutText: {
+    color: Colors.light.error,
+    fontFamily: 'Poppins-SemiBold',
   },
 });

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, Lock, Play, CheckCircle, Trophy, Crown, Zap } from 'lucide-react-native';
+import { Star, Lock, Play, CheckCircle, Trophy, Crown, Zap, Sparkles } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import { Season, Episode } from '@/types';
 
@@ -34,8 +34,8 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
     allEpisodes.forEach((episode, index) => {
       Animated.timing(animations[episode.id], {
         toValue: 1,
-        duration: 600,
-        delay: index * 100,
+        duration: 800,
+        delay: index * 150,
         useNativeDriver: true,
       }).start();
     });
@@ -54,7 +54,7 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
   const getEpisodeIcon = (status: string, episode: Episode) => {
     switch (status) {
       case 'completed':
-        return episode.type === 'weekend_special' ? Crown : Star;
+        return episode.type === 'weekend_special' ? Crown : CheckCircle;
       case 'current':
         return Play;
       default:
@@ -67,11 +67,11 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
       case 'completed':
         return episode.type === 'weekend_special' 
           ? ['#FFB347', '#FFB347CC']
-          : ['#7AC74F', '#7AC74FCC'];
+          : ['#58CC02', '#58CC02CC']; // Duolingo green
       case 'current':
-        return ['#FF6B6B', '#FF6B6BCC'];
+        return ['#FF4B4B', '#FF4B4BCC']; // Duolingo red
       default:
-        return ['#E0E0E0', '#F5F5F5'];
+        return ['#E5E5E5', '#F5F5F5'];
     }
   };
 
@@ -83,7 +83,7 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
     
     // Calculate position for zigzag pattern
     const isLeft = index % 2 === 0;
-    const nodeSize = episode.type === 'weekend_special' ? 70 : 60;
+    const nodeSize = episode.type === 'weekend_special' ? 80 : 70;
     
     return (
       <Animated.View
@@ -95,12 +95,20 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
             marginLeft: isLeft ? 20 : 0,
             marginRight: isLeft ? 0 : 20,
             opacity: animations[episode.id],
-            transform: [{
-              translateY: animations[episode.id].interpolate({
-                inputRange: [0, 1],
-                outputRange: [30, 0]
-              })
-            }]
+            transform: [
+              {
+                translateY: animations[episode.id].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [50, 0]
+                })
+              },
+              {
+                scale: animations[episode.id].interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.8, 1]
+                })
+              }
+            ]
           }
         ]}
       >
@@ -110,6 +118,17 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
           disabled={!isUnlocked}
           style={[styles.episodeNode, { width: nodeSize, height: nodeSize }]}
         >
+          {/* Node Shadow/Glow */}
+          <View style={[
+            styles.nodeShadow,
+            { 
+              width: nodeSize + 8, 
+              height: nodeSize + 8,
+              backgroundColor: status === 'completed' ? '#58CC0220' : 
+                              status === 'current' ? '#FF4B4B20' : '#E5E5E520'
+            }
+          ]} />
+          
           <LinearGradient
             colors={colors}
             style={[styles.episodeGradient, { borderRadius: nodeSize / 2 }]}
@@ -117,12 +136,12 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
             {/* Special episode crown/border effect */}
             {episode.type === 'weekend_special' && status === 'completed' && (
               <View style={styles.specialBorder}>
-                <Zap size={12} color="#FFFFFF" />
+                <Sparkles size={16} color="#FFFFFF" />
               </View>
             )}
             
             <IconComponent 
-              size={episode.type === 'weekend_special' ? 32 : 24} 
+              size={episode.type === 'weekend_special' ? 36 : 28} 
               color={status === 'locked' ? '#999' : '#FFFFFF'}
               strokeWidth={2.5}
             />
@@ -135,7 +154,7 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
                     styles.progressSegment,
                     { 
                       transform: [{ rotate: `${(episode.completionRate / 100) * 360}deg` }],
-                      borderTopColor: Colors.light.accent
+                      borderTopColor: '#58CC02'
                     }
                   ]}
                 />
@@ -176,7 +195,7 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
               </Text>
               
               {status === 'current' && episode.completionRate > 0 && (
-                <Text style={[styles.progressText, { color: Colors.light.primary }]}>
+                <Text style={[styles.progressText, { color: '#58CC02' }]}>
                   {episode.completionRate}% complete
                 </Text>
               )}
@@ -190,7 +209,8 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
             styles.connectionLine,
             { 
               left: isLeft ? nodeSize - 5 : -35,
-              transform: [{ rotate: isLeft ? '45deg' : '-45deg' }]
+              transform: [{ rotate: isLeft ? '45deg' : '-45deg' }],
+              backgroundColor: status === 'completed' ? '#58CC02' : '#E5E5E5'
             }
           ]} />
         )}
@@ -209,13 +229,13 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
         {/* Season Header */}
         <View style={styles.seasonHeader}>
           <LinearGradient
-            colors={['#FF6B6B20', Colors.light.cardBackground]}
+            colors={['#58CC0220', Colors.light.cardBackground]}
             style={styles.seasonHeaderGradient}
           >
             <View style={styles.seasonHeaderContent}>
               <View style={styles.seasonTitleContainer}>
                 <View style={styles.seasonIcon}>
-                  <Trophy size={24} color={Colors.light.primary} />
+                  <Trophy size={24} color="#58CC02" />
                 </View>
                 <View style={styles.seasonTitleInfo}>
                   <Text style={styles.seasonTitle}>{season.title}</Text>
@@ -248,10 +268,10 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
         </View>
 
         {/* Season Completion Celebration */}
-        {completedEpisodes === season.episodes.length && (
+        {progressPercentage === 100 && (
           <View style={styles.seasonCompleteBadge}>
             <LinearGradient
-              colors={['#FFB347', '#FFB347CC']}
+              colors={['#58CC02', '#58CC02CC']}
               style={styles.completeBadgeGradient}
             >
               <Crown size={20} color="#FFFFFF" />
@@ -277,6 +297,7 @@ export default function JourneyMap({ seasons, onEpisodePress, currentProgress }:
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   scrollContent: {
     paddingBottom: 40,
@@ -312,7 +333,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Colors.light.primary + '20',
+    backgroundColor: '#58CC0220',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -323,13 +344,13 @@ const styles = StyleSheet.create({
   seasonTitle: {
     fontFamily: 'LilitaOne',
     fontSize: 20,
-    color: Colors.light.text,
+    color: '#1CB0F6',
     marginBottom: 4,
   },
   seasonTheme: {
     fontFamily: 'Poppins-Regular',
     fontSize: 14,
-    color: Colors.light.text,
+    color: '#3C3C3C',
     opacity: 0.7,
   },
   seasonProgress: {
@@ -338,19 +359,19 @@ const styles = StyleSheet.create({
   seasonProgressText: {
     fontFamily: 'LilitaOne',
     fontSize: 16,
-    color: Colors.light.primary,
+    color: '#58CC02',
     marginBottom: 4,
   },
   seasonProgressBar: {
     width: 60,
     height: 6,
-    backgroundColor: Colors.light.border,
+    backgroundColor: '#E5E5E5',
     borderRadius: 3,
     overflow: 'hidden',
   },
   seasonProgressFill: {
     height: '100%',
-    backgroundColor: Colors.light.primary,
+    backgroundColor: '#58CC02',
     borderRadius: 3,
   },
   episodesJourney: {
@@ -368,6 +389,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
+  nodeShadow: {
+    position: 'absolute',
+    borderRadius: 100,
+    top: -4,
+    left: -4,
+  },
   episodeGradient: {
     width: '100%',
     height: '100%',
@@ -379,12 +406,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -3,
     right: -3,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: Colors.light.accent,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFB347',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   progressRing: {
     position: 'absolute',
@@ -430,7 +462,7 @@ const styles = StyleSheet.create({
   episodeMetaText: {
     fontFamily: 'Poppins-Regular',
     fontSize: 11,
-    color: Colors.light.text,
+    color: '#3C3C3C',
     opacity: 0.6,
   },
   progressText: {
@@ -441,8 +473,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -30,
     width: 40,
-    height: 2,
-    backgroundColor: Colors.light.border,
+    height: 3,
   },
   seasonCompleteBadge: {
     alignSelf: 'center',

@@ -1,3 +1,4 @@
+// app/_layout.tsx - Updated with Theme Provider
 import { useEffect, useState, ReactNode } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -9,6 +10,7 @@ import { LilitaOne_400Regular } from '@expo-google-fonts/lilita-one';
 import * as SplashScreen from 'expo-splash-screen';
 import { View, Text } from 'react-native';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { TeddyProvider } from '@/contexts/TeddyContext';
 import { LearningProvider } from '@/contexts/LearningContext';
 import * as SecureStore from 'expo-secure-store';
@@ -20,6 +22,7 @@ SplashScreen.preventAutoHideAsync();
 // and redirect to the appropriate screen
 function AuthenticationGuard({ children }: { children: ReactNode }) {
   const { currentUser, isAuthenticated } = useAuth();
+  const { colors, activeTheme } = useTheme();
   const segments = useSegments();
   const router = useRouter();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -66,11 +69,22 @@ function AuthenticationGuard({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [currentUser, segments]);
 
-  // While checking authentication state, show a loading screen
+  // While checking authentication state, show a loading screen with theme colors
   if (isCheckingAuth) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF9E6' }}>
-        <Text style={{ fontSize: 18, fontFamily: 'Poppins-Regular' }}>Loading...</Text>
+      <View style={{ 
+        flex: 1, 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        backgroundColor: colors.background 
+      }}>
+        <Text style={{ 
+          fontSize: 18, 
+          fontFamily: 'Poppins-Regular',
+          color: colors.text 
+        }}>
+          Loading...
+        </Text>
       </View>
     );
   }
@@ -78,7 +92,8 @@ function AuthenticationGuard({ children }: { children: ReactNode }) {
   return children;
 }
 
-export default function RootLayout() {
+// Main layout component that includes theme provider
+function MainLayout() {
   useFrameworkReady();
 
   const [fontsLoaded, fontError] = useFonts({
@@ -105,21 +120,38 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <TeddyProvider>
-        <LearningProvider>
-          <AuthenticationGuard>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
-              <Stack.Screen name="episode" options={{ headerShown: false }} />
-              <Stack.Screen name="step" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
-            </Stack>
-            <StatusBar style="dark" />
-          </AuthenticationGuard>
-        </LearningProvider>
-      </TeddyProvider>
+      <ThemeProvider>
+        <TeddyProvider>
+          <LearningProvider>
+            <ThemedApp />
+          </LearningProvider>
+        </TeddyProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }
+
+// Themed app component that uses theme context
+function ThemedApp() {
+  const { activeTheme, isLoading } = useTheme();
+
+  if (isLoading) {
+    return null; // Keep splash screen while loading theme
+  }
+
+  return (
+    <AuthenticationGuard>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
+        <Stack.Screen name="episode" options={{ headerShown: false }} />
+        <Stack.Screen name="step" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
+      </Stack>
+      <StatusBar style={activeTheme === 'dark' ? 'light' : 'dark'} />
+    </AuthenticationGuard>
+  );
+}
+
+export default MainLayout;

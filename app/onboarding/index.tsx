@@ -1,3 +1,4 @@
+// app/onboarding/index.tsx - Fixed with proper Text component usage
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { router } from 'expo-router';
@@ -138,7 +139,7 @@ const OnboardingScreen = () => {
             disabled={loading}
           >
             <Text style={styles.nextButtonText}>
-              {step === 3 ? 'Get Started' : 'Next'}
+              {step === 3 ? (loading ? 'Setting up...' : 'Get Started') : 'Next'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -157,104 +158,109 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 24,
-    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 40,
     justifyContent: 'space-between',
   },
   progress: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginVertical: 24,
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 40,
   },
   progressDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
     backgroundColor: Colors.light.border,
-    marginHorizontal: 6,
   },
   progressDotActive: {
     backgroundColor: Colors.light.primary,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 24,
   },
   stepContent: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
-    paddingVertical: 40,
+    paddingVertical: 20,
   },
   stepTitle: {
-    fontFamily: 'LilitaOne',
     fontSize: 28,
     color: Colors.light.text,
-    marginBottom: 16,
+    fontFamily: 'Cubano',
     textAlign: 'center',
+    marginBottom: 16,
   },
   stepDescription: {
-    fontFamily: 'Poppins-Regular',
     fontSize: 16,
     color: Colors.light.text,
-    opacity: 0.8,
+    fontFamily: 'OpenSans-Regular',
     textAlign: 'center',
-    marginBottom: 32,
     lineHeight: 24,
+    marginBottom: 32,
+    paddingHorizontal: 16,
   },
   teddyImage: {
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    borderWidth: 5,
-    borderColor: Colors.light.primary,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    marginBottom: 20,
   },
   features: {
     width: '100%',
-    marginTop: 24,
+    gap: 16,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 12,
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    gap: 16,
   },
   featureIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    marginRight: 16,
   },
   featureText: {
-    fontFamily: 'Poppins-Medium',
     fontSize: 16,
     color: Colors.light.text,
+    fontFamily: 'Cubano',
+    flex: 1,
   },
   navigation: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
-    paddingVertical: 24,
+    alignItems: 'center',
+    paddingTop: 20,
   },
   backButton: {
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   backButtonText: {
-    fontFamily: 'Poppins-Medium',
     fontSize: 16,
     color: Colors.light.text,
+    fontFamily: 'OpenSans-Bold',
     opacity: 0.7,
   },
   nextButton: {
     backgroundColor: Colors.light.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 24,
+    shadowColor: Colors.light.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   nextButtonText: {
-    fontFamily: 'LilitaOne',
     fontSize: 16,
     color: '#FFFFFF',
+    fontFamily: 'Cubano',
   },
 });
 

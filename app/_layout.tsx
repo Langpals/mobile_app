@@ -1,4 +1,4 @@
-// app/_layout.tsx - Updated with Theme Provider
+// app/_layout.tsx - Fixed with proper Text component usage
 import { useEffect, useState, ReactNode, useCallback } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -106,72 +106,41 @@ function MainLayout() {
     'Poppins-Regular': Poppins_400Regular,
     'Poppins-SemiBold': Poppins_600SemiBold,
     'Poppins-Bold': Poppins_700Bold,
-    'OpenSans': require('../assets/fonts/OpenSans-Regular.ttf'),
+    'Cubano': require('../assets/fonts/Cubano.ttf'),
+    'OpenSans-Regular': require('../assets/fonts/OpenSans-Regular.ttf'),
     'OpenSans-Bold': require('../assets/fonts/OpenSans-Bold.ttf'),
   });
 
-  useEffect(() => {
-    async function prepare() {
-      try {
-        // Wait for fonts to load
-        if (fontsLoaded) {
-          await SplashScreen.hideAsync();
-        }
-      } catch (e) {
-        console.warn('Error hiding splash screen:', e);
-      }
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded || fontError) {
+      await SplashScreen.hideAsync();
     }
-
-    prepare();
-  }, [fontsLoaded]);
+  }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
-    <AuthProvider>
-      <ThemeProvider>
+    <ThemeProvider>
+      <AuthProvider>
         <TeddyProvider>
           <LearningProvider>
-            <ThemedApp />
+            <AuthenticationGuard>
+              <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="onboarding" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="episode/[id]" />
+                </Stack>
+                <StatusBar style="auto" />
+              </View>
+            </AuthenticationGuard>
           </LearningProvider>
         </TeddyProvider>
-      </ThemeProvider>
-    </AuthProvider>
-  );
-}
-
-// Themed app component that uses theme context
-function ThemedApp() {
-  const { activeTheme, isLoading } = useTheme();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading) {
-      // Additional check to ensure splash screen is hidden
-      SplashScreen.hideAsync().catch(() => {
-        /* ignore error */
-      });
-    }
-  }, [isLoading]);
-
-  if (isLoading) {
-    return null;
-  }
-
-  return (
-    <AuthenticationGuard>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
-        <Stack.Screen name="episode" options={{ headerShown: false }} />
-        <Stack.Screen name="step" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
-      </Stack>
-      <StatusBar style={activeTheme === 'dark' ? 'light' : 'dark'} />
-    </AuthenticationGuard>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

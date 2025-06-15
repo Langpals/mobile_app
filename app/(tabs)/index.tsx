@@ -6,7 +6,7 @@ import {
   Trophy, Clock, Star, BookOpen, ChevronRight, CheckCircle, Lock, Play
 } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-import { mockSeasons } from '@/data/mockData';
+import { mockChildProfile, mockSeasons } from '@/data/mockData';
 import { router } from 'expo-router';
 import { Episode } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -211,10 +211,12 @@ const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({ seasons, onEpis
           <View style={[
             dynamicStyles.episodeInfoCard,
             {
-              // Position based on whether the node is on the left or right
+              position: 'absolute',
+              top: 50, // Adjusted significantly upwards to ensure no vertical overlap with the node
               marginLeft: isLeft ? nodeSize + 10 : -150, // To the right of left node, or to the left of right node
               alignSelf: isLeft ? 'flex-start' : 'flex-end', // Aligns the card's content within its container
-              opacity: status === 'locked' ? 0.6 : 1 // Keep existing opacity logic if applicable
+              opacity: status === 'locked' ? 0.6 : 1, // Keep existing opacity logic if applicable
+              zIndex: 1000, // Ensure info card is above all other nodes
             }
           ]}>
             <Text style={[
@@ -335,7 +337,7 @@ export default function HomeScreen() {
         <Animated.View style={[dynamicStyles.welcomeSection, { opacity: fadeAnim }]}>
           <View style={dynamicStyles.welcomeHeader}>
             <View>
-              <Text style={dynamicStyles.welcomeTitle}>Welcome back!</Text>
+              <Text style={dynamicStyles.welcomeTitle}>¡Hola {mockChildProfile.name}!</Text>
               <Text style={dynamicStyles.welcomeSubtitle}>Ready to continue your Spanish journey?</Text>
             </View>
             <View style={dynamicStyles.welcomeIcon}>
@@ -363,11 +365,11 @@ function createStyles(colors: any) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: Colors.light.background,
     },
     scrollView: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: Colors.light.background,
     },
     scrollContent: {
       padding: 20,
@@ -402,14 +404,13 @@ function createStyles(colors: any) {
       width: 48,
       height: 48,
       borderRadius: 24,
-      backgroundColor: '#FFEBEE',
+      backgroundColor: '#E8F8E8',
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: 12,
     },
     journeyTitle: {
       fontSize: 18,
-      fontWeight: '700',
       color: '#2C3E50',
       fontFamily: 'Cubano',
     },
@@ -423,7 +424,6 @@ function createStyles(colors: any) {
     },
     progressNumber: {
       fontSize: 20,
-      fontWeight: '700',
       color: '#FF6B6B',
       fontFamily: 'Cubano',
     },
@@ -506,7 +506,6 @@ function createStyles(colors: any) {
     },
     episodeCardTitle: {
       fontSize: 14,
-      fontWeight: '700',
       fontFamily: 'Cubano',
       marginBottom: 4,
     },
@@ -523,7 +522,7 @@ function createStyles(colors: any) {
     metaText: {
       fontSize: 11,
       color: '#666',
-      fontFamily: 'OpenSans',
+      fontFamily: 'OpenSans-Regular',
     },
     progressContainer: {
       marginTop: 4,
@@ -580,7 +579,6 @@ function createStyles(colors: any) {
     },
     welcomeTitle: {
       fontSize: 24,
-      fontWeight: '700',
       color: '#2C3E50',
       fontFamily: 'Cubano',
       marginBottom: 4,
@@ -600,7 +598,7 @@ function createStyles(colors: any) {
     },
     // New styles for the Start Episode Button
     startEpisodeButton: {
-      backgroundColor: '#FF6B6B', // Hardcoded original color
+      backgroundColor: Colors.light.primary, // Hardcoded original color
       paddingVertical: 8,
       paddingHorizontal: 12,
       borderRadius: 8,
@@ -610,8 +608,7 @@ function createStyles(colors: any) {
     startEpisodeButtonText: {
       color: '#FFFFFF',
       fontSize: 14,
-      fontWeight: 'bold',
-      fontFamily: 'OpenSans',
+      fontFamily: 'OpenSans-Bold',
     },
   });
 }

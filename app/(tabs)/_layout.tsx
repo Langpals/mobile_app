@@ -25,12 +25,13 @@ export default function TabLayout() {
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontFamily: 'Poppins-SemiBold',
+          fontFamily: 'Cubano',
           fontSize: 12,
-          marginTop: 4,
+          marginTop: 0,
         },
         tabBarIconStyle: {
-          marginBottom: 0,
+          height: 20,
+          marginBottom: 4,
         },
         headerShown: false,
       }}

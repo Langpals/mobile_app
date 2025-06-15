@@ -99,13 +99,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 100,
     color: Colors.light.text,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 30,
+    marginTop: 30,
   },
   backButton: {
     width: 40,
@@ -116,10 +117,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 40,
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
   },
   placeholder: {
     width: 40,
@@ -127,14 +127,14 @@ const styles = StyleSheet.create({
   episodeContainer: {
     backgroundColor: Colors.light.cardBackground,
     borderRadius: 16,
-    padding: 24,
     marginBottom: 24,
+    marginTop: 10,
+    paddingBottom: 10,
   },
   episodeTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.light.text,
     opacity: 0.8,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
     lineHeight: 24,
     textAlign: 'center',
     marginBottom: 16,
@@ -159,16 +159,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.text,
     opacity: 0.7,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
   },
   vocabularySection: {
     marginBottom: 30,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     marginBottom: 16,
   },
   wordsGrid: {
@@ -185,7 +184,7 @@ const styles = StyleSheet.create({
   wordText: {
     fontSize: 14,
     color: Colors.light.primary,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
   },
   startSection: {
     alignItems: 'center',
@@ -202,16 +201,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   startButtonText: {
-    color: '#FFFFFF',
+    color: Colors.light.background,
     fontSize: 18,
-    fontWeight: 'bold',
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
   },
   startNote: {
     fontSize: 12,
     color: Colors.light.text,
     opacity: 0.6,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
     textAlign: 'center',
   },
 });

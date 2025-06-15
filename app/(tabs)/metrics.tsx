@@ -9,7 +9,7 @@ import { mockProgressStats, mockChildProfile } from '@/data/mockData';
 export default function MetricsScreen() {
   const [showWordsModal, setShowWordsModal] = useState(false);
   const [showTopicsModal, setShowTopicsModal] = useState(false);
-  const [showAchievements, setShowAchievements] = useState(false);
+  //const [showAchievements, setShowAchievements] = useState(false);
   
   const wordsLearnt = mockProgressStats.proficiency.vocabularyMastery.mastered;
   const topicsLearnt = 2; // Based on completed topics
@@ -28,43 +28,43 @@ export default function MetricsScreen() {
   ];
 
   // Mock achievements data
-  const achievements = [
-    {
-      id: '1',
-      title: 'First Steps',
-      description: 'Complete your first episode',
-      points: 50,
-      unlocked: true,
-      color: Colors.light.primary,
-    },
-    {
-      id: '2',
-      title: 'Word Explorer',
-      description: 'Learn 10 new words',
-      points: 25,
-      unlocked: true,
-      color: Colors.light.success,
-    },
-    {
-      id: '3',
-      title: 'Streak Master',
-      description: 'Maintain a 3-day learning streak',
-      points: 75,
-      unlocked: true,
-      color: Colors.light.warning,
-    },
-    {
-      id: '4',
-      title: 'Perfect Score',
-      description: 'Complete an episode with 100% accuracy',
-      points: 100,
-      unlocked: false,
-      color: Colors.light.secondary,
-    },
-  ];
+  // const achievements = [
+  //   {
+  //     id: '1',
+  //     title: 'First Steps',
+  //     description: 'Complete your first episode',
+  //     points: 50,
+  //     unlocked: true,
+  //     color: Colors.light.primary,
+  //   },
+  //   {
+  //     id: '2',
+  //     title: 'Word Explorer',
+  //     description: 'Learn 10 new words',
+  //     points: 25,
+  //     unlocked: true,
+  //     color: Colors.light.success,
+  //   },
+  //   {
+  //     id: '3',
+  //     title: 'Streak Master',
+  //     description: 'Maintain a 3-day learning streak',
+  //     points: 75,
+  //     unlocked: true,
+  //     color: Colors.light.warning,
+  //   },
+  //   {
+  //     id: '4',
+  //     title: 'Perfect Score',
+  //     description: 'Complete an episode with 100% accuracy',
+  //     points: 100,
+  //     unlocked: false,
+  //     color: Colors.light.secondary,
+  //   },
+  // ];
 
-  const unlockedAchievements = achievements.filter(a => a.unlocked);
-  const totalPoints = unlockedAchievements.reduce((sum, a) => sum + a.points, 0);
+  // const unlockedAchievements = achievements.filter(a => a.unlocked);
+  // const totalPoints = unlockedAchievements.reduce((sum, a) => sum + a.points, 0);
 
   const renderWordsModal = () => (
     <Modal visible={showWordsModal} transparent animationType="slide">
@@ -117,85 +117,84 @@ export default function MetricsScreen() {
     </Modal>
   );
 
-  const renderAchievementsSection = () => (
-    <View style={styles.achievementsSection}>
-      <View style={styles.achievementsHeader}>
-        <Text style={styles.sectionTitle}>Achievements</Text>
-        <TouchableOpacity 
-          style={styles.toggleButton}
-          onPress={() => setShowAchievements(!showAchievements)}
-        >
-          <Text style={styles.toggleButtonText}>
-            {showAchievements ? 'Hide' : 'Show All'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+  // const renderAchievementsSection = () => (
+  //   <View style={styles.achievementsSection}>
+  //     <View style={styles.achievementsHeader}>
+  //       <Text style={styles.sectionTitle}>Achievements</Text>
+  //       <TouchableOpacity 
+  //         style={styles.toggleButton}
+  //         onPress={() => setShowAchievements(!showAchievements)}
+  //       >
+  //         <Text style={styles.toggleButtonText}>
+  //           {showAchievements ? 'Hide' : 'Show All'}
+  //         </Text>
+  //       </TouchableOpacity>
+  //     </View>
       
-      <View style={styles.achievementsSummary}>
-        <View style={styles.achievementStat}>
-          <Trophy size={24} color={Colors.light.accent} />
-          <Text style={styles.achievementNumber}>{unlockedAchievements.length}</Text>
-          <Text style={styles.achievementLabel}>Unlocked</Text>
-        </View>
-        <View style={styles.achievementStat}>
-          <Target size={24} color={Colors.light.primary} />
-          <Text style={styles.achievementNumber}>{totalPoints}</Text>
-          <Text style={styles.achievementLabel}>Points</Text>
-        </View>
-      </View>
+  //     <View style={styles.achievementsSummary}>
+  //       <View style={styles.achievementStat}>
+  //         <Trophy size={24} color={Colors.light.accent} />
+  //         <Text style={styles.achievementNumber}>{unlockedAchievements.length}</Text>
+  //         <Text style={styles.achievementLabel}>Unlocked</Text>
+  //       </View>
+  //       <View style={styles.achievementStat}>
+  //         <Target size={24} color={Colors.light.primary} />
+  //         <Text style={styles.achievementNumber}>{totalPoints}</Text>
+  //         <Text style={styles.achievementLabel}>Points</Text>
+  //       </View>
+  //     </View>
 
-      {showAchievements && (
-        <View style={styles.achievementsList}>
-          {achievements.map((achievement) => (
-            <View key={achievement.id} style={[
-              styles.achievementCard,
-              { opacity: achievement.unlocked ? 1 : 0.6 }
-            ]}>
-              <LinearGradient
-                colors={achievement.unlocked ? 
-                  [achievement.color + '20', Colors.light.background] : 
-                  [Colors.light.cardBackground, Colors.light.background]
-                }
-                style={styles.achievementGradient}
-              >
-                <View style={styles.achievementContent}>
-                  <View style={[
-                    styles.achievementIcon,
-                    { backgroundColor: achievement.unlocked ? achievement.color + '20' : Colors.light.border }
-                  ]}>
-                    <Trophy size={20} color={achievement.unlocked ? achievement.color : Colors.light.tabIconDefault} />
-                  </View>
-                  <View style={styles.achievementInfo}>
-                    <Text style={[
-                      styles.achievementTitle,
-                      { color: achievement.unlocked ? Colors.light.text : Colors.light.tabIconDefault }
-                    ]}>
-                      {achievement.title}
-                    </Text>
-                    <Text style={[
-                      styles.achievementDescription,
-                      { color: achievement.unlocked ? Colors.light.text : Colors.light.border }
-                    ]}>
-                      {achievement.description}
-                    </Text>
-                  </View>
-                  <View style={styles.achievementPoints}>
-                    <Text style={[
-                      styles.pointsText,
-                      { color: achievement.unlocked ? achievement.color : Colors.light.tabIconDefault }
-                    ]}>
-                      {achievement.points}
-                    </Text>
-                    <Text style={styles.pointsLabel}>pts</Text>
-                  </View>
-                </View>
-              </LinearGradient>
-            </View>
-          ))}
-        </View>
-      )}
-    </View>
-  );
+  //     {showAchievements && (
+  //       <View style={styles.achievementsList}>
+  //         {achievements.map((achievement) => (
+  //           <View key={achievement.id} style={[
+  //             styles.achievementCard,
+  //             { opacity: achievement.unlocked ? 1 : 0.6 }
+  //           ]}>
+  //             <View
+  //               // colors={achievement.unlocked ? 
+  //               //   [achievement.color + '20', Colors.light.background] : 
+  //               //   [Colors.light.cardBackground, Colors.light.background]
+  //               // }
+  //               style={styles.achievementGradient}
+  //             >
+  //               <View style={styles.achievementContent}>
+  //                 <View style={[
+  //                   styles.achievementIcon,
+  //                   { backgroundColor: achievement.unlocked ? achievement.color + '20' : Colors.light.border }
+  //                 ]}>
+  //                   <Trophy size={20} color={achievement.unlocked ? achievement.color : Colors.light.tabIconDefault} />
+  //                 </View>
+  //                 <View style={styles.achievementInfo}>
+  //                   <Text style={[
+  //                     styles.achievementTitle,
+  //                     { color: achievement.unlocked ? Colors.light.text : Colors.light.tabIconDefault }
+  //                   ]}>
+  //                     {achievement.title}
+  //                   </Text>
+  //                   <Text style={[
+  //                     styles.achievementDescription,
+  //                     { color: achievement.unlocked ? Colors.light.text : Colors.light.border }
+  //                   ]}>
+  //                     {achievement.description}
+  //                   </Text>
+  //                 </View>
+  //                 <View style={styles.achievementPoints}>
+  //                   <Text style={[
+  //                     styles.pointsText,
+  //                     { color: achievement.unlocked ? achievement.color : Colors.light.tabIconDefault }
+  //                   ]}>
+  //                     {achievement.points}
+  //                   </Text>
+  //                 </View>
+  //               </View>
+  //             </View>
+  //           </View>
+  //         ))}
+  //       </View>
+  //     )}
+  //   </View>
+  // );
 
   return (
     <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
@@ -210,38 +209,57 @@ export default function MetricsScreen() {
 
         {/* Quick Stats */}
         <View style={styles.metricsContainer}>
-          <View style={styles.metricCard}>
+          <TouchableOpacity style={[styles.metricCard, { backgroundColor: '#73C44B' }]} onPress={() => setShowWordsModal(true)}>
+            <View style={[styles.metricIconCircle, { backgroundColor: Colors.light.background }]}>
+              <BookOpen size={24} color={'#73C44B'} />
+            </View>
             <Text style={styles.statValue}>{mockChildProfile.wordsLearned}</Text>
             <Text style={styles.statLabel}>Words Learned</Text>
-            <TouchableOpacity style={styles.viewAllButton}>
-              <Text style={styles.viewAllText}>Tap to view all words</Text>
-            </TouchableOpacity>
-          </View>
+            <Text style={styles.viewAllText}>Tap to view all words</Text>
+          </TouchableOpacity>
 
-          <View style={styles.metricCard}>
+          <TouchableOpacity style={[styles.metricCard, { backgroundColor: '#58B4F9' }]} onPress={() => setShowTopicsModal(true)}>
+            <View style={[styles.metricIconCircle, { backgroundColor: Colors.light.background }]}>
+              <Target size={24} color={'#58B4F9'} />
+            </View>
             <Text style={styles.statValue}>{mockChildProfile.topicsMastered}</Text>
             <Text style={styles.statLabel}>Topics Mastered</Text>
-            <TouchableOpacity style={styles.viewAllButton}>
-              <Text style={styles.viewAllText}>Tap to view topics</Text>
-            </TouchableOpacity>
-          </View>
+            <Text style={styles.viewAllText}>Tap to view topics</Text>
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.metricCard}>
-            <Text style={styles.statValue}>{mockChildProfile.learningStreak}</Text>
+        {/* Learning Streak Card */}
+        <TouchableOpacity style={[styles.fullWidthMetricCard, { backgroundColor: Colors.light.accent }]} onPress={() => { /* Add streak detail navigation here if needed */ }}>
+          <View style={[styles.metricIconCircle, { backgroundColor: Colors.light.background, marginBottom: 0 }]}>
+            <TrendingUp size={24} color={Colors.light.warning} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 16 }}>
             <Text style={styles.statLabel}>Learning Streak</Text>
+            <Text style={[styles.statValue, { fontSize: 32 }]}>{mockChildProfile.learningStreak}</Text>
+            <Text style={styles.streakDays}>Days in a row</Text>
+            <View style={styles.progressBarContainer}>
+              <View style={[styles.progressBarFill, { width: `${(mockChildProfile.learningStreak / 7) * 100}%` }]}></View> {/* Example progress based on 7-day goal */}
+            </View>
             <Text style={styles.streakText}>{'4 more days to level up!'}</Text>
           </View>
-        </View>
+          
+        </TouchableOpacity>
 
-        {/* Learning Time */}
-        <View style={styles.timeCard}>
-          <Text style={styles.timeValue}>{mockChildProfile.totalLearningTime}</Text>
-          <Text style={styles.timeUnit}>minutes</Text>
-          <Text style={styles.timeDescription}>{'That\'s 1 hour and 30 minutes of Spanish practice!'}</Text>
-        </View>
+        {/* Total Learning Time Card */}
+        <TouchableOpacity style={[styles.fullWidthMetricCard, { backgroundColor: Colors.light.accent }]} onPress={() => { /* Add time detail navigation here if needed */ }}>
+          <View style={[styles.metricIconCircle, { backgroundColor: Colors.light.background, marginBottom: 0 }]}>
+            <Clock size={24} color={Colors.light.accent} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 16 }}>
+            <Text style={styles.statLabel}>Total Learning Time</Text>
+            <Text style={[styles.statValue, { fontSize: 32 }]}>{mockChildProfile.totalLearningTime}</Text>
+            <Text style={styles.timeUnit}>Minutes</Text>
+            <Text style={styles.timeDescription}>{'That\'s 1 hour and 30 minutes of Spanish practice!'}</Text>
+          </View>
+        </TouchableOpacity>
 
         {/* Achievements Section */}
-        {renderAchievementsSection()}
+        {/* {renderAchievementsSection()} */}
 
         {/* Modals */}
         {renderWordsModal()}
@@ -265,9 +283,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: '700',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     marginBottom: 4,
   },
   headerSubtitle: {
@@ -280,27 +297,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 16,
     paddingHorizontal: 20,
     marginBottom: 24,
+    gap: 16,
   },
   metricCard: {
-    flex: 1,
-    flexShrink: 1,
+    width: '47%',
     borderRadius: 20,
-    padding: 20,
+    padding: 24,
     alignItems: 'center',
+    backgroundColor: Colors.light.cardBackground,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 0,
+    elevation: 2,
+    borderWidth: 0,
+    borderColor: Colors.light.border,
+    marginBottom: 16,
   },
   statValue: {
     fontSize: 22,
-    fontWeight: '700',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
   },
   statLabel: {
     fontSize: 14,
@@ -309,15 +328,13 @@ const styles = StyleSheet.create({
     fontFamily: 'OpenSans-Bold',
   },
   viewAllButton: {
-    padding: 8,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    borderRadius: 8,
+    display: 'none',
   },
   viewAllText: {
     fontSize: 12,
-    color: Colors.light.primary,
+    color: Colors.light.text,
     fontFamily: 'OpenSans-Bold',
+    marginTop: 8,
   },
   streakText: {
     fontSize: 14,
@@ -340,15 +357,15 @@ const styles = StyleSheet.create({
   },
   timeValue: {
     fontSize: 22,
-    fontWeight: '700',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
   },
   timeUnit: {
     fontSize: 14,
     color: Colors.light.text,
     opacity: 0.7,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'OpenSans-Bold',
+    marginBottom: 4,
   },
   timeDescription: {
     fontSize: 12,
@@ -362,10 +379,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '700',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     marginBottom: 16,
+    marginTop: 15,
   },
   sectionSubtitle: {
     fontSize: 14,
@@ -414,12 +431,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: Colors.light.border,
+    borderColor: '#73C44B',
   },
   wordText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.light.primary,
+    color: '#73C44B',
     fontFamily: 'OpenSans-Bold',
   },
   modalOverlay: {
@@ -445,9 +462,8 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '700',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
   },
   modalScroll: {
     padding: 20,
@@ -488,9 +504,8 @@ const styles = StyleSheet.create({
   },
   achievementNumber: {
     fontSize: 24,
-    fontWeight: '700',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
   },
   achievementLabel: {
     fontSize: 12,
@@ -507,7 +522,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 0,
   },
   achievementGradient: {
     padding: 16,
@@ -529,8 +544,7 @@ const styles = StyleSheet.create({
   },
   achievementTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     marginBottom: 2,
   },
   achievementDescription: {
@@ -543,13 +557,56 @@ const styles = StyleSheet.create({
   },
   pointsText: {
     fontSize: 18,
-    fontWeight: '700',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
   },
   pointsLabel: {
     fontSize: 10,
     color: Colors.light.text,
     fontFamily: 'OpenSans',
+  },
+  metricIconCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  fullWidthMetricCard: {
+    marginHorizontal: 20,
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
+    backgroundColor: Colors.light.cardBackground,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 0,
+    borderColor: Colors.light.border,
+    marginBottom: 16,
+  },
+  streakDays: {
+    fontSize: 12,
+    color: Colors.light.text,
+    opacity: 0.7,
+    fontFamily: 'OpenSans-Bold',
+    marginBottom: 8,
+  },
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: Colors.light.border,
+    borderRadius: 4,
+    overflow: 'hidden',
+    width: '100%',
+    marginBottom: 8,
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#58CC02',
+    borderRadius: 4,
   },
 });

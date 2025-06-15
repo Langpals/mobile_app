@@ -94,14 +94,14 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   title: {
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     fontSize: 28,
     color: Colors.light.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
     fontSize: 16,
     color: Colors.light.text,
     opacity: 0.7,
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   label: {
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'OpenSans-Bold',
     fontSize: 14,
     color: Colors.light.text,
     marginBottom: 8,
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#E0E0E0',
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loginButtonText: {
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     fontSize: 16,
     color: '#FFFFFF',
   },
@@ -143,13 +143,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   registerText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
     fontSize: 14,
     color: Colors.light.text,
   },
   registerLink: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
     fontSize: 14,
-    color: Colors.light.primary,
+    color: Colors.light.text,
   },
 });

@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#58CC0220',
+    backgroundColor: '#E8F8E8',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -342,9 +342,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   seasonTitle: {
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     fontSize: 20,
-    color: '#1CB0F6',
+    color: Colors.light.secondary,
     marginBottom: 4,
   },
   seasonTheme: {
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   seasonProgressText: {
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     fontSize: 16,
     color: '#58CC02',
     marginBottom: 4,

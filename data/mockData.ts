@@ -479,7 +479,11 @@ export const mockChildProfile: ChildProfile = {
     dailyMinutes: 15,
     weeklyEpisodes: 3,
     focusAreas: ['vocabulary', 'pronunciation']
-  }
+  },
+  wordsLearned: 42,
+  topicsMastered: 3,
+  learningStreak: 5,
+  totalLearningTime: 90
 };
 
 export const mockTeddyBear: TeddyBear = {

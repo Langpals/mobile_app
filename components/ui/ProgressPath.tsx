@@ -323,26 +323,26 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   specialBadgeText: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
     fontSize: 8,
     color: Colors.light.warning,
     marginLeft: 2,
   },
   episodeNumber: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
     fontSize: 11,
     color: Colors.light.primary,
     marginBottom: 2,
   },
   episodeTitle: {
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     fontSize: 12,
     color: Colors.light.text,
     marginBottom: 2,
     lineHeight: 14,
   },
   episodeDescription: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 10,
     color: Colors.light.text,
     opacity: 0.8,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   metaText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 9,
     color: Colors.light.text,
     opacity: 0.7,
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   episodeProgressText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 8,
     color: Colors.light.text,
     opacity: 0.7,
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.light.border,
   },
   vocabularyTitle: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
     fontSize: 9,
     color: Colors.light.text,
     marginBottom: 2,
@@ -412,12 +412,12 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   vocabularyWord: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 8,
     color: Colors.light.primary,
   },
   vocabularyMore: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 8,
     color: Colors.light.text,
     opacity: 0.6,
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   legendText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 9,
     color: Colors.light.text,
     marginTop: 2,

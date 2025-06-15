@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   messageText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 14,
     color: Colors.light.text,
     textAlign: 'center',
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   speakButtonText: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
     fontSize: 12,
   },
   bubbleTriangle: {

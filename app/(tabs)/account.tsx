@@ -86,89 +86,70 @@ export default function AccountScreen() {
     }
   };
 
-  const toggleReminder = async (enabled: boolean) => {
+  const toggleReminder = async (newValue: boolean) => {
+    setReminderEnabled(newValue);
     try {
-      if (enabled) {
-        // Request notification permissions
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permission Required', 'Please enable notifications to use daily reminders');
-          return;
-        }
-        
-        // Schedule the notification
-        await scheduleReminderNotification();
+      await SecureStore.setItemAsync('reminder_enabled', String(newValue));
+      if (newValue) {
+        await scheduleDailyReminder(reminderTime);
       } else {
-        // Cancel all scheduled notifications
         await Notifications.cancelAllScheduledNotificationsAsync();
+        Alert.alert('Reminder Disabled', 'Daily learning reminders are now off.');
       }
-      
-      setReminderEnabled(enabled);
-      await SecureStore.setItemAsync('reminder_enabled', enabled.toString());
-      
-      Alert.alert(
-        'Reminder Updated', 
-        enabled 
-          ? `Daily reminder set for ${formatTime(reminderTime)}` 
-          : 'Daily reminder disabled'
-      );
     } catch (error) {
       console.error('Error toggling reminder:', error);
-      Alert.alert('Error', 'Failed to update reminder setting');
+      Alert.alert('Error', 'Failed to save reminder preference.');
     }
   };
 
-  const scheduleReminderNotification = async () => {
-    try {
-      // Cancel existing notifications first
-      await Notifications.cancelAllScheduledNotificationsAsync();
-      
-      // Parse the time
-      const [hours, minutes] = reminderTime.split(':').map(Number);
-      
-      // Schedule daily notification
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '🧸 Time for Learning!',
-          body: `Ready for today's Spanish lesson with ${mockChildProfile.name}? Bern the Teddy is waiting!`,
-          sound: true,
-        },
-        trigger: {
-          hour: hours,
-          minute: minutes,
-          repeats: true,
-        },
-      });
-      
-      console.log(`Reminder scheduled for ${formatTime(reminderTime)}`);
-    } catch (error) {
-      console.error('Error scheduling notification:', error);
-      throw error;
-    }
+  const scheduleDailyReminder = async (time: string) => {
+    await Notifications.cancelAllScheduledNotificationsAsync(); // Clear existing
+
+    const [hours, minutes] = time.split(':').map(Number);
+
+    const trigger = {
+      hour: hours,
+      minute: minutes,
+      repeats: true,
+    };
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Time to learn Spanish! 🇪🇸",
+        body: 'Your daily dose of language learning awaits! 🔥',
+      },
+      trigger,
+    });
+    Alert.alert('Reminder Set', `Daily reminder scheduled for ${formatTime(time)}.`);
   };
 
   const updateReminderTime = async () => {
+    // Basic validation for HH:MM format
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (!timeRegex.test(tempReminderTime)) {
+      Alert.alert('Invalid Time', 'Please enter time in HH:MM format (e.g., 19:00).');
+      return;
+    }
+
+    setReminderTime(tempReminderTime);
     try {
-      setReminderTime(tempReminderTime);
       await SecureStore.setItemAsync('reminder_time', tempReminderTime);
-      
       if (reminderEnabled) {
-        await scheduleReminderNotification();
+        await scheduleDailyReminder(tempReminderTime);
       }
-      
       setShowReminderModal(false);
-      Alert.alert('Reminder Time Updated', `New reminder time: ${formatTime(tempReminderTime)}`);
+      Alert.alert('Reminder Time Updated', `Daily reminder set for ${formatTime(tempReminderTime)}.`);
     } catch (error) {
       console.error('Error updating reminder time:', error);
-      Alert.alert('Error', 'Failed to update reminder time');
+      Alert.alert('Error', 'Failed to update reminder time.');
     }
   };
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':').map(Number);
+  const formatTime = (time24: string) => {
+    const [hours, minutes] = time24.split(':').map(Number);
     const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
+    return `${formattedHours}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
   };
 
   const handleLogout = async () => {
@@ -411,7 +392,7 @@ export default function AccountScreen() {
               style={dynamicStyles.saveButton}
               onPress={updateReminderTime}
             >
-              <Save size={20} color="#FFFFFF" />
+              <Save size={20} color={colors.background} />
               <Text style={dynamicStyles.saveButtonText}>Save Reminder Time</Text>
             </TouchableOpacity>
           </View>
@@ -440,13 +421,13 @@ function createStyles(colors: any) {
       fontSize: 22,
       fontWeight: 'bold',
       color: colors.text,
-      fontFamily: 'LilitaOne',
+      fontFamily: 'Cubano',
     },
     userEmail: {
       fontSize: 14,
       color: colors.text,
       opacity: 0.7,
-      fontFamily: 'Poppins-Regular',
+      fontFamily: 'OpenSans',
       marginTop: 4,
     },
     section: {
@@ -456,7 +437,7 @@ function createStyles(colors: any) {
       fontSize: 18,
       fontWeight: 'bold',
       color: colors.text,
-      fontFamily: 'LilitaOne',
+      fontFamily: 'Cubano',
       marginBottom: 16,
     },
     profileCard: {
@@ -490,14 +471,14 @@ function createStyles(colors: any) {
       fontSize: 20,
       fontWeight: 'bold',
       color: colors.text,
-      fontFamily: 'LilitaOne',
+      fontFamily: 'Cubano',
       marginBottom: 4,
     },
     profileDetail: {
       fontSize: 14,
       color: colors.text,
       opacity: 0.7,
-      fontFamily: 'Poppins-Regular',
+      fontFamily: 'OpenSans',
     },
     enhancedTeddyCard: {
       backgroundColor: colors.cardBackground,
@@ -526,7 +507,7 @@ function createStyles(colors: any) {
       fontSize: 18,
       fontWeight: 'bold',
       color: colors.text,
-      fontFamily: 'LilitaOne',
+      fontFamily: 'Cubano',
       marginBottom: 8,
     },
     statusRow: {
@@ -538,7 +519,7 @@ function createStyles(colors: any) {
     statusText: {
       fontSize: 14,
       color: colors.text,
-      fontFamily: 'Poppins-Regular',
+      fontFamily: 'OpenSans',
     },
     preferenceCard: {
       backgroundColor: colors.cardBackground,
@@ -682,7 +663,7 @@ function createStyles(colors: any) {
       fontSize: 18,
       fontWeight: 'bold',
       color: colors.text,
-      fontFamily: 'LilitaOne',
+      fontFamily: 'Cubano',
     },
     modalCloseButton: {
       padding: 4,
@@ -725,7 +706,7 @@ function createStyles(colors: any) {
       gap: 8,
     },
     saveButtonText: {
-      color: '#FFFFFF',
+      color: colors.background,
       fontSize: 16,
       fontWeight: 'bold',
       fontFamily: 'Poppins-SemiBold',

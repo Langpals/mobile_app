@@ -104,6 +104,10 @@ export interface ChildProfile {
     weeklyEpisodes: number;
     focusAreas: string[];
   };
+  wordsLearned: number;
+  topicsMastered: number;
+  learningStreak: number;
+  totalLearningTime: number;
 }
 
 export interface TeddyBear {

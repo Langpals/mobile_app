@@ -190,21 +190,18 @@ export default function StepScreen() {
           <Text style={styles.tipTitle}>Learning Tips</Text>
         </View>
         <Text style={styles.tipText}>
-          {step?.difficulty === 'veryEasy' ? 
-            "Take your time! I'll repeat everything and give you lots of hints." :
-            step?.difficulty === 'easy' ?
-            "Don't worry if you make mistakes - that's how we learn!" :
-            step?.difficulty === 'medium' ?
-            "Listen carefully and try your best. You're doing great!" :
+          {step?.difficulty === 'veryEasy' ? "Take your time! I'll repeat everything and give you lots of hints." :
+            step?.difficulty === 'easy' ? "Don't worry if you make mistakes - that's how we learn!" :
+            step?.difficulty === 'medium' ? "Listen carefully and try your best. You're doing great!" :
             "You're ready for a challenge! Trust yourself and have fun!"
           }
         </Text>
       </View>
 
-      <TeddyMascot 
-        mood="encouraging" 
+      <TeddyMascot
+        mood="encouraging"
         message={`¡Hola! Ready to learn about ${step?.title.toLowerCase()}? ¡Vamos!`}
-        size="medium" 
+        size="medium"
       />
 
       <TouchableOpacity style={styles.startButton} onPress={handleStartStep}>
@@ -225,18 +222,16 @@ export default function StepScreen() {
     <View style={styles.phaseContainer}>
       <View style={styles.learningContent}>
         <Text style={styles.phaseTitle}>Learning Phase</Text>
-        <Text style={styles.phaseDescription}>
-          Listen to Bern and learn the new words and phrases
-        </Text>
+        <Text style={styles.phaseDescription}>Listen to Bern and learn the new words and phrases</Text>
 
         {/* Interactive Learning Area */}
         <View style={styles.interactiveArea}>
-          <TeddyMascot 
-            mood="teaching" 
+          <TeddyMascot
+            mood="teaching"
             message="Now I'll teach you some new Spanish words. Listen carefully!"
-            size="large" 
+            size="large"
           />
-          
+
           {/* Mock Interactive Elements */}
           <View style={styles.learningCards}>
             {step?.vocabularyWords?.slice(0, 2).map((word, index) => (
@@ -264,16 +259,14 @@ export default function StepScreen() {
     <View style={styles.phaseContainer}>
       <View style={styles.practiceContent}>
         <Text style={styles.phaseTitle}>Practice Time</Text>
-        <Text style={styles.phaseDescription}>
-          Now it's your turn! Try saying the words you just learned
-        </Text>
+        <Text style={styles.phaseDescription}>Now it's your turn! Try saying the words you just learned</Text>
 
         {/* Practice Interface */}
         <View style={styles.practiceInterface}>
-          <TeddyMascot 
-            mood="encouraging" 
+          <TeddyMascot
+            mood="encouraging"
             message="Your turn! Can you say 'Hola'? Press and hold the button while you speak."
-            size="medium" 
+            size="medium"
           />
 
           <View style={styles.practiceCard}>
@@ -294,8 +287,8 @@ export default function StepScreen() {
         </View>
 
         <View style={styles.practiceActions}>
-          <TouchableOpacity 
-            style={styles.hintButton} 
+          <TouchableOpacity
+            style={styles.hintButton}
             onPress={() => setShowHint(!showHint)}
           >
             <Lightbulb size={18} color={Colors.light.warning} />
@@ -312,7 +305,7 @@ export default function StepScreen() {
   );
 
   const renderCompletedPhase = () => (
-    <Animated.View 
+    <Animated.View
       style={[
         styles.phaseContainer,
         {
@@ -335,13 +328,13 @@ export default function StepScreen() {
             <Text style={styles.statLabel}>Time</Text>
             <Text style={styles.statValue}>{responseTime}s</Text>
           </View>
-          
+
           <View style={styles.statItem}>
             <Mic size={20} color={Colors.light.secondary} />
             <Text style={styles.statLabel}>Attempts</Text>
             <Text style={styles.statValue}>{interactionCount}</Text>
           </View>
-          
+
           <View style={styles.statItem}>
             <CheckCircle size={20} color={Colors.light.success} />
             <Text style={styles.statLabel}>Status</Text>
@@ -349,7 +342,7 @@ export default function StepScreen() {
           </View>
         </View>
 
-        <TeddyMascot 
+        <TeddyMascot
           mood="excited" 
           message="¡Fantástico! You're becoming a Spanish superstar! Ready for the next step?"
           size="large" 

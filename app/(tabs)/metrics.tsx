@@ -35,7 +35,7 @@ export default function MetricsScreen() {
       description: 'Complete your first episode',
       points: 50,
       unlocked: true,
-      color: '#FF6B6B',
+      color: Colors.light.primary,
     },
     {
       id: '2',
@@ -43,7 +43,7 @@ export default function MetricsScreen() {
       description: 'Learn 10 new words',
       points: 25,
       unlocked: true,
-      color: '#4CAF50',
+      color: Colors.light.success,
     },
     {
       id: '3',
@@ -51,7 +51,7 @@ export default function MetricsScreen() {
       description: 'Maintain a 3-day learning streak',
       points: 75,
       unlocked: true,
-      color: '#FF9800',
+      color: Colors.light.warning,
     },
     {
       id: '4',
@@ -59,7 +59,7 @@ export default function MetricsScreen() {
       description: 'Complete an episode with 100% accuracy',
       points: 100,
       unlocked: false,
-      color: '#9C27B0',
+      color: Colors.light.secondary,
     },
   ];
 
@@ -73,7 +73,7 @@ export default function MetricsScreen() {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Your Word Bank</Text>
             <TouchableOpacity onPress={() => setShowWordsModal(false)}>
-              <X size={24} color="#2C3E50" />
+              <X size={24} color={Colors.light.text} />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.modalScroll}>
@@ -97,7 +97,7 @@ export default function MetricsScreen() {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Completed Topics</Text>
             <TouchableOpacity onPress={() => setShowTopicsModal(false)}>
-              <X size={24} color="#2C3E50" />
+              <X size={24} color={Colors.light.text} />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.modalScroll}>
@@ -133,12 +133,12 @@ export default function MetricsScreen() {
       
       <View style={styles.achievementsSummary}>
         <View style={styles.achievementStat}>
-          <Trophy size={24} color="#FFB74D" />
+          <Trophy size={24} color={Colors.light.accent} />
           <Text style={styles.achievementNumber}>{unlockedAchievements.length}</Text>
           <Text style={styles.achievementLabel}>Unlocked</Text>
         </View>
         <View style={styles.achievementStat}>
-          <Target size={24} color="#FF6B6B" />
+          <Target size={24} color={Colors.light.primary} />
           <Text style={styles.achievementNumber}>{totalPoints}</Text>
           <Text style={styles.achievementLabel}>Points</Text>
         </View>
@@ -153,28 +153,28 @@ export default function MetricsScreen() {
             ]}>
               <LinearGradient
                 colors={achievement.unlocked ? 
-                  [achievement.color + '20', '#FFFFFF'] : 
-                  ['#F5F5F5', '#FFFFFF']
+                  [achievement.color + '20', Colors.light.background] : 
+                  [Colors.light.cardBackground, Colors.light.background]
                 }
                 style={styles.achievementGradient}
               >
                 <View style={styles.achievementContent}>
                   <View style={[
                     styles.achievementIcon,
-                    { backgroundColor: achievement.unlocked ? achievement.color + '20' : '#E0E0E0' }
+                    { backgroundColor: achievement.unlocked ? achievement.color + '20' : Colors.light.border }
                   ]}>
-                    <Trophy size={20} color={achievement.unlocked ? achievement.color : '#9E9E9E'} />
+                    <Trophy size={20} color={achievement.unlocked ? achievement.color : Colors.light.tabIconDefault} />
                   </View>
                   <View style={styles.achievementInfo}>
                     <Text style={[
                       styles.achievementTitle,
-                      { color: achievement.unlocked ? '#2C3E50' : '#9E9E9E' }
+                      { color: achievement.unlocked ? Colors.light.text : Colors.light.tabIconDefault }
                     ]}>
                       {achievement.title}
                     </Text>
                     <Text style={[
                       styles.achievementDescription,
-                      { color: achievement.unlocked ? '#546E7A' : '#BDBDBD' }
+                      { color: achievement.unlocked ? Colors.light.text : Colors.light.border }
                     ]}>
                       {achievement.description}
                     </Text>
@@ -182,7 +182,7 @@ export default function MetricsScreen() {
                   <View style={styles.achievementPoints}>
                     <Text style={[
                       styles.pointsText,
-                      { color: achievement.unlocked ? achievement.color : '#9E9E9E' }
+                      { color: achievement.unlocked ? achievement.color : Colors.light.tabIconDefault }
                     ]}>
                       {achievement.points}
                     </Text>
@@ -199,73 +199,45 @@ export default function MetricsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
-      <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content" />
+      <StatusBar backgroundColor={Colors.light.background} barStyle="dark-content" />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>{mockChildProfile.name}'s Progress</Text>
-          <Text style={styles.subtitle}>Track your Spanish learning journey</Text>
+          <Text style={styles.headerTitle}>{mockChildProfile.name}'s Progress</Text>
+          <Text style={styles.headerSubtitle}>Track your Spanish learning journey</Text>
         </View>
 
-        {/* Main Metrics Cards */}
+        {/* Quick Stats */}
         <View style={styles.metricsContainer}>
-          <TouchableOpacity 
-            style={[styles.metricCard, { backgroundColor: '#FFEBEE' }]}
-            onPress={() => setShowWordsModal(true)}
-          >
-            <View style={[styles.metricIcon, { backgroundColor: '#FF6B6B20' }]}>
-              <BookOpen size={28} color="#FF6B6B" />
-            </View>
-            <Text style={styles.metricNumber}>{wordsLearnt}</Text>
-            <Text style={styles.metricLabel}>Words Learned</Text>
-            <Text style={styles.metricSubtext}>Tap to view all words</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.metricCard, { backgroundColor: '#E8F5E8' }]}
-            onPress={() => setShowTopicsModal(true)}
-          >
-            <View style={[styles.metricIcon, { backgroundColor: '#4CAF5020' }]}>
-              <Target size={28} color="#4CAF50" />
-            </View>
-            <Text style={styles.metricNumber}>{topicsLearnt}</Text>
-            <Text style={styles.metricLabel}>Topics Mastered</Text>
-            <Text style={styles.metricSubtext}>Tap to view topics</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Learning Streak */}
-        <View style={styles.streakCard}>
-          <View style={styles.streakHeader}>
-            <View style={styles.streakIcon}>
-              <TrendingUp size={24} color="#FF9800" />
-            </View>
-            <View>
-              <Text style={styles.streakTitle}>Learning Streak</Text>
-              <Text style={styles.streakSubtitle}>Days in a row</Text>
-            </View>
-            <Text style={styles.streakNumber}>{mockProgressStats.currentStreak}</Text>
+          <View style={styles.metricCard}>
+            <Text style={styles.statValue}>{mockChildProfile.wordsLearned}</Text>
+            <Text style={styles.statLabel}>Words Learned</Text>
+            <TouchableOpacity style={styles.viewAllButton}>
+              <Text style={styles.viewAllText}>Tap to view all words</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.streakProgress}>
-            <View style={styles.streakBar}>
-              <View style={[styles.streakFill, { width: `${(mockProgressStats.currentStreak / 7) * 100}%` }]} />
-            </View>
-            <Text style={styles.streakText}>
-              {7 - mockProgressStats.currentStreak} more days to reach weekly goal!
-            </Text>
+
+          <View style={styles.metricCard}>
+            <Text style={styles.statValue}>{mockChildProfile.topicsMastered}</Text>
+            <Text style={styles.statLabel}>Topics Mastered</Text>
+            <TouchableOpacity style={styles.viewAllButton}>
+              <Text style={styles.viewAllText}>Tap to view topics</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.metricCard}>
+            <Text style={styles.statValue}>{mockChildProfile.learningStreak}</Text>
+            <Text style={styles.statLabel}>Learning Streak</Text>
+            <Text style={styles.streakText}>{'4 more days to level up!'}</Text>
           </View>
         </View>
 
-        {/* Time Spent */}
+        {/* Learning Time */}
         <View style={styles.timeCard}>
-          <View style={styles.timeHeader}>
-            <Clock size={24} color="#9C27B0" />
-            <Text style={styles.timeTitle}>Total Learning Time</Text>
-          </View>
-          <Text style={styles.timeNumber}>{mockProgressStats.totalTimeSpent}</Text>
-          <Text style={styles.timeLabel}>Minutes</Text>
-          <Text style={styles.timeSubtext}>That's {Math.round(mockProgressStats.totalTimeSpent / 60)} hours of Spanish!</Text>
+          <Text style={styles.timeValue}>{mockChildProfile.totalLearningTime}</Text>
+          <Text style={styles.timeUnit}>minutes</Text>
+          <Text style={styles.timeDescription}>{'That\'s 1 hour and 30 minutes of Spanish practice!'}</Text>
         </View>
 
         {/* Achievements Section */}
@@ -282,7 +254,7 @@ export default function MetricsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.light.background,
   },
   scrollView: {
     flex: 1,
@@ -291,132 +263,73 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
+  headerTitle: {
+    fontSize: 24,
     fontWeight: '700',
-    color: '#2C3E50',
-    fontFamily: 'Cubano',
+    color: Colors.light.text,
+    fontFamily: 'LilitaOne',
     marginBottom: 4,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#546E7A',
-    fontFamily: 'OpenSans',
+  headerSubtitle: {
+    fontSize: 14,
+    color: Colors.light.text,
+    opacity: 0.7,
+    fontFamily: 'OpenSans-Bold',
   },
   metricsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     gap: 16,
     paddingHorizontal: 20,
     marginBottom: 24,
   },
   metricCard: {
     flex: 1,
+    flexShrink: 1,
     borderRadius: 20,
-    padding: 24,
+    padding: 20,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 0,
   },
-  metricIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  metricNumber: {
-    fontSize: 42,
+  statValue: {
+    fontSize: 22,
     fontWeight: '700',
-    color: '#2C3E50',
-    fontFamily: 'Cubano',
-    marginBottom: 8,
+    color: Colors.light.text,
+    fontFamily: 'LilitaOne',
   },
-  metricLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2C3E50',
-    fontFamily: 'OpenSans',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  metricSubtext: {
-    fontSize: 12,
-    color: '#546E7A',
-    fontFamily: 'OpenSans',
-    textAlign: 'center',
-  },
-  streakCard: {
-    marginHorizontal: 20,
-    backgroundColor: '#FFF8E1',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  streakHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  streakIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FF980020',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  streakTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2C3E50',
-    fontFamily: 'Cubano',
-  },
-  streakSubtitle: {
+  statLabel: {
     fontSize: 14,
-    color: '#546E7A',
-    fontFamily: 'OpenSans',
+    color: Colors.light.text,
+    opacity: 0.7,
+    fontFamily: 'OpenSans-Bold',
   },
-  streakNumber: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#FF9800',
-    fontFamily: 'Cubano',
-    marginLeft: 'auto',
+  viewAllButton: {
+    padding: 8,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    borderRadius: 8,
   },
-  streakProgress: {
-    gap: 8,
-  },
-  streakBar: {
-    height: 8,
-    backgroundColor: '#FFE0B2',
-    borderRadius: 4,
-  },
-  streakFill: {
-    height: '100%',
-    backgroundColor: '#FF9800',
-    borderRadius: 4,
+  viewAllText: {
+    fontSize: 12,
+    color: Colors.light.primary,
+    fontFamily: 'OpenSans-Bold',
   },
   streakText: {
-    fontSize: 12,
-    color: '#546E7A',
-    fontFamily: 'OpenSans',
-    textAlign: 'center',
+    fontSize: 14,
+    color: Colors.light.text,
+    opacity: 0.7,
+    fontFamily: 'OpenSans-Regular',
   },
   timeCard: {
     marginHorizontal: 20,
-    backgroundColor: '#F3E5F5',
+    backgroundColor: Colors.light.cardBackground,
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     alignItems: 'center',
     marginBottom: 32,
     shadowColor: '#000',
@@ -425,52 +338,38 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  timeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 8,
-  },
-  timeTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2C3E50',
-    fontFamily: 'OpenSans',
-  },
-  timeNumber: {
-    fontSize: 48,
+  timeValue: {
+    fontSize: 22,
     fontWeight: '700',
-    color: '#9C27B0',
-    fontFamily: 'Cubano',
-    marginBottom: 4,
+    color: Colors.light.text,
+    fontFamily: 'LilitaOne',
   },
-  timeLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2C3E50',
-    fontFamily: 'OpenSans',
-    marginBottom: 8,
-  },
-  timeSubtext: {
+  timeUnit: {
     fontSize: 14,
-    color: '#546E7A',
-    fontFamily: 'OpenSans',
-    textAlign: 'center',
+    color: Colors.light.text,
+    opacity: 0.7,
+    fontFamily: 'LilitaOne',
+  },
+  timeDescription: {
+    fontSize: 12,
+    color: Colors.light.text,
+    opacity: 0.7,
+    fontFamily: 'OpenSans-Bold',
   },
   section: {
     paddingHorizontal: 20,
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#2C3E50',
-    fontFamily: 'Cubano',
-    marginBottom: 4,
+    color: Colors.light.text,
+    fontFamily: 'LilitaOne',
+    marginBottom: 16,
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: '#546E7A',
+    color: Colors.light.text,
     fontFamily: 'OpenSans',
     marginBottom: 16,
   },
@@ -480,7 +379,7 @@ const styles = StyleSheet.create({
   topicItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8F5E8',
+    backgroundColor: Colors.light.cardBackground,
     borderRadius: 12,
     padding: 16,
     gap: 16,
@@ -489,19 +388,19 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#4CAF50',
+    backgroundColor: Colors.light.success,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkmark: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: Colors.light.background,
     fontWeight: '700',
   },
   topicText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2C3E50',
+    color: Colors.light.text,
     fontFamily: 'OpenSans',
   },
   wordsGrid: {
@@ -510,18 +409,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   wordChip: {
-    backgroundColor: '#FFEBEE',
+    backgroundColor: Colors.light.cardBackground,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#FF6B6B30',
+    borderColor: Colors.light.border,
   },
   wordText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FF6B6B',
-    fontFamily: 'Inter_600SemiBold',
+    color: Colors.light.primary,
+    fontFamily: 'OpenSans-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -529,7 +428,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.light.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -542,13 +441,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: Colors.light.border,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#2C3E50',
-    fontFamily: 'Nunito-ExtraBold',
+    color: Colors.light.text,
+    fontFamily: 'LilitaOne',
   },
   modalScroll: {
     padding: 20,
@@ -564,7 +463,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   toggleButton: {
-    backgroundColor: '#FF6B6B20',
+    backgroundColor: Colors.light.primary + '20',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -572,13 +471,13 @@ const styles = StyleSheet.create({
   toggleButtonText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#FF6B6B',
-    fontFamily: 'Inter_600SemiBold',
+    color: Colors.light.primary,
+    fontFamily: 'OpenSans-Bold',
   },
   achievementsSummary: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#FFF8E1',
+    backgroundColor: Colors.light.cardBackground,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -590,13 +489,13 @@ const styles = StyleSheet.create({
   achievementNumber: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#2C3E50',
-    fontFamily: 'Nunito-ExtraBold',
+    color: Colors.light.text,
+    fontFamily: 'LilitaOne',
   },
   achievementLabel: {
     fontSize: 12,
-    color: '#546E7A',
-    fontFamily: 'Inter_400Regular',
+    color: Colors.light.text,
+    fontFamily: 'OpenSans',
   },
   achievementsList: {
     gap: 12,
@@ -631,12 +530,13 @@ const styles = StyleSheet.create({
   achievementTitle: {
     fontSize: 16,
     fontWeight: '700',
-    fontFamily: 'Nunito-ExtraBold',
+    fontFamily: 'LilitaOne',
     marginBottom: 2,
   },
   achievementDescription: {
     fontSize: 12,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'OpenSans',
+    color: Colors.light.text,
   },
   achievementPoints: {
     alignItems: 'center',
@@ -644,11 +544,12 @@ const styles = StyleSheet.create({
   pointsText: {
     fontSize: 18,
     fontWeight: '700',
-    fontFamily: 'Nunito-ExtraBold',
+    color: Colors.light.text,
+    fontFamily: 'LilitaOne',
   },
   pointsLabel: {
     fontSize: 10,
-    color: '#546E7A',
-    fontFamily: 'Inter_400Regular',
+    color: Colors.light.text,
+    fontFamily: 'OpenSans',
   },
 });

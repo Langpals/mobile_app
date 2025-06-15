@@ -1,5 +1,5 @@
 // app/_layout.tsx - Updated with Theme Provider
-import { useEffect, useState, ReactNode } from 'react';
+import { useEffect, useState, ReactNode, useCallback } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
@@ -16,7 +16,9 @@ import { LearningProvider } from '@/contexts/LearningContext';
 import * as SecureStore from 'expo-secure-store';
 
 // Prevent the splash screen from auto-hiding
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* ignore error */
+});
 
 // This component will check if the user is authenticated
 // and redirect to the appropriate screen
@@ -104,16 +106,25 @@ function MainLayout() {
     'Poppins-Regular': Poppins_400Regular,
     'Poppins-SemiBold': Poppins_600SemiBold,
     'Poppins-Bold': Poppins_700Bold,
+    'OpenSans': require('../assets/fonts/OpenSans-Regular.ttf'),
+    'OpenSans-Bold': require('../assets/fonts/OpenSans-Bold.ttf'),
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      // Hide the splash screen after fonts have loaded
-      SplashScreen.hideAsync();
+    async function prepare() {
+      try {
+        // Wait for fonts to load
+        if (fontsLoaded) {
+          await SplashScreen.hideAsync();
+        }
+      } catch (e) {
+        console.warn('Error hiding splash screen:', e);
+      }
     }
-  }, [fontsLoaded, fontError]);
 
-  // If fonts aren't loaded and there isn't an error, return null to keep splash screen
+    prepare();
+  }, [fontsLoaded]);
+
   if (!fontsLoaded && !fontError) {
     return null;
   }
@@ -134,9 +145,19 @@ function MainLayout() {
 // Themed app component that uses theme context
 function ThemedApp() {
   const { activeTheme, isLoading } = useTheme();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading) {
+      // Additional check to ensure splash screen is hidden
+      SplashScreen.hideAsync().catch(() => {
+        /* ignore error */
+      });
+    }
+  }, [isLoading]);
 
   if (isLoading) {
-    return null; // Keep splash screen while loading theme
+    return null;
   }
 
   return (

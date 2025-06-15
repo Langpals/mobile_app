@@ -3,7 +3,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { auth } from '../firebase/firebaseConfig';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.29.132:5000/api';
 
 console.log('=== API CONFIG DEBUG ===');
 console.log('API_URL configured as:', API_URL);
@@ -12,7 +12,7 @@ console.log('=======================');
 
 const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 10000, // 10 second timeout
+  timeout: 5000, // Reduced timeout to 5 seconds
   headers: {
     'Content-Type': 'application/json',
   },
@@ -69,6 +69,17 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
+    if (error.code === 'ECONNABORTED') {
+      console.error('Request timeout - server might be unreachable');
+      // Return a mock response for teddy and learning progress to prevent app from hanging
+      if (error.config.url.includes('/teddy')) {
+        return Promise.resolve({ data: { data: { connectionStatus: { isConnected: false, batteryLevel: 0 } } } });
+      }
+      if (error.config.url.includes('/learning/progress')) {
+        return Promise.resolve({ data: { data: { completedEpisodes: [], currentEpisode: null } } });
+      }
+    }
+    
     console.error('API Error:', error.message);
     
     if (error.response) {
@@ -92,6 +103,13 @@ apiClient.interceptors.response.use(
       }
     } else if (error.request) {
       console.error('No response received:', error.request);
+      // Return mock responses for critical endpoints to prevent app from hanging
+      if (error.config.url.includes('/teddy')) {
+        return Promise.resolve({ data: { data: { connectionStatus: { isConnected: false, batteryLevel: 0 } } } });
+      }
+      if (error.config.url.includes('/learning/progress')) {
+        return Promise.resolve({ data: { data: { completedEpisodes: [], currentEpisode: null } } });
+      }
     }
     
     return Promise.reject(error);

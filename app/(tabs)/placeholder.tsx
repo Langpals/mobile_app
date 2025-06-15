@@ -70,8 +70,8 @@ export default function PlaceholderScreen() {
               </View>
 
               <View style={styles.featureItem}>
-                <View style={[styles.featureIcon, { backgroundColor: Colors.light.accent + '20' }]}>
-                  <Sparkles size={20} color={Colors.light.accent} />
+                <View style={[styles.featureIcon, { backgroundColor: Colors.light.secondary + '20' }]}>
+                  <Sparkles size={20} color={Colors.light.secondary} />
                 </View>
                 <View style={styles.featureInfo}>
                   <Text style={styles.featureTitle}>Story Mode</Text>
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   encouragementText: {
     fontSize: 14,
     color: Colors.light.text,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     textAlign: 'center',
     lineHeight: 22,
   },

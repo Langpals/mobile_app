@@ -1,35 +1,35 @@
-const tintColorLight = '#FF6B6B'; // Cheerful coral
-const tintColorDark = '#FF9B9B';
+const tintColorLight = '#EB858C';
+const tintColorDark = '#EB858C';
 
 export default {
   light: {
-    text: '#2C3E50', // Dark blue-gray for readability
-    background: '#FFFFFF', // Pure white background
+    text: '#231F20', // Very dark grey
+    background: '#F5F5F4', // Light grey-white
     tint: tintColorLight,
-    tabIconDefault: '#A0AEC0',
+    tabIconDefault: '#F5F5F4', // Light grey-white
     tabIconSelected: tintColorLight,
-    cardBackground: '#FFFFFF', // White card backgrounds
-    primary: '#FF6B6B', // Cheerful coral
-    secondary: '#4CAF50', // Green
-    accent: '#FFB74D', // Orange
-    success: '#4CAF50', // Green
-    warning: '#FF9800', // Orange
-    error: '#F44336', // Red
-    border: '#E0E0E0', // Light gray border
+    cardBackground: '#F5F5F4', // Light grey-white
+    primary: '#EB858C', // Reddish
+    secondary: '#088FFF', // Blue
+    accent: '#FFCA0B', // Yellow
+    success: '#088FFF', // Using blue for success
+    warning: '#FFCA0B', // Using yellow for warning
+    error: '#EB858C', // Using reddish for error
+    border: '#F5F5F4', // Light grey-white
   },
   dark: {
-    text: '#F7FAFC',
-    background: '#1A202C',
+    text: '#F5F5F4', // Light grey-white
+    background: '#231F20', // Very dark grey
     tint: tintColorDark,
-    tabIconDefault: '#718096',
+    tabIconDefault: '#F5F5F4',
     tabIconSelected: tintColorDark,
-    cardBackground: '#2D3748',
-    primary: '#FF9B9B', // Lighter coral
-    secondary: '#68D391', // Lighter green
-    accent: '#FFD080', // Lighter orange
-    success: '#68D391', // Lighter green
-    warning: '#FBB040', // Lighter orange
-    error: '#FC8181', // Lighter red
-    border: '#4A5568',
+    cardBackground: '#F5F5F4', // Using light grey for dark card backgrounds
+    primary: '#EB858C',
+    secondary: '#088FFF',
+    accent: '#FFCA0B',
+    success: '#088FFF',
+    warning: '#FFCA0B',
+    error: '#EB858C',
+    border: '#F5F5F4',
   },
 };

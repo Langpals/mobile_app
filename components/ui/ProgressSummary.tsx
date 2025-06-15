@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   viewMoreText: {
     fontSize: 14,
     color: Colors.light.primary,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
   },
   mainCard: {
     borderRadius: 16,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.text,
     opacity: 0.8,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
   },
   statsGrid: {
     flexDirection: 'row',
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.light.text,
     opacity: 0.6,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     marginTop: 2,
   },
   weeklySection: {
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: Colors.light.text,
-    fontFamily: 'Outfit-Medium',
+    fontFamily: 'OpenSans-Bold',
   },
   weeklyProgress: {
     fontSize: 14,
@@ -229,6 +229,6 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     opacity: 0.6,
     textAlign: 'center',
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
   },
 });

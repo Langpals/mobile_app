@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   progressText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 11,
     color: Colors.light.text,
     opacity: 0.7,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statText: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
     fontSize: 11,
     color: Colors.light.text,
     marginLeft: 4,
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   settingText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 12,
     color: Colors.light.text,
     marginLeft: 6,
@@ -422,13 +422,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     fontSize: 16,
     color: Colors.light.text,
     marginBottom: 8,
   },
   description: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 14,
     color: Colors.light.text,
     lineHeight: 20,
@@ -444,16 +444,16 @@ const styles = StyleSheet.create({
     borderLeftColor: Colors.light.primary,
   },
   characterRole: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 12,
     color: Colors.light.text,
     marginBottom: 6,
   },
   characterLabel: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
   },
   narrativeHook: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 13,
     color: Colors.light.text,
     fontStyle: 'italic',
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   learningText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 11,
     color: Colors.light.text,
     marginLeft: 4,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   outcomeText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 13,
     color: Colors.light.text,
     flex: 1,
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
   },
   moreOutcomes: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 12,
     color: Colors.light.text,
     opacity: 0.6,
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   episodePreviewNumber: {
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     fontSize: 12,
     color: Colors.light.primary,
     marginBottom: 2,
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
   },
   episodePreviewTitle: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 11,
     color: Colors.light.text,
     lineHeight: 14,
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   moreEpisodes: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
     fontSize: 12,
     color: Colors.light.text,
     opacity: 0.6,

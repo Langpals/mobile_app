@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   text: {
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     fontWeight: 'bold',
     textAlign: 'center',
   },

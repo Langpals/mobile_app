@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.light.text,
     opacity: 0.6,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
   },
   vocabularyPreview: {
     marginBottom: 12,
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: Colors.light.text,
-    fontFamily: 'Outfit-Medium',
+    fontFamily: 'OpenSans-Bold',
     marginBottom: 6,
   },
   vocabularyChips: {
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   vocabularyWord: {
     fontSize: 11,
     fontWeight: '600',
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
   },
   pronunciationIcon: {
     padding: 2,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.light.text,
     opacity: 0.6,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans',
   },
   footer: {
     flexDirection: 'row',
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    fontFamily: 'Outfit-Medium',
+    fontFamily: 'OpenSans-Bold',
   },
   quickActionButton: {
     paddingHorizontal: 12,
@@ -427,6 +427,6 @@ const styles = StyleSheet.create({
   quickActionText: {
     fontSize: 12,
     fontWeight: 'bold',
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
   },
 });

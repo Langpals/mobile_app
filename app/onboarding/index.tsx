@@ -7,11 +7,13 @@ import Colors from '@/constants/Colors';
 import { globalStyles } from '@/constants/Styles';
 import TeddyMascot from '@/components/ui/TeddyMascot';
 import { useTeddy } from '@/contexts/TeddyContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const OnboardingScreen = () => {
   const [step, setStep] = useState(1);
-  const [teddyName, setTeddyName] = useState('Bernie');
+  const [teddyName, setTeddyName] = useState('Teddy');
   const { updateTeddy, loading } = useTeddy();
+  const { isAuthenticated } = useAuth();
 
   const handleNext = () => {
     if (step < 3) {
@@ -42,13 +44,29 @@ const OnboardingScreen = () => {
       // Mark onboarding as completed
       await SecureStore.setItemAsync('onboarding_completed', 'true');
       
-      // Navigate to the main app
-      router.replace('/(tabs)/');
+      // Check if user is authenticated to determine where to redirect
+      const authenticated = await isAuthenticated();
+      
+      if (authenticated) {
+        // User is authenticated, go to dashboard
+        router.replace('/(tabs)/');
+      } else {
+        // User is not authenticated, go to login
+        router.replace('/(auth)/login');
+      }
     } catch (error) {
       console.error('Error setting up teddy:', error);
-      // Mark onboarding as completed anyway and navigate
+      // Mark onboarding as completed anyway
       await SecureStore.setItemAsync('onboarding_completed', 'true');
-      router.replace('/(tabs)/');
+      
+      // Check authentication and redirect accordingly
+      const authenticated = await isAuthenticated();
+      
+      if (authenticated) {
+        router.replace('/(tabs)/');
+      } else {
+        router.replace('/(auth)/login');
+      }
     }
   };
 
@@ -57,9 +75,9 @@ const OnboardingScreen = () => {
       case 1:
         return (
           <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Welcome to Bernie!</Text>
+            <Text style={styles.stepTitle}>Welcome!</Text>
             <Text style={styles.stepDescription}>
-              Meet your child's new learning companion! Bernie the teddy bear helps your child learn languages through play and exploration.
+              Meet your child's new learning companion! Teddy helps your child learn languages through play and exploration.
             </Text>
             <Image 
               source={{ uri: 'https://images.pexels.com/photos/2767814/pexels-photo-2767814.jpeg' }}
@@ -72,7 +90,7 @@ const OnboardingScreen = () => {
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>How It Works</Text>
             <Text style={styles.stepDescription}>
-              Bernie connects to your device and guides your child through interactive learning episodes. You'll track progress and see real-time metrics of your child's language development.
+              Teddy connects to your device and guides your child through interactive learning episodes. You'll track progress and see real-time metrics of your child's language development.
             </Text>
             <View style={styles.features}>
               <View style={styles.featureItem}>
@@ -95,7 +113,7 @@ const OnboardingScreen = () => {
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>Get Started!</Text>
             <Text style={styles.stepDescription}>
-              You're all set to begin the learning journey with Bernie. Connect your teddy bear and start the first episode.
+              You're all set to begin the learning journey with Teddy. Connect your bear and start the first episode.
             </Text>
             <TeddyMascot 
               mood="excited" 
@@ -151,7 +169,7 @@ const OnboardingScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#FFFFFF',
   },
   scrollContent: {
     flexGrow: 1,

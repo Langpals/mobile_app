@@ -39,6 +39,7 @@ import { useTheme, ThemeMode } from '@/contexts/ThemeContext';
 import * as SecureStore from 'expo-secure-store';
 import * as Notifications from 'expo-notifications';
 import Markdown, { Renderer } from 'react-native-marked';
+import Colors from '@/constants/Colors';
 
 // Configure notification handling
 Notifications.setNotificationHandler({
@@ -472,7 +473,7 @@ berndottech@gmail.com
 
         {/* Enhanced Teddy Status with theme-aware styling */}
         <View style={dynamicStyles.section}>
-          <Text style={dynamicStyles.sectionTitle}>Hola, {mockChildProfile.name}! 👋</Text>
+          <Text style={dynamicStyles.sectionTitle}>Your Bear</Text>
           <View style={dynamicStyles.enhancedTeddyCard}>
             <View style={dynamicStyles.teddyInfo}>
               <Image 
@@ -701,7 +702,7 @@ function createStyles(colors: any) {
       marginBottom: 16,
     },
     profileCard: {
-      backgroundColor: colors.cardBackground,
+      backgroundColor: Colors.light.background,
       borderRadius: 16,
       padding: 20,
       flexDirection: 'row',
@@ -740,16 +741,16 @@ function createStyles(colors: any) {
       fontFamily: 'OpenSans',
     },
     enhancedTeddyCard: {
-      backgroundColor: colors.cardBackground,
-      borderRadius: 20,
+      backgroundColor: Colors.light.background,
+      borderRadius: 16,
       padding: 20,
-      borderWidth: 2,
-      borderColor: colors.primary + '20',
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 4,
+      marginBottom: 12,
+      borderWidth: 0,
+      shadowColor: colors.text,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
     },
     teddyInfo: {
       flexDirection: 'row',
@@ -760,7 +761,7 @@ function createStyles(colors: any) {
       width: 40,
       height: 40,
       resizeMode: 'contain',
-      borderRadius: 20,
+      borderRadius: 13,
     },
     teddyDetails: {
       flex: 1,
@@ -783,7 +784,7 @@ function createStyles(colors: any) {
       fontFamily: 'OpenSans',
     },
     preferenceCard: {
-      backgroundColor: colors.cardBackground,
+      backgroundColor: Colors.light.background,
       borderRadius: 16,
       padding: 20,
       marginBottom: 12,
@@ -874,7 +875,7 @@ function createStyles(colors: any) {
       fontFamily: 'Poppins-SemiBold',
     },
     settingItem: {
-      backgroundColor: colors.cardBackground,
+      backgroundColor: Colors.light.background,
       borderRadius: 12,
       padding: 16,
       flexDirection: 'row',
@@ -893,8 +894,7 @@ function createStyles(colors: any) {
       fontFamily: 'OpenSans-Bold',
     },
     logoutButton: {
-      borderColor: colors.error + '30',
-      borderWidth: 1,
+      borderWidth: 0,
     },
     logoutText: {
       color: colors.error,

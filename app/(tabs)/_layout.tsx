@@ -3,6 +3,24 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { BarChart3, Home, Settings, Sparkles } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { TouchableNativeFeedback, View, Platform } from 'react-native';
+
+// Custom tab bar button component
+const TabBarButton = ({ children, ...props }: any) => (
+  <TouchableNativeFeedback
+    background={TouchableNativeFeedback.Ripple('rgba(0, 0, 0, 0.1)', true, 52.67)} // radius is the last parameter
+    {...props}
+  >
+    <View style={{
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 8,
+    }}>
+      {children}
+    </View>
+  </TouchableNativeFeedback>
+);
 
 export default function TabLayout() {
   const { colors } = useTheme();
@@ -15,14 +33,14 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: colors.cardBackground,
           borderTopWidth: 0,
-          elevation: 8,
+          elevation: 0,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
           shadowRadius: 8,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 50,
+          paddingBottom: 0,
+          paddingTop: 0,
         },
         tabBarLabelStyle: {
           fontFamily: 'Cubano',
@@ -31,36 +49,38 @@ export default function TabLayout() {
         },
         tabBarIconStyle: {
           height: 20,
-          marginBottom: 4,
+          marginTop: 15,
+          marginBottom: 0,
         },
         headerShown: false,
+        tabBarButton: (props) => <TabBarButton {...props} />,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Learning',
+          title: '',
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="metrics"
         options={{
-          title: 'Metrics',
+          title: '',
           tabBarIcon: ({ color, size }) => <BarChart3 size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
-          title: 'Account',
+          title: '',
           tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="placeholder"
         options={{
-          title: 'Coming Soon',
+          title: '',
           tabBarIcon: ({ color, size }) => <Sparkles size={size} color={color} />,
         }}
       />

@@ -38,26 +38,30 @@ function AuthenticationGuard({ children }: { children: ReactNode }) {
         const inAuthGroup = segments[0] === '(auth)';
         const inOnboardingGroup = segments[0] === 'onboarding';
         
-        if (!authenticated && !inAuthGroup) {
-          // Redirect to login if not authenticated and not in auth group
-          router.replace('/(auth)/login');
-        } else if (authenticated && inAuthGroup) {
-          // Redirect to home if authenticated but in auth group
-          if (hasCompletedOnboarding !== 'true') {
-            // First login - redirect to onboarding
+        // If user hasn't completed onboarding, show onboarding regardless of auth status
+        if (hasCompletedOnboarding !== 'true') {
+          if (!inOnboardingGroup) {
             router.replace('/onboarding');
-          } else {
-            // User has completed onboarding - redirect to home
+          }
+        } else {
+          // User has completed onboarding, now check authentication
+          if (!authenticated && !inAuthGroup) {
+            // Not authenticated and not in auth group - redirect to login
+            router.replace('/(auth)/login');
+          } else if (authenticated && inAuthGroup) {
+            // Authenticated but in auth group - redirect to dashboard
             router.replace('/(tabs)/');
           }
-        } else if (authenticated && !inOnboardingGroup && hasCompletedOnboarding !== 'true') {
-          // User is authenticated but hasn't completed onboarding
-          router.replace('/onboarding');
         }
       } catch (error) {
         console.error('Error checking authentication:', error);
-        // If there's an error, default to login page
-        router.replace('/(auth)/login');
+        // If there's an error, check if onboarding is completed
+        const hasCompletedOnboarding = await SecureStore.getItemAsync('onboarding_completed');
+        if (hasCompletedOnboarding !== 'true') {
+          router.replace('/onboarding');
+        } else {
+          router.replace('/(auth)/login');
+        }
       } finally {
         setIsCheckingAuth(false);
       }

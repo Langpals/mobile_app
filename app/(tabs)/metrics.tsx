@@ -272,7 +272,7 @@ export default function MetricsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#FFFFFF',
   },
   scrollView: {
     flex: 1,

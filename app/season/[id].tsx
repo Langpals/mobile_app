@@ -36,7 +36,10 @@ export default function SeasonScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -76,18 +79,26 @@ export default function SeasonScreen() {
               style={[
                 styles.episodeCard,
                 episode.completed && styles.completedCard,
-                episode.locked && styles.lockedCard
+                episode.locked && styles.lockedCard,
+                !episode.completed && !episode.locked && styles.unlockedCard
               ]}
               onPress={() => handleEpisodePress(episode)}
               disabled={episode.locked}
             >
-              <View style={styles.episodeNumber}>
+              <View style={[
+                styles.episodeNumber,
+                !episode.completed && !episode.locked && styles.unlockedEpisodeNumber,
+                episode.completed && styles.completedEpisodeNumber
+              ]}>
                 {episode.completed ? (
-                  <Star size={16} color={Colors.light.success} />
+                  <Star size={16} color={'#73C44B'} />
                 ) : episode.locked ? (
                   <Lock size={16} color={Colors.light.text} />
                 ) : (
-                  <Text style={styles.episodeNumberText}>{episode.number}</Text>
+                  <Text style={[
+                    styles.episodeNumberText,
+                    !episode.completed && !episode.locked && styles.unlockedEpisodeNumberText
+                  ]}>{episode.number}</Text>
                 )}
               </View>
               
@@ -95,7 +106,8 @@ export default function SeasonScreen() {
                 <Text style={[
                   styles.episodeTitle,
                   episode.completed && styles.completedText,
-                  episode.locked && styles.lockedText
+                  episode.locked && styles.lockedText,
+                  !episode.completed && !episode.locked && styles.unlockedText
                 ]}>
                   {episode.title}
                 </Text>
@@ -103,7 +115,7 @@ export default function SeasonScreen() {
               </View>
               
               {!episode.locked && (
-                <Play size={16} color={episode.completed ? Colors.light.success : Colors.light.primary} />
+                <Play size={16} color={episode.completed ? '#73C44B' : Colors.light.primary} />
               )}
             </TouchableOpacity>
           ))}
@@ -116,7 +128,7 @@ export default function SeasonScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
@@ -127,13 +139,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 100,
     color: Colors.light.text,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 30,
+    marginTop: 15,
   },
   backButton: {
     width: 40,
@@ -142,27 +155,26 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.cardBackground,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 5,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 30,
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
   },
   placeholder: {
     width: 40,
   },
   seasonContainer: {
-    backgroundColor: Colors.light.cardBackground,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
     marginBottom: 24,
   },
   seasonTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -170,7 +182,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.light.text,
     opacity: 0.8,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
     lineHeight: 24,
     textAlign: 'center',
     marginBottom: 20,
@@ -181,19 +193,19 @@ const styles = StyleSheet.create({
   progressText: {
     fontSize: 14,
     color: Colors.light.text,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
     marginBottom: 8,
   },
   progressBar: {
     width: '100%',
     height: 6,
-    backgroundColor: Colors.light.border,
+    backgroundColor: Colors.light.background,
     borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: Colors.light.primary,
+    backgroundColor: '#58CC02',
     borderRadius: 3,
   },
   episodesSection: {
@@ -201,13 +213,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     marginBottom: 16,
   },
   episodeCard: {
-    backgroundColor: Colors.light.cardBackground,
+    backgroundColor: Colors.light.background,
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -216,12 +227,17 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   completedCard: {
-    backgroundColor: Colors.light.success + '10',
-    borderColor: Colors.light.success + '30',
+    backgroundColor: '#73C44B' + '10',
+    borderColor: '#73C44B',
     borderWidth: 1,
   },
   lockedCard: {
     opacity: 0.6,
+  },
+  unlockedCard: {
+    backgroundColor: Colors.light.primary + '10',
+    borderColor: Colors.light.primary,
+    borderWidth: 1,
   },
   episodeNumber: {
     width: 32,
@@ -233,9 +249,8 @@ const styles = StyleSheet.create({
   },
   episodeNumberText: {
     fontSize: 14,
-    fontWeight: 'bold',
     color: Colors.light.text,
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
   },
   episodeInfo: {
     flex: 1,
@@ -244,11 +259,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: Colors.light.text,
-    fontFamily: 'Outfit-Medium',
+    fontFamily: 'OpenSans-Bold',
     marginBottom: 2,
   },
   completedText: {
-    color: Colors.light.success,
+    color: '#73C44B',
   },
   lockedText: {
     opacity: 0.6,
@@ -257,6 +272,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.light.text,
     opacity: 0.6,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
+  },
+  unlockedEpisodeNumber: {
+    backgroundColor: Colors.light.primary + '20',
+  },
+  unlockedEpisodeNumberText: {
+    color: Colors.light.primary,
+  },
+  unlockedText: {
+    color: Colors.light.primary,
+  },
+  completedEpisodeNumber: {
+    backgroundColor: '#73C44B' + '20',
   },
 });

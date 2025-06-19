@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   seasonTheme: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
     fontSize: 14,
     color: '#3C3C3C',
     opacity: 0.7,
@@ -444,14 +444,14 @@ const styles = StyleSheet.create({
     maxWidth: 150,
   },
   episodeNumber: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
     fontSize: 12,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     marginBottom: 2,
   },
   episodeTitle: {
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     fontSize: 16,
     lineHeight: 20,
     marginBottom: 6,
@@ -460,13 +460,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   episodeMetaText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Regular',
     fontSize: 11,
     color: '#3C3C3C',
     opacity: 0.6,
   },
   progressText: {
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'OpenSans-Bold',
     fontSize: 11,
   },
   connectionLine: {
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   completeBadgeText: {
-    fontFamily: 'LilitaOne',
+    fontFamily: 'Cubano',
     fontSize: 16,
     color: '#FFFFFF',
   },

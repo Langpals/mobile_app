@@ -1,6 +1,8 @@
 // utils/TextDebugHelper.tsx - Helper to identify Text component issues
 import React, { useEffect } from 'react';
-import { LogBox, Text } from 'react-native';
+import { LogBox, Text, View, TouchableOpacity, StyleSheet } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+import { router } from 'expo-router';
 
 // This helper component helps debug Text component issues
 export const TextDebugHelper = () => {
@@ -87,5 +89,48 @@ export const renderSafeContent = (content: any) => {
   
   return content;
 };
+
+// Utility function to reset onboarding state (for testing)
+export const resetOnboardingState = async () => {
+  try {
+    await SecureStore.deleteItemAsync('onboarding_completed');
+    console.log('✅ Onboarding state reset successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Error resetting onboarding state:', error);
+    return false;
+  }
+};
+
+// Debug component to reset onboarding (only show in development)
+export const OnboardingResetButton = () => {
+  const handleReset = async () => {
+    const success = await resetOnboardingState();
+    if (success) {
+      // Navigate to onboarding
+      router.replace('/onboarding');
+    }
+  };
+
+  return (
+    <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+      <Text style={styles.resetButtonText}>Reset Onboarding</Text>
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  resetButton: {
+    backgroundColor: '#FF6B6B',
+    padding: 10,
+    borderRadius: 8,
+    margin: 10,
+  },
+  resetButtonText: {
+    color: '#FFFFFF',
+    fontFamily: 'OpenSans-Bold',
+    fontSize: 14,
+  },
+});
 
 export default TextDebugHelper;

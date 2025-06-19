@@ -88,7 +88,7 @@ export default function EpisodeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     width: 40,
   },
   episodeContainer: {
-    backgroundColor: Colors.light.cardBackground,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     marginBottom: 24,
     marginTop: 10,

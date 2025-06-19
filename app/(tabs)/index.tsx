@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, Animated, TouchableWithoutFeedback } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Svg, Line } from 'react-native-svg';
 import {
@@ -10,6 +10,7 @@ import { mockChildProfile, mockSeasons } from '@/data/mockData';
 import { router } from 'expo-router';
 import { Episode } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
+import { OnboardingResetButton } from '@/utils/TextDebugHelper';
 
 const { width } = Dimensions.get('window');
 
@@ -29,7 +30,23 @@ const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({ seasons, onEpis
   const [nodeAnimations] = useState(
     seasons[0].episodes.slice(0, 6).map((): Animated.Value => new Animated.Value(0))
   );
-  const [openInfoCardId, setOpenInfoCardId] = useState<string | null>(null); // State to manage open info card
+  const [bounceAnimations] = useState(
+    seasons[0].episodes.slice(0, 6).map((): Animated.Value => new Animated.Value(1))
+  );
+  const [openInfoCardId, setOpenInfoCardId] = useState<string | null>(null);
+
+  // Get current episode data when info card is open
+  const currentEpisode = openInfoCardId 
+    ? seasons[0].episodes.find((ep: Episode) => ep.id === openInfoCardId)
+    : null;
+  
+  // Get current node index for positioning
+  const currentNodeIndex = currentEpisode 
+    ? seasons[0].episodes.findIndex((ep: Episode) => ep.id === openInfoCardId)
+    : -1;
+  
+  const isLeft = currentNodeIndex % 2 === 0;
+  const nodeSize = currentEpisode?.type === 'weekend_special' ? 80 : 70;
 
   useEffect(() => {
     // Staggered animation for nodes
@@ -40,6 +57,27 @@ const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({ seasons, onEpis
         delay: index * 150,
         useNativeDriver: true,
       }).start();
+    });
+    // Bounce animation for unlocked (current) node
+    bounceAnimations.forEach((bounceAnim: Animated.Value, index: number) => {
+      const episode = seasons[0].episodes[index];
+      const isCurrent = episode.id === currentProgress.currentEpisodeId;
+      if (isCurrent) {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(bounceAnim, {
+              toValue: 1.15,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(bounceAnim, {
+              toValue: 1,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+      }
     });
   }, []);
 
@@ -124,7 +162,7 @@ const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({ seasons, onEpis
     // Determine colors based on status (matching provided image exactly with solid colors, adding alpha to second for type)
     const nodeColors = (() => {
       if (status === 'completed') {
-        return ['#58CC02', '#58CC0220'] as const;
+        return ['#73C44B', '#73C44B20'] as const;
       } else if (status === 'current') {
         return ['#FF6B6B', '#FF6B6B20'] as const;
       } else {
@@ -135,11 +173,54 @@ const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({ seasons, onEpis
     // Calculate position for zigzag pattern
     const isLeft = index % 2 === 0;
     const yOffset = index * 80;
-    const xOffset = isLeft ? 60 : width - 200; // Adjusted xOffset for left shift and better containment
+    const xOffset = isLeft ? 60 : width - 200;
 
     const handleNodeTap = (episodeId: string) => {
       setOpenInfoCardId(prevId => (prevId === episodeId ? null : episodeId));
     };
+
+    // Press animation
+    const [pressed, setPressed] = useState(false);
+    const pressAnim = useState(new Animated.Value(1))[0];
+    const shadowAnim = useState(new Animated.Value(2))[0];
+    const onPressIn = () => {
+      setPressed(true);
+      Animated.parallel([
+        Animated.spring(pressAnim, {
+          toValue: 1.12,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shadowAnim, {
+          toValue: 8,
+          duration: 120,
+          useNativeDriver: false,
+        }),
+      ]).start();
+    };
+    const onPressOut = () => {
+      setPressed(false);
+      Animated.parallel([
+        Animated.spring(pressAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shadowAnim, {
+          toValue: 2,
+          duration: 120,
+          useNativeDriver: false,
+        }),
+      ]).start();
+    };
+    // Use bounce animation for current (unlocked) node
+    const animatedStyle = status === 'current'
+      ? { transform: [
+          { translateY: nodeAnimations[index].interpolate({ inputRange: [0, 1], outputRange: [50, 0] }) },
+          { scale: Animated.multiply(bounceAnimations[index], pressAnim) },
+        ] }
+      : { transform: [
+          { translateY: nodeAnimations[index].interpolate({ inputRange: [0, 1], outputRange: [50, 0] }) },
+          { scale: Animated.multiply(nodeAnimations[index].interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }), pressAnim) },
+        ] };
 
     return (
       <Animated.View
@@ -150,115 +231,61 @@ const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({ seasons, onEpis
             left: xOffset,
             top: yOffset,
             opacity: nodeAnimations[index],
-            transform: [
-              {
-                translateY: nodeAnimations[index].interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [50, 0]
-                })
-              },
-              {
-                scale: nodeAnimations[index].interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.8, 1]
-                })
-              }
-            ],
-            zIndex: 2,
-            // Removed debugging border
+            ...animatedStyle,
+            zIndex: 1,
           }
         ]}
       >
         {/* Episode Node */}
         <TouchableOpacity
-          onPress={() => handleNodeTap(episode.id)} // Modified to toggle info card visibility
+          onPress={() => handleNodeTap(episode.id)}
+          onPressIn={onPressIn}
+          onPressOut={onPressOut}
           disabled={status === 'locked'}
-          style={[dynamicStyles.episodeNode, { width: nodeSize, height: nodeSize }]}>
-          {/* Node Shadow/Glow (matching image) */}
-          {/* Removed Node Shadow/Glow */}
-
-          {/* Main Node */}
-          <View // Replaced LinearGradient with a simple View
+          activeOpacity={0.85}
+          style={[dynamicStyles.episodeNode, { width: nodeSize, height: nodeSize }]}
+        >
+          {/* Shadow */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              top: 6,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: -1,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.22,
+              shadowRadius: shadowAnim,
+              elevation: shadowAnim,
+              borderRadius: nodeSize / 2,
+            }}
+          />
+          {/* Main Node with Gradient */}
+          <View
             style={[
-              dynamicStyles.nodeGradient, // Keep base styles
+              dynamicStyles.nodeGradient,
               {
                 borderRadius: nodeSize / 2,
-                backgroundColor: nodeColors[0], // Use solid color from nodeColors
-                // Removed shadow properties as they are handled by nodeGradient if needed
-                shadowColor: 'transparent',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0,
-                shadowRadius: 0,
-                elevation: 0,
-              }
-            ]}>
-            {/* Node Icon */}
+                backgroundColor: nodeColors[0],
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: nodeSize,
+                height: nodeSize,
+              },
+            ]}
+          >
             <IconComponent
               size={isSpecial ? 36 : 28}
               color={status === 'locked' ? '#9E9E9E' : '#FFFFFF'}
               strokeWidth={3}
             />
-
-            {/* Episode Number/Label - Always present in image */}
             <View style={dynamicStyles.episodeNumberBadge}>
               <Text style={dynamicStyles.episodeNumberText}>{episode.number}</Text>
             </View>
           </View>
         </TouchableOpacity>
-
-        {/* Episode Info Card (matching image positioning) */}
-        {openInfoCardId === episode.id && ( // Conditionally render info card
-          <View style={[
-            dynamicStyles.episodeInfoCard,
-            {
-              position: 'absolute',
-              top: 50, // Adjusted significantly upwards to ensure no vertical overlap with the node
-              marginLeft: isLeft ? nodeSize + 10 : -150, // To the right of left node, or to the left of right node
-              alignSelf: isLeft ? 'flex-start' : 'flex-end', // Aligns the card's content within its container
-              opacity: status === 'locked' ? 0.6 : 1, // Keep existing opacity logic if applicable
-              zIndex: 1000, // Ensure info card is above all other nodes
-            }
-          ]}>
-            <Text style={[
-              dynamicStyles.episodeCardTitle,
-              { color: status === 'locked' ? '#9E9E9E' : '#3C3C3C' }
-            ]}>
-              {episode.title}
-            </Text>
-
-            {status !== 'locked' && (
-              <>
-                <View style={dynamicStyles.episodeCardMeta}>
-                  <View style={dynamicStyles.metaItem}>
-                    <Clock size={12} color="#666" />
-                    <Text style={dynamicStyles.metaText}>{episode.duration}m</Text>
-                  </View>
-                  <View style={dynamicStyles.metaItem}>
-                    <BookOpen size={12} color="#666" />
-                    <Text style={dynamicStyles.metaText}>{episode.vocabularyFocus.length} words</Text>
-                  </View>
-                </View>
-
-                {status === 'current' && episode.completionRate > 0 && (
-                  <View style={dynamicStyles.progressContainer}>
-                    <View style={dynamicStyles.progressBar}>
-                      <View style={[dynamicStyles.progressFill, { width: `${episode.completionRate}%` }]} />
-                    </View>
-                    <Text style={[dynamicStyles.progressText, { color: '#58CC02' }]}>{episode.completionRate}% complete</Text>
-                  </View>
-                )}
-
-                {/* New: Start Episode Button */}
-                <TouchableOpacity
-                  style={dynamicStyles.startEpisodeButton}
-                  onPress={() => onEpisodePress(episode)} // Use existing navigation handler
-                >
-                  <Text style={dynamicStyles.startEpisodeButtonText}>Start Episode</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        )}
       </Animated.View>
     );
   };
@@ -269,7 +296,7 @@ const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({ seasons, onEpis
       <View style={dynamicStyles.journeyHeader}>
         <View style={dynamicStyles.journeyTitleContainer}>
           <View style={dynamicStyles.journeyIcon}>
-            <Trophy size={24} color="#58CC02" />
+            <Trophy size={24} color="#73C44B" />
           </View>
           <View>
             <Text style={[dynamicStyles.journeyTitle, { color: '#1CB0F6' }]}>{seasons[0].title}</Text>
@@ -277,7 +304,7 @@ const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({ seasons, onEpis
           </View>
         </View>
         <View style={dynamicStyles.journeyProgress}>
-          <Text style={[dynamicStyles.progressNumber, { color: '#58CC02' }]}>
+          <Text style={[dynamicStyles.progressNumber, { color: '#73C44B' }]}>
             {currentProgress.completedEpisodes.length}/{seasons[0].episodes.length}
           </Text>
           <Text style={dynamicStyles.progressLabel}>Episodes</Text>
@@ -285,18 +312,97 @@ const LearningJourneyMap: React.FC<LearningJourneyMapProps> = ({ seasons, onEpis
       </View>
 
       {/* Journey Map */}
-      <View style={dynamicStyles.journeyMap}> {/* This will become the direct parent */}
-        {renderZigZagLines()}{/* Render zig-zag lines first */}
-        {seasons[0].episodes.slice(0, 6).map((episode: Episode, index: number) =>
-          renderEpisodeNode(episode, index)
-        )}
+      <View style={[dynamicStyles.journeyMap, { position: 'relative' }]}>
+        {renderZigZagLines()}
+        
+        {/* Render all nodes first */}
+        <View style={{ position: 'relative', zIndex: 1 }}>
+          {seasons[0].episodes.slice(0, 6).map((episode: Episode, index: number) =>
+            renderEpisodeNode(episode, index)
+          )}
+        </View>
 
-        {/* View All Episodes Button (matching image) */}
+        {/* Render all info cards on top */}
+        <TouchableWithoutFeedback onPress={() => setOpenInfoCardId(null)}>
+          <View style={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            zIndex: 9999,
+            pointerEvents: 'box-none'
+          }}>
+            {seasons[0].episodes.slice(0, 6).map((episode: Episode, index: number) => {
+              const isLeft = index % 2 === 0;
+              const yOffset = index * 80;
+              const xOffset = isLeft ? 60 : width - 200;
+              const nodeSize = episode.type === 'weekend_special' ? 80 : 70;
+
+              return openInfoCardId === episode.id && (
+                <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                  <View
+                    key={`info-${episode.id}`}
+                    style={[
+                      dynamicStyles.episodeInfoCard,
+                      {
+                        position: 'absolute',
+                        top: yOffset + nodeSize + 10,
+                        left: xOffset - 40,
+                        width: 150,
+                      }
+                    ]}
+                  >
+                    <Text style={[
+                      dynamicStyles.episodeCardTitle,
+                      { color: getEpisodeStatus(episode) === 'locked' ? '#9E9E9E' : '#3C3C3C' }
+                    ]}>
+                      {episode.title}
+                    </Text>
+
+                    {getEpisodeStatus(episode) !== 'locked' && (
+                      <>
+                        <View style={dynamicStyles.episodeCardMeta}>
+                          <View style={dynamicStyles.metaItem}>
+                            <Clock size={12} color="#666" />
+                            <Text style={dynamicStyles.metaText}>{episode.duration}m</Text>
+                          </View>
+                          <View style={dynamicStyles.metaItem}>
+                            <BookOpen size={12} color="#666" />
+                            <Text style={dynamicStyles.metaText}>{episode.vocabularyFocus.length} words</Text>
+                          </View>
+                        </View>
+
+                        {getEpisodeStatus(episode) === 'current' && episode.completionRate > 0 && (
+                          <View style={dynamicStyles.progressContainer}>
+                            <View style={dynamicStyles.progressBar}>
+                              <View style={[dynamicStyles.progressFill, { width: `${episode.completionRate}%` }]} />
+                            </View>
+                            <Text style={[dynamicStyles.progressText, { color: '#58CC02' }]}>{episode.completionRate}% complete</Text>
+                          </View>
+                        )}
+
+                        <TouchableOpacity
+                          style={dynamicStyles.startEpisodeButton}
+                          onPress={() => onEpisodePress(episode)}
+                        >
+                          <Text style={dynamicStyles.startEpisodeButtonText}>Start Episode</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                  </View>
+                </TouchableWithoutFeedback>
+              );
+            })}
+          </View>
+        </TouchableWithoutFeedback>
+
+        {/* View All Episodes Button */}
         <TouchableOpacity
           style={dynamicStyles.viewAllButton}
           onPress={() => router.push('/season/1')}
         >
-          <Text style={[dynamicStyles.viewAllText, { color: '#58CC02' }]}>View All Episodes</Text>
+          <Text style={[dynamicStyles.viewAllText, { color: '#73C44B' }]}>View All Episodes</Text>
           <ChevronRight size={16} color="#58CC02" />
         </TouchableOpacity>
       </View>
@@ -332,12 +438,15 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Development Reset Button - Remove in production */}
+      <OnboardingResetButton />
+      
       <ScrollView style={dynamicStyles.scrollView} contentContainerStyle={dynamicStyles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Welcome Section */}
         <Animated.View style={[dynamicStyles.welcomeSection, { opacity: fadeAnim }]}>
           <View style={dynamicStyles.welcomeHeader}>
             <View>
-              <Text style={dynamicStyles.welcomeTitle}>¡Hola {mockChildProfile.name}!</Text>
+              <Text style={dynamicStyles.welcomeTitle}>¡Hola, {mockChildProfile.name}!</Text>
               <Text style={dynamicStyles.welcomeSubtitle}>Ready to continue your Spanish journey?</Text>
             </View>
             <View style={dynamicStyles.welcomeIcon}>
@@ -345,7 +454,7 @@ export default function HomeScreen() {
             </View>
           </View>
         </Animated.View>
-
+        
         {/* Enhanced Learning Journey (passing dynamicStyles) */}
         <Animated.View style={[dynamicStyles.learningPathSection, { opacity: fadeAnim }]}>
           <LearningJourneyMap
@@ -365,11 +474,11 @@ function createStyles(colors: any) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: Colors.light.background,
+      backgroundColor: '#FFFFFF',
     },
     scrollView: {
       flex: 1,
-      backgroundColor: Colors.light.background,
+      backgroundColor: '#FFFFFF',
     },
     scrollContent: {
       padding: 20,
@@ -381,7 +490,7 @@ function createStyles(colors: any) {
       marginBottom: 24,
     },
     learningJourneyContainer: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: Colors.light.background,
       borderRadius: 16,
       padding: 20,
       shadowColor: '#000',
@@ -568,7 +677,7 @@ function createStyles(colors: any) {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: Colors.light.background,
       borderRadius: 16,
       padding: 20,
       shadowColor: '#000',
@@ -598,7 +707,7 @@ function createStyles(colors: any) {
     },
     // New styles for the Start Episode Button
     startEpisodeButton: {
-      backgroundColor: Colors.light.primary, // Hardcoded original color
+      backgroundColor: '#FEF5D7', // Hardcoded original color
       paddingVertical: 8,
       paddingHorizontal: 12,
       borderRadius: 8,
@@ -606,7 +715,7 @@ function createStyles(colors: any) {
       alignSelf: 'center',
     },
     startEpisodeButtonText: {
-      color: '#FFFFFF',
+      color: Colors.light.accent,
       fontSize: 14,
       fontFamily: 'OpenSans-Bold',
     },

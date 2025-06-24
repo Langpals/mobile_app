@@ -1,9 +1,33 @@
-// app/step/[id].tsx - Enhanced Step Screen
+// app/step/[id].tsx - Enhanced with 3D Effects
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  SafeAreaView, 
+  TouchableOpacity, 
+  ScrollView, 
+  Animated, 
+  Dimensions 
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Play, CheckCircle, Clock, BookOpen, Mic, RotateCcw, ArrowRight, Lightbulb, Volume2 } from 'lucide-react-native';
+import { 
+  ArrowLeft, 
+  Play, 
+  CheckCircle, 
+  Clock, 
+  BookOpen, 
+  Mic, 
+  RotateCcw, 
+  ArrowRight, 
+  Lightbulb, 
+  Volume2,
+  Heart,
+  Star,
+  Trophy,
+  Zap
+} from 'lucide-react-native';
 import { mockSeasons } from '@/data/mockData';
 import { globalStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
@@ -24,10 +48,21 @@ export default function StepScreen() {
   const [interactionCount, setInteractionCount] = useState(0);
   const [responseTime, setResponseTime] = useState(0);
   const [startTime, setStartTime] = useState<number>(0);
+  const [hearts, setHearts] = useState(3);
+  const [score, setScore] = useState(0);
   
+  // Enhanced animations
   const [fadeAnimation] = useState(new Animated.Value(0));
   const [progressAnimation] = useState(new Animated.Value(0));
   const [celebrationAnimation] = useState(new Animated.Value(0));
+  const [headerAnimation] = useState(new Animated.Value(0));
+  const [contentAnimation] = useState(new Animated.Value(0));
+  const [floatingAnimation] = useState(new Animated.Value(0));
+  const [heartAnimations] = useState([
+    new Animated.Value(1),
+    new Animated.Value(1),
+    new Animated.Value(1)
+  ]);
 
   useEffect(() => {
     // Find the step from all seasons' episodes
@@ -46,356 +81,527 @@ export default function StepScreen() {
       }
     }
 
-    // Animate entrance
-    Animated.timing(fadeAnimation, {
+    // Start animations
+    const headerAnim = Animated.timing(headerAnimation, {
       toValue: 1,
       duration: 800,
       useNativeDriver: true,
-    }).start();
-  }, [id]);
+    });
 
-  const handleStartStep = () => {
-    setCurrentPhase('learning');
-    setStartTime(Date.now());
-    
-    // Animate progress
-    Animated.timing(progressAnimation, {
-      toValue: 0.33,
-      duration: 600,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const handlePracticePhase = () => {
-    setCurrentPhase('practice');
-    setInteractionCount(interactionCount + 1);
-    
-    // Animate progress
-    Animated.timing(progressAnimation, {
-      toValue: 0.66,
-      duration: 600,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const handleComplete = () => {
-    const endTime = Date.now();
-    setResponseTime(Math.round((endTime - startTime) / 1000));
-    setCompleted(true);
-    setCurrentPhase('completed');
-    
-    // Complete progress animation
-    Animated.timing(progressAnimation, {
+    const contentAnim = Animated.timing(contentAnimation, {
       toValue: 1,
-      duration: 600,
-      useNativeDriver: false,
-    }).start();
-
-    // Celebration animation
-    Animated.spring(celebrationAnimation, {
-      toValue: 1,
+      duration: 1000,
+      delay: 200,
       useNativeDriver: true,
-      tension: 100,
-      friction: 8,
-    }).start();
-  };
+    });
 
-  const handleNextStep = () => {
-    // Find next step in episode
-    if (episodeInfo && episodeInfo.steps) {
-      const currentIndex = episodeInfo.steps.findIndex((s: Step) => s.id === id);
-      const nextStep = episodeInfo.steps[currentIndex + 1];
+    const fadeAnim = Animated.timing(fadeAnimation, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    });
+
+    // Floating animation loop
+    const floatingLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatingAnimation, {
+          toValue: 1,
+          duration: 2500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatingAnimation, {
+          toValue: 0,
+          duration: 2500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    Animated.parallel([headerAnim, contentAnim, fadeAnim]).start();
+    floatingLoop.start();
+  }, []);
+
+  const handleNextPhase = () => {
+    const phases: Array<'intro' | 'learning' | 'practice' | 'completed'> = ['intro', 'learning', 'practice', 'completed'];
+    const currentIndex = phases.indexOf(currentPhase);
+    
+    if (currentIndex < phases.length - 1) {
+      setCurrentPhase(phases[currentIndex + 1]);
       
-      if (nextStep) {
-        router.replace({
-          pathname: "/step/[id]",
-          params: { id: nextStep.id }
-        });
-      } else {
-        // No more steps, go back to episode
+      // Animate progress
+      Animated.timing(progressAnimation, {
+        toValue: (currentIndex + 2) / phases.length,
+        duration: 500,
+        useNativeDriver: false,
+      }).start();
+
+      // Update score
+      setScore(score + 100);
+    } else {
+      // Step completed - celebrate!
+      Animated.timing(celebrationAnimation, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start();
+      
+      setCompleted(true);
+      setTimeout(() => {
         router.back();
-      }
+      }, 2000);
     }
   };
 
-  const getStepTypeIcon = (type: string) => {
-    switch (type) {
-      case 'vocabulary': return BookOpen;
-      case 'interaction': return Mic;
-      case 'assessment': return CheckCircle;
-      default: return Play;
+  const loseHeart = () => {
+    if (hearts > 0) {
+      const heartIndex = hearts - 1;
+      
+      // Animate heart loss
+      Animated.sequence([
+        Animated.timing(heartAnimations[heartIndex], {
+          toValue: 0.5,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartAnimations[heartIndex], {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+      
+      setHearts(hearts - 1);
     }
   };
 
-  const getStepTypeColor = (type: string) => {
-    switch (type) {
-      case 'vocabulary': return Colors.light.primary;
-      case 'interaction': return Colors.light.secondary;
-      case 'assessment': return Colors.light.success;
-      case 'review': return Colors.light.accent;
-      default: return Colors.light.primary;
+  const getPhaseColor = () => {
+    switch (currentPhase) {
+      case 'intro': return ['#667eea', '#764ba2'];
+      case 'learning': return ['#4ECDC4', '#44A08D'];
+      case 'practice': return ['#FFE66D', '#FF9F43'];
+      case 'completed': return ['#4CAF50', '#66BB6A'];
+      default: return ['#667eea', '#764ba2'];
     }
-  };
-
-  const getDifficultySettings = (level: DifficultyLevel) => {
-    const settings = {
-      veryEasy: { responseTime: 10, repetitions: 3, hints: true },
-      easy: { responseTime: 8, repetitions: 2, hints: true },
-      medium: { responseTime: 6, repetitions: 1, hints: true },
-      hard: { responseTime: 5, repetitions: 1, hints: false },
-      veryHard: { responseTime: 4, repetitions: 0, hints: false }
-    };
-    return settings[level];
   };
 
   const renderIntroPhase = () => (
-    <Animated.View style={[styles.phaseContainer, { opacity: fadeAnimation }]}>
-      <View style={styles.stepHeader}>
-        <View style={styles.stepTypeContainer}>
-          {React.createElement(getStepTypeIcon(step?.type || 'introduction'), {
-            size: 24,
-            color: getStepTypeColor(step?.type || 'introduction')
-          })}
-          <Text style={[styles.stepType, { color: getStepTypeColor(step?.type || 'introduction') }]}>
-            {step?.type.toUpperCase()}
-          </Text>
-        </View>
-        <DifficultyBadge level={step?.difficulty || 'easy'} />
-      </View>
-
-      <Text style={styles.stepTitle}>{step?.title}</Text>
-      <Text style={styles.stepDescription}>{step?.description}</Text>
-
-      {/* Vocabulary Preview */}
-      {step?.vocabularyWords && step.vocabularyWords.length > 0 && (
-        <View style={styles.vocabularyPreview}>
-          <Text style={styles.vocabularyTitle}>New Words:</Text>
-          <View style={styles.vocabularyList}>
-            {step.vocabularyWords.map((word, index) => (
-              <View key={index} style={styles.vocabularyChip}>
-                <Text style={styles.vocabularyWord}>{word}</Text>
-                <TouchableOpacity style={styles.pronunciationButton}>
-                  <Volume2 size={14} color={Colors.light.primary} />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Learning Tips */}
-      <View style={styles.tipsContainer}>
-        <View style={styles.tipHeader}>
-          <Lightbulb size={16} color={Colors.light.warning} />
-          <Text style={styles.tipTitle}>Learning Tips</Text>
-        </View>
-        <Text style={styles.tipText}>
-          {step?.difficulty === 'veryEasy' ? "Take your time! I'll repeat everything and give you lots of hints." :
-            step?.difficulty === 'easy' ? "Don't worry if you make mistakes - that's how we learn!" :
-            step?.difficulty === 'medium' ? "Listen carefully and try your best. You're doing great!" :
-            "You're ready for a challenge! Trust yourself and have fun!"
+    <Animated.View style={[
+      styles.phaseContainer,
+      {
+        opacity: contentAnimation,
+        transform: [
+          { perspective: 1000 },
+          {
+            translateY: contentAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [50, 0]
+            })
+          },
+          {
+            rotateX: contentAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['5deg', '0deg']
+            })
           }
-        </Text>
-      </View>
-
-      <TeddyMascot
-        mood="encouraging"
-        message={`¡Hola! Ready to learn about ${step?.title.toLowerCase()}? ¡Vamos!`}
-        size="medium"
-      />
-
-      <TouchableOpacity style={styles.startButton} onPress={handleStartStep}>
+        ]
+      }
+    ]}>
+      <View style={[styles.phaseCard, {
+        shadowColor: getPhaseColor()[0],
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+        elevation: 15,
+      }]}>
         <LinearGradient
-          colors={[Colors.light.primary, Colors.light.secondary]}
+          colors={getPhaseColor() as [import('react-native').ColorValue, import('react-native').ColorValue]}
+          style={styles.phaseGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.buttonGradient}
         >
-          <Play size={24} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Start Learning</Text>
+          <View style={styles.phaseHighlight} />
+          
+          <Text style={[styles.phaseTitle, {
+            textShadowColor: 'rgba(0,0,0,0.3)',
+            textShadowOffset: { width: 2, height: 2 },
+            textShadowRadius: 4,
+          }]}>
+            {step?.title}
+          </Text>
+          
+          <Text style={styles.phaseDescription}>
+            Get ready to learn! Teddy will guide you through this step.
+          </Text>
+
+          {/* Animated Teddy */}
+          <Animated.View style={[
+            styles.teddyContainer,
+            {
+              transform: [
+                {
+                  translateY: floatingAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, -10]
+                  })
+                },
+                {
+                  scale: floatingAnimation.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [1, 1.05, 1]
+                  })
+                }
+              ]
+            }
+          ]}>
+            <TeddyMascot mood="excited" size="large" />
+          </Animated.View>
+
+          <TouchableOpacity
+            onPress={handleNextPhase}
+            style={[styles.phaseButton, {
+              shadowColor: '#FFFFFF',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.3,
+              shadowRadius: 10,
+              elevation: 8,
+            }]}
+          >
+            <LinearGradient
+              colors={['#FFFFFF', '#F5F5F5']}
+              style={styles.phaseButtonGradient}
+            >
+              <Play size={24} color={getPhaseColor()[0]} strokeWidth={2.5} />
+              <Text style={[styles.phaseButtonText, { color: getPhaseColor()[0] }]}>
+                Let's Start!
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </LinearGradient>
-      </TouchableOpacity>
+      </View>
     </Animated.View>
   );
 
   const renderLearningPhase = () => (
-    <View style={styles.phaseContainer}>
-      <View style={styles.learningContent}>
-        <Text style={styles.phaseTitle}>Learning Phase</Text>
-        <Text style={styles.phaseDescription}>Listen to Bern and learn the new words and phrases</Text>
-
-        {/* Interactive Learning Area */}
-        <View style={styles.interactiveArea}>
-          <TeddyMascot
-            mood="teaching"
-            message="Now I'll teach you some new Spanish words. Listen carefully!"
-            size="large"
-          />
-
-          {/* Mock Interactive Elements */}
-          <View style={styles.learningCards}>
-            {step?.vocabularyWords?.slice(0, 2).map((word, index) => (
-              <View key={index} style={styles.learningCard}>
-                <Text style={styles.wordSpanish}>{word}</Text>
-                <Text style={styles.wordEnglish}>({getEnglishTranslation(word)})</Text>
-                <TouchableOpacity style={styles.repeatButton}>
-                  <RotateCcw size={16} color={Colors.light.secondary} />
-                  <Text style={styles.repeatText}>Repeat</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <TouchableOpacity style={styles.nextPhaseButton} onPress={handlePracticePhase}>
-          <Text style={styles.nextPhaseText}>Ready to Practice</Text>
-          <ArrowRight size={20} color={Colors.light.primary} />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  const renderPracticePhase = () => (
-    <View style={styles.phaseContainer}>
-      <View style={styles.practiceContent}>
-        <Text style={styles.phaseTitle}>Practice Time</Text>
-        <Text style={styles.phaseDescription}>Now it's your turn! Try saying the words you just learned</Text>
-
-        {/* Practice Interface */}
-        <View style={styles.practiceInterface}>
-          <TeddyMascot
-            mood="encouraging"
-            message="Your turn! Can you say 'Hola'? Press and hold the button while you speak."
-            size="medium"
-          />
-
-          <View style={styles.practiceCard}>
-            <Text style={styles.practicePrompt}>Say: "Hola"</Text>
-            <TouchableOpacity style={styles.micButton}>
-              <Mic size={32} color="#FFFFFF" />
-            </TouchableOpacity>
-            <Text style={styles.micInstructions}>Hold to speak</Text>
-          </View>
-
-          {showHint && (
-            <View style={styles.hintContainer}>
-              <Text style={styles.hintText}>
-                💡 Try saying "OH-lah" - break it into syllables!
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.practiceActions}>
-          <TouchableOpacity
-            style={styles.hintButton}
-            onPress={() => setShowHint(!showHint)}
-          >
-            <Lightbulb size={18} color={Colors.light.warning} />
-            <Text style={styles.hintButtonText}>Get Hint</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.completeButton} onPress={handleComplete}>
-            <Text style={styles.completeButtonText}>I Did It!</Text>
-            <CheckCircle size={20} color={Colors.light.success} />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderCompletedPhase = () => (
-    <Animated.View
-      style={[
-        styles.phaseContainer,
-        {
-          transform: [{
-            scale: celebrationAnimation.interpolate({
+    <Animated.View style={[
+      styles.phaseContainer,
+      {
+        opacity: contentAnimation,
+        transform: [
+          { perspective: 1000 },
+          {
+            rotateX: contentAnimation.interpolate({
               inputRange: [0, 1],
-              outputRange: [0.9, 1]
+              outputRange: ['3deg', '0deg']
             })
-          }]
-        }
-      ]}
-    >
-      <View style={styles.celebrationContent}>
-        <Text style={styles.celebrationTitle}>¡Excelente!</Text>
-        <Text style={styles.celebrationSubtitle}>You completed this step!</Text>
+          }
+        ]
+      }
+    ]}>
+      <View style={[styles.phaseCard, {
+        shadowColor: getPhaseColor()[0],
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+        elevation: 15,
+      }]}>
+        <LinearGradient
+          colors={getPhaseColor() as [import('react-native').ColorValue, import('react-native').ColorValue]}
+          style={styles.phaseGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.phaseHighlight} />
+          
+          <Text style={[styles.phaseTitle, {
+            textShadowColor: 'rgba(0,0,0,0.3)',
+            textShadowOffset: { width: 2, height: 2 },
+            textShadowRadius: 4,
+          }]}>
+            Learning: "Hola"
+          </Text>
+          
+          <Text style={styles.phaseDescription}>
+            Listen and repeat after Teddy!
+          </Text>
 
-        <View style={styles.completionStats}>
-          <View style={styles.statItem}>
-            <Clock size={20} color={Colors.light.primary} />
-            <Text style={styles.statLabel}>Time</Text>
-            <Text style={styles.statValue}>{responseTime}s</Text>
+          {/* Word Practice Card */}
+          <View style={[styles.wordCard, {
+            shadowColor: '#FFFFFF',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.3,
+            shadowRadius: 12,
+            elevation: 10,
+          }]}>
+            <LinearGradient
+              colors={['#FFFFFF', '#F8F8F8']}
+              style={styles.wordGradient}
+            >
+              <Text style={styles.wordText}>Hola</Text>
+              <Text style={styles.wordTranslation}>Hello</Text>
+              
+              <TouchableOpacity style={styles.playButton}>
+                <Volume2 size={32} color={getPhaseColor()[0]} strokeWidth={2.5} />
+              </TouchableOpacity>
+            </LinearGradient>
           </View>
 
-          <View style={styles.statItem}>
-            <Mic size={20} color={Colors.light.secondary} />
-            <Text style={styles.statLabel}>Attempts</Text>
-            <Text style={styles.statValue}>{interactionCount}</Text>
-          </View>
-
-          <View style={styles.statItem}>
-            <CheckCircle size={20} color={Colors.light.success} />
-            <Text style={styles.statLabel}>Status</Text>
-            <Text style={styles.statValue}>Perfect!</Text>
-          </View>
-        </View>
-
-        <TeddyMascot
-          mood="excited" 
-          message="¡Fantástico! You're becoming a Spanish superstar! Ready for the next step?"
-          size="large" 
-        />
-
-        <View style={styles.completionActions}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backButtonText}>Back to Episode</Text>
-          </TouchableOpacity>
-
-          {episodeInfo && episodeInfo.steps && 
-           episodeInfo.steps.findIndex((s: Step) => s.id === id) < episodeInfo.steps.length - 1 && (
-            <TouchableOpacity style={styles.nextStepButton} onPress={handleNextStep}>
-              <LinearGradient
-                colors={[Colors.light.success, Colors.light.primary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.buttonGradient}
-              >
-                <Text style={styles.buttonText}>Next Step</Text>
-                <ArrowRight size={20} color="#FFFFFF" />
-              </LinearGradient>
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity style={[styles.actionButton, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+              <Mic size={24} color="#FFFFFF" strokeWidth={2.5} />
+              <Text style={styles.actionButtonText}>Record</Text>
             </TouchableOpacity>
-          )}
-        </View>
+            
+            <TouchableOpacity 
+              onPress={handleNextPhase}
+              style={[styles.actionButton, { backgroundColor: 'rgba(255,255,255,0.3)' }]}
+            >
+              <ArrowRight size={24} color="#FFFFFF" strokeWidth={2.5} />
+              <Text style={styles.actionButtonText}>Continue</Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
       </View>
     </Animated.View>
   );
 
-  // Helper function for mock translations
-  const getEnglishTranslation = (word: string): string => {
-    const translations: { [key: string]: string } = {
-      'Hola': 'Hello',
-      'Adiós': 'Goodbye',
-      'Gracias': 'Thank you',
-      'Me llamo': 'My name is',
-      'Rojo': 'Red',
-      'Azul': 'Blue',
-      'Verde': 'Green',
-      'Amarillo': 'Yellow'
-    };
-    return translations[word] || 'Translation';
-  };
+  const renderPracticePhase = () => (
+    <Animated.View style={[
+      styles.phaseContainer,
+      {
+        opacity: contentAnimation,
+        transform: [
+          { perspective: 1000 },
+          {
+            rotateX: contentAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['3deg', '0deg']
+            })
+          }
+        ]
+      }
+    ]}>
+      <View style={[styles.phaseCard, {
+        shadowColor: getPhaseColor()[0],
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+        elevation: 15,
+      }]}>
+        <LinearGradient
+          colors={getPhaseColor() as [import('react-native').ColorValue, import('react-native').ColorValue]}
+          style={styles.phaseGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.phaseHighlight} />
+          
+          <Text style={[styles.phaseTitle, {
+            textShadowColor: 'rgba(0,0,0,0.3)',
+            textShadowOffset: { width: 2, height: 2 },
+            textShadowRadius: 4,
+          }]}>
+            Practice Time!
+          </Text>
+          
+          <Text style={styles.phaseDescription}>
+            Choose the correct translation for "Hello"
+          </Text>
 
-  if (!step || !episodeInfo) {
+          {/* Practice Options */}
+          <View style={styles.practiceOptions}>
+            {['Hola', 'Adiós', 'Gracias'].map((option, index) => (
+              <TouchableOpacity
+                key={option}
+                onPress={() => {
+                  if (option === 'Hola') {
+                    handleNextPhase();
+                  } else {
+                    loseHeart();
+                  }
+                }}
+                style={[styles.practiceOption, {
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 10,
+                  elevation: 6,
+                }]}
+              >
+                <LinearGradient
+                  colors={['#FFFFFF', '#F5F5F5']}
+                  style={styles.practiceOptionGradient}
+                >
+                  <Text style={styles.practiceOptionText}>{option}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Hint Button */}
+          <TouchableOpacity
+            onPress={() => setShowHint(!showHint)}
+            style={[styles.hintButton, {
+              backgroundColor: showHint ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+            }]}
+          >
+            <Lightbulb size={20} color="#FFFFFF" strokeWidth={2.5} />
+            <Text style={styles.hintButtonText}>
+              {showHint ? 'Hide Hint' : 'Show Hint'}
+            </Text>
+          </TouchableOpacity>
+
+          {showHint && (
+            <Animated.View style={[
+              styles.hintCard,
+              {
+                opacity: fadeAnimation,
+                transform: [
+                  { perspective: 800 },
+                  { rotateX: '-5deg' },
+                  { scale: 1.02 }
+                ]
+              }
+            ]}>
+              <Text style={styles.hintText}>
+                💡 "Hola" is the Spanish word for "Hello"
+              </Text>
+            </Animated.View>
+          )}
+        </LinearGradient>
+      </View>
+    </Animated.View>
+  );
+
+  const renderCompletedPhase = () => (
+    <Animated.View style={[
+      styles.phaseContainer,
+      {
+        opacity: celebrationAnimation,
+        transform: [
+          { perspective: 1000 },
+          {
+            scale: celebrationAnimation.interpolate({
+              inputRange: [0, 0.5, 1],
+              outputRange: [0.8, 1.1, 1]
+            })
+          },
+          {
+            rotateY: celebrationAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['0deg', '360deg']
+            })
+          }
+        ]
+      }
+    ]}>
+      <View style={[styles.phaseCard, {
+        shadowColor: getPhaseColor()[0],
+        shadowOffset: { width: 0, height: 16 },
+        shadowOpacity: 0.3,
+        shadowRadius: 24,
+        elevation: 20,
+      }]}>
+        <LinearGradient
+          colors={getPhaseColor() as [import('react-native').ColorValue, import('react-native').ColorValue]}
+          style={styles.phaseGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.phaseHighlight} />
+          
+          <Trophy size={64} color="#FFFFFF" strokeWidth={2.5} />
+          
+          <Text style={[styles.phaseTitle, {
+            textShadowColor: 'rgba(0,0,0,0.3)',
+            textShadowOffset: { width: 2, height: 2 },
+            textShadowRadius: 4,
+          }]}>
+            Well Done!
+          </Text>
+          
+          <Text style={styles.phaseDescription}>
+            You've completed this step! 🎉
+          </Text>
+
+          {/* Score Display */}
+          <View style={[styles.scoreCard, {
+            shadowColor: '#FFFFFF',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.3,
+            shadowRadius: 12,
+            elevation: 10,
+          }]}>
+            <LinearGradient
+              colors={['#FFFFFF', '#F8F8F8']}
+              style={styles.scoreGradient}
+            >
+              <View style={styles.scoreItem}>
+                <Star size={24} color="#FFD700" />
+                <Text style={styles.scoreText}>+{score} XP</Text>
+              </View>
+              
+              <View style={styles.scoreItem}>
+                <Zap size={24} color="#FF6B6B" />
+                <Text style={styles.scoreText}>Perfect!</Text>
+              </View>
+            </LinearGradient>
+          </View>
+
+          {/* Floating celebration particles */}
+          <View style={styles.celebrationParticles}>
+            {[...Array(8)].map((_, i) => (
+              <Animated.View
+                key={i}
+                style={[
+                  styles.celebrationParticle,
+                  {
+                    opacity: celebrationAnimation.interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: [0, 1, 0]
+                    }),
+                    transform: [
+                      {
+                        translateY: celebrationAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, -100 - (i * 20)]
+                        })
+                      },
+                      {
+                        rotate: celebrationAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '720deg']
+                        })
+                      }
+                    ]
+                  }
+                ]}
+              />
+            ))}
+          </View>
+        </LinearGradient>
+      </View>
+    </Animated.View>
+  );
+
+  if (!step) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.loadingContainer}>
-          <TeddyMascot mood="thinking" message="Loading your learning step..." />
-        </View>
+        <LinearGradient
+          colors={['#667eea', '#764ba2']}
+          style={styles.gradientBackground}
+        >
+          <View style={styles.loadingContainer}>
+            <Animated.Text style={[styles.loadingText, {
+              opacity: floatingAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.5, 1]
+              })
+            }]}>
+              Loading step...
+            </Animated.Text>
+          </View>
+        </LinearGradient>
       </SafeAreaView>
     );
   }
@@ -403,27 +609,78 @@ export default function StepScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <LinearGradient
-        colors={[
-          getStepTypeColor(step.type) + '10',
-          Colors.light.background,
-          Colors.light.secondary + '05'
-        ]}
+        colors={getPhaseColor() as [import('react-native').ColorValue, import('react-native').ColorValue]}
         style={styles.gradientBackground}
       >
-        {/* Header with Progress */}
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backHeaderButton}>
-              <ArrowLeft size={24} color={Colors.light.text} />
+        {/* Enhanced 3D Header */}
+        <Animated.View style={[
+          styles.header,
+          {
+            opacity: headerAnimation,
+            transform: [
+              { perspective: 1000 },
+              {
+                translateY: headerAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-30, 0]
+                })
+              },
+              {
+                rotateX: headerAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['10deg', '0deg']
+                })
+              }
+            ]
+          }
+        ]}>
+          <View style={styles.headerContent}>
+            <TouchableOpacity 
+              onPress={() => router.back()} 
+              style={styles.backHeaderButton}
+            >
+              <ArrowLeft size={24} color={getPhaseColor()[0]} strokeWidth={2.5} />
             </TouchableOpacity>
             
             <View style={styles.headerInfo}>
-              <Text style={styles.headerTitle}>{episodeInfo.title}</Text>
-              <Text style={styles.headerSubtitle}>Step {stepNumber} of {episodeInfo.steps.length}</Text>
+              <Text style={styles.headerTitle}>
+                Step {stepNumber} - {step.title}
+              </Text>
+              <Text style={styles.headerSubtitle}>
+                {currentPhase === 'intro' ? 'Ready to start' :
+                 currentPhase === 'learning' ? 'Learning...' :
+                 currentPhase === 'practice' ? 'Practicing...' :
+                 'Completed!'}
+              </Text>
+            </View>
+
+            {/* Hearts Display */}
+            <View style={styles.heartsContainer}>
+              {[...Array(3)].map((_, index) => (
+                <Animated.View
+                  key={index}
+                  style={[
+                    styles.heartWrapper,
+                    {
+                      opacity: heartAnimations[index],
+                      transform: [
+                        { scale: heartAnimations[index] }
+                      ]
+                    }
+                  ]}
+                >
+                  <Heart 
+                    size={24} 
+                    color={index < hearts ? "#FF6B6B" : "#CCCCCC"}
+                    fill={index < hearts ? "#FF6B6B" : "transparent"}
+                    strokeWidth={2}
+                  />
+                </Animated.View>
+              ))}
             </View>
           </View>
-          
-          {/* Progress Bar */}
+
+          {/* Enhanced Progress Bar */}
           <View style={styles.progressContainer}>
             <View style={styles.progressTrack}>
               <Animated.View 
@@ -439,13 +696,12 @@ export default function StepScreen() {
               />
             </View>
             <Text style={styles.progressText}>
-              {currentPhase === 'intro' ? 'Ready to start' :
-               currentPhase === 'learning' ? 'Learning...' :
-               currentPhase === 'practice' ? 'Practicing...' :
-               'Completed!'}
+              {Math.round(((currentPhase === 'intro' ? 0 : 
+                           currentPhase === 'learning' ? 33 : 
+                           currentPhase === 'practice' ? 66 : 100)))}% Complete
             </Text>
           </View>
-        </View>
+        </Animated.View>
 
         <ScrollView 
           style={styles.container} 
@@ -465,7 +721,6 @@ export default function StepScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.light.background,
   },
   gradientBackground: {
     flex: 1,
@@ -479,437 +734,291 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 32,
   },
+  loadingText: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontFamily: 'Cubano',
+    textAlign: 'center',
+  },
   header: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
-    backgroundColor: Colors.light.cardBackground,
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  headerTop: {
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
   backHeaderButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.light.background,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.05)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   headerInfo: {
     flex: 1,
   },
   headerTitle: {
-    fontFamily: 'LilitaOne',
-    fontSize: 16,
+    fontFamily: 'Cubano',
+    fontSize: 18,
     color: Colors.light.text,
   },
   headerSubtitle: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 12,
+    fontFamily: 'OpenSans',
+    fontSize: 14,
     color: Colors.light.text,
     opacity: 0.7,
+  },
+  heartsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  heartWrapper: {
+    padding: 4,
   },
   progressContainer: {
     alignItems: 'center',
   },
   progressTrack: {
     width: '100%',
-    height: 6,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 3,
+    height: 8,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 6,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: Colors.light.primary,
-    borderRadius: 3,
+    backgroundColor: Colors.light.success,
+    borderRadius: 4,
   },
   progressText: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'OpenSans-Bold',
     fontSize: 12,
     color: Colors.light.text,
     opacity: 0.8,
   },
   contentContainer: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: 20,
+    paddingTop: 40,
   },
   phaseContainer: {
     flex: 1,
+    justifyContent: 'center',
+    minHeight: height * 0.7,
   },
-  stepHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  phaseCard: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    margin: 8,
+  },
+  phaseGradient: {
+    padding: 32,
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  stepTypeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.cardBackground,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  stepType: {
-    fontFamily: 'Poppins-SemiBold',
-    fontSize: 12,
-    marginLeft: 6,
-  },
-  stepTitle: {
-    fontFamily: 'LilitaOne',
-    fontSize: 24,
-    color: Colors.light.text,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  stepDescription: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 16,
-    color: Colors.light.text,
-    opacity: 0.8,
-    lineHeight: 24,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  vocabularyPreview: {
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-  },
-  vocabularyTitle: {
-    fontFamily: 'LilitaOne',
-    fontSize: 16,
-    color: Colors.light.text,
-    marginBottom: 12,
-  },
-  vocabularyList: {
-    gap: 8,
-  },
-  vocabularyChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.light.primary + '15',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.primary + '30',
-  },
-  vocabularyWord: {
-    fontFamily: 'Poppins-SemiBold',
-    fontSize: 16,
-    color: Colors.light.primary,
-  },
-  pronunciationButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.light.primary + '20',
-    alignItems: 'center',
+    position: 'relative',
+    minHeight: 400,
     justifyContent: 'center',
   },
-  tipsContainer: {
-    backgroundColor: Colors.light.warning + '10',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.light.warning,
-  },
-  tipHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  tipTitle: {
-    fontFamily: 'LilitaOne',
-    fontSize: 14,
-    color: Colors.light.text,
-    marginLeft: 6,
-  },
-  tipText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: Colors.light.text,
-    lineHeight: 20,
-  },
-  startButton: {
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
-    marginTop: 20,
-  },
-  buttonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 16,
-    padding: 16,
-  },
-  buttonText: {
-    fontFamily: 'LilitaOne',
-    fontSize: 18,
-    color: '#FFFFFF',
-    marginLeft: 8,
-  },
-  learningContent: {
-    alignItems: 'center',
+  phaseHighlight: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    right: 8,
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 3,
   },
   phaseTitle: {
-    fontFamily: 'LilitaOne',
-    fontSize: 22,
-    color: Colors.light.text,
-    marginBottom: 8,
+    fontSize: 32,
+    color: '#FFFFFF',
+    fontFamily: 'Cubano',
+    textAlign: 'center',
+    marginBottom: 16,
   },
   phaseDescription: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: Colors.light.text,
-    opacity: 0.8,
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.9)',
+    fontFamily: 'OpenSans',
     textAlign: 'center',
-    marginBottom: 24,
-  },
-  interactiveArea: {
-    width: '100%',
-    alignItems: 'center',
+    lineHeight: 26,
     marginBottom: 32,
   },
-  learningCards: {
-    width: '100%',
-    marginTop: 20,
+  teddyContainer: {
+    marginBottom: 32,
+  },
+  phaseButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    minWidth: 200,
+  },
+  phaseButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 32,
     gap: 12,
   },
-  learningCard: {
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+  phaseButtonText: {
+    fontSize: 20,
+    fontFamily: 'Cubano',
   },
-  wordSpanish: {
-    fontFamily: 'LilitaOne',
-    fontSize: 24,
-    color: Colors.light.primary,
-    marginBottom: 4,
-  },
-  wordEnglish: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: Colors.light.text,
-    opacity: 0.7,
-    marginBottom: 12,
-  },
-  repeatButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.secondary + '20',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  repeatText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 12,
-    color: Colors.light.secondary,
-    marginLeft: 4,
-  },
-  nextPhaseButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.cardBackground,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.light.primary,
-  },
-  nextPhaseText: {
-    fontFamily: 'Poppins-SemiBold',
-    fontSize: 16,
-    color: Colors.light.primary,
-    marginRight: 8,
-  },
-  practiceContent: {
-    alignItems: 'center',
-  },
-  practiceInterface: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  practiceCard: {
-    backgroundColor: Colors.light.cardBackground,
+  wordCard: {
     borderRadius: 20,
-    padding: 24,
+    overflow: 'hidden',
+    marginBottom: 32,
+    minWidth: width * 0.7,
+  },
+  wordGradient: {
+    padding: 32,
     alignItems: 'center',
-    marginTop: 20,
+  },
+  wordText: {
+    fontSize: 48,
+    color: Colors.light.text,
+    fontFamily: 'Cubano',
+    marginBottom: 8,
+  },
+  wordTranslation: {
+    fontSize: 20,
+    color: Colors.light.text,
+    fontFamily: 'OpenSans',
+    opacity: 0.7,
+    marginBottom: 20,
+  },
+  playButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  practicePrompt: {
-    fontFamily: 'LilitaOne',
-    fontSize: 20,
-    color: Colors.light.text,
-    marginBottom: 20,
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 20,
   },
-  micButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.light.secondary,
+  actionButton: {
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
+    gap: 8,
+    flex: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 4,
   },
-  micInstructions: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 12,
-    color: Colors.light.text,
-    opacity: 0.7,
-  },
-  hintContainer: {
-    backgroundColor: Colors.light.warning + '15',
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: Colors.light.warning + '30',
-  },
-  hintText: {
-    fontFamily: 'Poppins-Regular',
+  actionButtonText: {
+    color: '#FFFFFF',
     fontSize: 14,
-    color: Colors.light.text,
-    textAlign: 'center',
+    fontFamily: 'OpenSans-Bold',
   },
-  practiceActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  practiceOptions: {
     width: '100%',
+    gap: 16,
+    marginBottom: 24,
+  },
+  practiceOption: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  practiceOptionGradient: {
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  practiceOptionText: {
+    fontSize: 18,
+    color: Colors.light.text,
+    fontFamily: 'Cubano',
   },
   hintButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.warning + '20',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    gap: 8,
     borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   hintButtonText: {
-    fontFamily: 'Poppins-Regular',
+    color: '#FFFFFF',
     fontSize: 14,
-    color: Colors.light.warning,
-    marginLeft: 6,
+    fontFamily: 'OpenSans-Bold',
   },
-  completeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.success + '20',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+  hintCard: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 12,
-  },
-  completeButtonText: {
-    fontFamily: 'Poppins-SemiBold',
-    fontSize: 14,
-    color: Colors.light.success,
-    marginRight: 6,
-  },
-  celebrationContent: {
-    alignItems: 'center',
-    paddingTop: 20,
-  },
-  celebrationTitle: {
-    fontFamily: 'LilitaOne',
-    fontSize: 32,
-    color: Colors.light.primary,
-    marginBottom: 8,
-  },
-  celebrationSubtitle: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 16,
-    color: Colors.light.text,
-    marginBottom: 24,
-  },
-  completionStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 16,
     padding: 16,
-    marginBottom: 24,
+    width: '100%',
   },
-  statItem: {
+  hintText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontFamily: 'OpenSans',
+    textAlign: 'center',
+  },
+  scoreCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginTop: 24,
+    minWidth: width * 0.6,
+  },
+  scoreGradient: {
+    flexDirection: 'row',
+    padding: 20,
+    justifyContent: 'space-around',
+  },
+  scoreItem: {
     alignItems: 'center',
+    gap: 8,
   },
-  statLabel: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 12,
-    color: Colors.light.text,
-    opacity: 0.7,
-    marginTop: 4,
-  },
-  statValue: {
-    fontFamily: 'LilitaOne',
+  scoreText: {
     fontSize: 16,
     color: Colors.light.text,
-    marginTop: 2,
+    fontFamily: 'Cubano',
   },
-  completionActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginTop: 20,
+  celebrationParticles: {
+    position: 'absolute',
+    top: 50,
+    left: 0,
+    right: 0,
+    height: 200,
+    pointerEvents: 'none',
   },
-  backButton: {
-    backgroundColor: Colors.light.cardBackground,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.light.border,
-  },
-  backButtonText: {
-    fontFamily: 'Poppins-Regular',
-    fontSize: 14,
-    color: Colors.light.text,
-  },
-  nextStepButton: {
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+  celebrationParticle: {
+    position: 'absolute',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFD700',
+    left: '50%',
+    top: '50%',
   },
 });

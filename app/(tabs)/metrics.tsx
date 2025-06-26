@@ -1,70 +1,77 @@
-// app/(tabs)/metrics.tsx - Updated with achievements and clickable metrics
+// app/(tabs)/metrics.tsx - Enhanced Metrics with Transcripts Card
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Platform, StatusBar, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { BookOpen, Target, TrendingUp, Clock, Trophy, X, Flame } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  SafeAreaView, 
+  Platform, 
+  StatusBar, 
+  ScrollView,
+  Modal
+} from 'react-native';
+import { 
+  BookOpen, 
+  Target, 
+  TrendingUp, 
+  Clock, 
+  MessageCircle,
+  X 
+} from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-import { mockProgressStats, mockChildProfile } from '@/data/mockData';
+import { mockChildProfile } from '@/data/mockData';
+
+const learnedWords = [
+  'Hola', 'Adiós', 'Gracias', 'Por favor', 'Sí', 'No', 'Agua', 'Casa',
+  'Perro', 'Gato', 'Mamá', 'Papá', 'Hermano', 'Hermana', 'Amigo', 'Escuela',
+  'Libro', 'Mesa', 'Silla', 'Ventana', 'Puerta', 'Cocina', 'Baño', 'Jardín',
+  'Sol', 'Luna', 'Estrella', 'Árbol', 'Flor', 'Pájaro', 'Pez', 'Manzana',
+  'Naranja', 'Plátano', 'Pan', 'Leche', 'Queso', 'Carne', 'Pollo', 'Arroz',
+  'Rojo', 'Azul'
+];
+
+const masteredTopics = [
+  'Family Members',
+  'Basic Greetings', 
+  'Common Animals'
+];
+
+// Mock transcript data
+const mockTranscripts = [
+  {
+    id: '1',
+    date: '2024-01-15',
+    time: '10:30 AM',
+    duration: '12 minutes',
+    episodeTitle: 'Meeting Bern',
+    conversationCount: 15,
+    preview: 'Child: "Hola Bern!" | Bern: "¡Hola! ¿Cómo te llamas?"'
+  },
+  {
+    id: '2',
+    date: '2024-01-14',
+    time: '4:15 PM',
+    duration: '8 minutes',
+    episodeTitle: 'Learning Colors',
+    conversationCount: 12,
+    preview: 'Child: "The apple is red!" | Bern: "¡Muy bien! La manzana es roja."'
+  },
+  {
+    id: '3',
+    date: '2024-01-13',
+    time: '11:45 AM',
+    duration: '15 minutes',
+    episodeTitle: 'Family Adventures',
+    conversationCount: 18,
+    preview: 'Child: "This is my family!" | Bern: "¡Qué bonita familia! Tell me about them."'
+  }
+];
 
 export default function MetricsScreen() {
   const [showWordsModal, setShowWordsModal] = useState(false);
   const [showTopicsModal, setShowTopicsModal] = useState(false);
-  //const [showAchievements, setShowAchievements] = useState(false);
-  
-  const wordsLearnt = mockProgressStats.proficiency.vocabularyMastery.mastered;
-  const topicsLearnt = 2; // Based on completed topics
-  
-  // Simple topic list based on episodes completed
-  const completedTopics = [
-    'Greetings & Introductions',
-    'Numbers & Counting'
-  ];
-
-  // Simple word bank based on completed episodes
-  const learnedWords = [
-    'Hola', 'Buenos días', 'Adiós', 'Gracias', 'Por favor',
-    'Uno', 'Dos', 'Tres', 'Cuatro', 'Cinco',
-    'Rojo', 'Azul', 'Verde', 'Amarillo', 'Naranja'
-  ];
-
-  // Mock achievements data
-  // const achievements = [
-  //   {
-  //     id: '1',
-  //     title: 'First Steps',
-  //     description: 'Complete your first episode',
-  //     points: 50,
-  //     unlocked: true,
-  //     color: Colors.light.primary,
-  //   },
-  //   {
-  //     id: '2',
-  //     title: 'Word Explorer',
-  //     description: 'Learn 10 new words',
-  //     points: 25,
-  //     unlocked: true,
-  //     color: Colors.light.success,
-  //   },
-  //   {
-  //     id: '3',
-  //     title: 'Streak Master',
-  //     description: 'Maintain a 3-day learning streak',
-  //     points: 75,
-  //     unlocked: true,
-  //     color: Colors.light.warning,
-  //   },
-  //   {
-  //     id: '4',
-  //     title: 'Perfect Score',
-  //     description: 'Complete an episode with 100% accuracy',
-  //     points: 100,
-  //     unlocked: false,
-  //     color: Colors.light.secondary,
-  //   },
-  // ];
-
-  // const unlockedAchievements = achievements.filter(a => a.unlocked);
-  // const totalPoints = unlockedAchievements.reduce((sum, a) => sum + a.points, 0);
+  const [showTranscriptsModal, setShowTranscriptsModal] = useState(false);
 
   const renderWordsModal = () => (
     <Modal visible={showWordsModal} transparent animationType="slide">
@@ -95,14 +102,14 @@ export default function MetricsScreen() {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Completed Topics</Text>
+            <Text style={styles.modalTitle}>Mastered Topics</Text>
             <TouchableOpacity onPress={() => setShowTopicsModal(false)}>
               <X size={24} color={Colors.light.text} />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.modalScroll}>
             <View style={styles.topicsList}>
-              {completedTopics.map((topic, index) => (
+              {masteredTopics.map((topic, index) => (
                 <View key={index} style={styles.topicItem}>
                   <View style={styles.topicIcon}>
                     <Text style={styles.checkmark}>✓</Text>
@@ -117,84 +124,41 @@ export default function MetricsScreen() {
     </Modal>
   );
 
-  // const renderAchievementsSection = () => (
-  //   <View style={styles.achievementsSection}>
-  //     <View style={styles.achievementsHeader}>
-  //       <Text style={styles.sectionTitle}>Achievements</Text>
-  //       <TouchableOpacity 
-  //         style={styles.toggleButton}
-  //         onPress={() => setShowAchievements(!showAchievements)}
-  //       >
-  //         <Text style={styles.toggleButtonText}>
-  //           {showAchievements ? 'Hide' : 'Show All'}
-  //         </Text>
-  //       </TouchableOpacity>
-  //     </View>
-      
-  //     <View style={styles.achievementsSummary}>
-  //       <View style={styles.achievementStat}>
-  //         <Trophy size={24} color={Colors.light.accent} />
-  //         <Text style={styles.achievementNumber}>{unlockedAchievements.length}</Text>
-  //         <Text style={styles.achievementLabel}>Unlocked</Text>
-  //       </View>
-  //       <View style={styles.achievementStat}>
-  //         <Target size={24} color={Colors.light.primary} />
-  //         <Text style={styles.achievementNumber}>{totalPoints}</Text>
-  //         <Text style={styles.achievementLabel}>Points</Text>
-  //       </View>
-  //     </View>
-
-  //     {showAchievements && (
-  //       <View style={styles.achievementsList}>
-  //         {achievements.map((achievement) => (
-  //           <View key={achievement.id} style={[
-  //             styles.achievementCard,
-  //             { opacity: achievement.unlocked ? 1 : 0.6 }
-  //           ]}>
-  //             <View
-  //               // colors={achievement.unlocked ? 
-  //               //   [achievement.color + '20', Colors.light.background] : 
-  //               //   [Colors.light.cardBackground, Colors.light.background]
-  //               // }
-  //               style={styles.achievementGradient}
-  //             >
-  //               <View style={styles.achievementContent}>
-  //                 <View style={[
-  //                   styles.achievementIcon,
-  //                   { backgroundColor: achievement.unlocked ? achievement.color + '20' : Colors.light.border }
-  //                 ]}>
-  //                   <Trophy size={20} color={achievement.unlocked ? achievement.color : Colors.light.tabIconDefault} />
-  //                 </View>
-  //                 <View style={styles.achievementInfo}>
-  //                   <Text style={[
-  //                     styles.achievementTitle,
-  //                     { color: achievement.unlocked ? Colors.light.text : Colors.light.tabIconDefault }
-  //                   ]}>
-  //                     {achievement.title}
-  //                   </Text>
-  //                   <Text style={[
-  //                     styles.achievementDescription,
-  //                     { color: achievement.unlocked ? Colors.light.text : Colors.light.border }
-  //                   ]}>
-  //                     {achievement.description}
-  //                   </Text>
-  //                 </View>
-  //                 <View style={styles.achievementPoints}>
-  //                   <Text style={[
-  //                     styles.pointsText,
-  //                     { color: achievement.unlocked ? achievement.color : Colors.light.tabIconDefault }
-  //                   ]}>
-  //                     {achievement.points}
-  //                   </Text>
-  //                 </View>
-  //               </View>
-  //             </View>
-  //           </View>
-  //         ))}
-  //       </View>
-  //     )}
-  //   </View>
-  // );
+  const renderTranscriptsModal = () => (
+    <Modal visible={showTranscriptsModal} transparent animationType="slide">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Conversation Transcripts</Text>
+            <TouchableOpacity onPress={() => setShowTranscriptsModal(false)}>
+              <X size={24} color={Colors.light.text} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalScroll}>
+            <Text style={styles.transcriptsDescription}>
+              Here are your child's recent conversations with Bern:
+            </Text>
+            <View style={styles.transcriptsList}>
+              {mockTranscripts.map((transcript) => (
+                <TouchableOpacity key={transcript.id} style={styles.transcriptCard}>
+                  <View style={styles.transcriptHeader}>
+                    <Text style={styles.transcriptTitle}>{transcript.episodeTitle}</Text>
+                    <Text style={styles.transcriptDate}>{transcript.date}</Text>
+                  </View>
+                  <View style={styles.transcriptMeta}>
+                    <Text style={styles.transcriptTime}>{transcript.time}</Text>
+                    <Text style={styles.transcriptDuration}>{transcript.duration}</Text>
+                    <Text style={styles.transcriptCount}>{transcript.conversationCount} exchanges</Text>
+                  </View>
+                  <Text style={styles.transcriptPreview}>{transcript.preview}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
 
   return (
     <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
@@ -235,11 +199,10 @@ export default function MetricsScreen() {
             <Text style={[styles.statValue, { fontSize: 32 }]}>{mockChildProfile.learningStreak}</Text>
             <Text style={styles.streakDays}>Days in a row</Text>
             <View style={styles.progressBarContainer}>
-              <View style={[styles.progressBarFill, { width: `${(mockChildProfile.learningStreak / 7) * 100}%` }]}></View> {/* Example progress based on 7-day goal */}
+              <View style={[styles.progressBarFill, { width: `${(mockChildProfile.learningStreak / 7) * 100}%` }]}></View>
             </View>
             <Text style={styles.streakText}>{'4 more days to level up!'}</Text>
           </View>
-          
         </TouchableOpacity>
 
         {/* Total Learning Time Card */}
@@ -255,12 +218,26 @@ export default function MetricsScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Achievements Section */}
-        {/* {renderAchievementsSection()} */}
+        {/* NEW: Conversation Transcripts Card */}
+        <TouchableOpacity 
+          style={[styles.fullWidthMetricCard, { backgroundColor: '#9B59B6' }]} 
+          onPress={() => setShowTranscriptsModal(true)}
+        >
+          <View style={[styles.metricIconCircle, { backgroundColor: Colors.light.background, marginBottom: 0 }]}>
+            <MessageCircle size={24} color={'#9B59B6'} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 16 }}>
+            <Text style={styles.statLabel}>Conversation Transcripts</Text>
+            <Text style={[styles.statValue, { fontSize: 32 }]}>{mockTranscripts.length}</Text>
+            <Text style={styles.timeUnit}>Sessions Available</Text>
+            <Text style={styles.timeDescription}>{'View your child\'s conversations with Bern!'}</Text>
+          </View>
+        </TouchableOpacity>
 
         {/* Modals */}
         {renderWordsModal()}
         {renderTopicsModal()}
+        {renderTranscriptsModal()}
       </ScrollView>
     </SafeAreaView>
   );
@@ -465,103 +442,6 @@ const styles = StyleSheet.create({
   modalScroll: {
     padding: 20,
   },
-  achievementsSection: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
-  },
-  achievementsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  toggleButton: {
-    backgroundColor: Colors.light.primary + '20',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  toggleButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.light.primary,
-    fontFamily: 'OpenSans-Bold',
-  },
-  achievementsSummary: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: Colors.light.cardBackground,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-  },
-  achievementStat: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  achievementNumber: {
-    fontSize: 24,
-    color: Colors.light.text,
-    fontFamily: 'Cubano',
-  },
-  achievementLabel: {
-    fontSize: 12,
-    color: Colors.light.text,
-    fontFamily: 'OpenSans',
-  },
-  achievementsList: {
-    gap: 12,
-  },
-  achievementCard: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 0,
-  },
-  achievementGradient: {
-    padding: 16,
-  },
-  achievementContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  achievementIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  achievementInfo: {
-    flex: 1,
-  },
-  achievementTitle: {
-    fontSize: 16,
-    fontFamily: 'Cubano',
-    marginBottom: 2,
-  },
-  achievementDescription: {
-    fontSize: 12,
-    fontFamily: 'OpenSans',
-    color: Colors.light.text,
-  },
-  achievementPoints: {
-    alignItems: 'center',
-  },
-  pointsText: {
-    fontSize: 18,
-    color: Colors.light.text,
-    fontFamily: 'Cubano',
-  },
-  pointsLabel: {
-    fontSize: 10,
-    color: Colors.light.text,
-    fontFamily: 'OpenSans',
-  },
   metricIconCircle: {
     width: 50,
     height: 50,
@@ -605,5 +485,79 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#58CC02',
     borderRadius: 4,
+  },
+  // New styles for transcripts modal
+  transcriptsDescription: {
+    fontSize: 14,
+    color: Colors.light.text,
+    opacity: 0.7,
+    fontFamily: 'OpenSans',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  transcriptsList: {
+    gap: 12,
+  },
+  transcriptCard: {
+    backgroundColor: Colors.light.cardBackground,
+    borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#9B59B6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  transcriptHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  transcriptTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.text,
+    fontFamily: 'Cubano',
+    flex: 1,
+  },
+  transcriptDate: {
+    fontSize: 12,
+    color: Colors.light.text,
+    opacity: 0.6,
+    fontFamily: 'OpenSans',
+  },
+  transcriptMeta: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 8,
+  },
+  transcriptTime: {
+    fontSize: 12,
+    color: '#9B59B6',
+    fontWeight: '600',
+    fontFamily: 'OpenSans-Bold',
+  },
+  transcriptDuration: {
+    fontSize: 12,
+    color: Colors.light.text,
+    opacity: 0.6,
+    fontFamily: 'OpenSans',
+  },
+  transcriptCount: {
+    fontSize: 12,
+    color: Colors.light.text,
+    opacity: 0.6,
+    fontFamily: 'OpenSans',
+  },
+  transcriptPreview: {
+    fontSize: 13,
+    color: Colors.light.text,
+    opacity: 0.8,
+    fontFamily: 'OpenSans',
+    fontStyle: 'italic',
+    lineHeight: 18,
   },
 });

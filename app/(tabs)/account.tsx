@@ -47,6 +47,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -311,11 +313,30 @@ berndottech@gmail.com
 
     const [hours, minutes] = time.split(':').map(Number);
 
-    const trigger = {
-      hour: hours,
-      minute: minutes,
-      repeats: true,
-    };
+    let trigger;
+    if (Platform.OS === 'ios') {
+      trigger = {
+        hour: hours,
+        minute: minutes,
+        repeats: true,
+        type: 'calendar',
+      } as Notifications.CalendarTriggerInput;
+    } else {
+      // Android: schedule for the next occurrence of the time, then repeat every 24h
+      const now = new Date();
+      const target = new Date();
+      target.setHours(hours, minutes, 0, 0);
+      let seconds = Math.floor((target.getTime() - now.getTime()) / 1000);
+      if (seconds < 0) {
+        // If the time has already passed today, schedule for tomorrow
+        seconds += 24 * 60 * 60;
+      }
+      trigger = {
+        seconds,
+        repeats: true,
+        type: 'timeInterval',
+      } as Notifications.TimeIntervalTriggerInput;
+    }
 
     await Notifications.scheduleNotificationAsync({
       content: {
@@ -481,7 +502,7 @@ berndottech@gmail.com
                 style={dynamicStyles.teddyImage}
               />
               <View style={dynamicStyles.teddyDetails}>
-                <Text style={dynamicStyles.teddyName}>{mockTeddyBear.name}</Text>
+                <Text style={dynamicStyles.teddyName}>Teddy</Text>
                 <View style={dynamicStyles.statusRow}>
                   <Wifi size={16} color={mockTeddyBear.connected ? colors.success : colors.error} />
                   <Text style={dynamicStyles.statusText}>

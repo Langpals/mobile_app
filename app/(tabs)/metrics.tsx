@@ -204,7 +204,6 @@ export default function MetricsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>{mockChildProfile.name}'s Progress</Text>
-          <Text style={styles.headerSubtitle}>Track your Spanish learning journey</Text>
         </View>
 
         {/* Quick Stats */}
@@ -215,7 +214,6 @@ export default function MetricsScreen() {
             </View>
             <Text style={styles.statValue}>{mockChildProfile.wordsLearned}</Text>
             <Text style={styles.statLabel}>Words Learned</Text>
-            <Text style={styles.viewAllText}>Tap to view all words</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.metricCard, { backgroundColor: '#58B4F9' }]} onPress={() => setShowTopicsModal(true)}>
@@ -224,7 +222,6 @@ export default function MetricsScreen() {
             </View>
             <Text style={styles.statValue}>{mockChildProfile.topicsMastered}</Text>
             <Text style={styles.statLabel}>Topics Mastered</Text>
-            <Text style={styles.viewAllText}>Tap to view topics</Text>
           </TouchableOpacity>
         </View>
 

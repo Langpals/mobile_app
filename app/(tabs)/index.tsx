@@ -65,10 +65,10 @@ export default function HomeScreen() {
           <View style={[styles.welcomeHeader, { backgroundColor: Colors.light.background }]}>
             <View>
               <Text style={[styles.welcomeTitle, { color: colors.text }]}>
-                ¡Hola, {mockChildProfile.name}!
+                ¡Hola!
               </Text>
               <Text style={[styles.welcomeSubtitle, { color: colors.text }]}>
-                Ready to continue your Spanish journey?
+                Ready to continue {mockChildProfile.name}'s Spanish journey?
               </Text>
             </View>
             <View style={styles.welcomeIcon}>

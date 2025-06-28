@@ -8,7 +8,9 @@ import {
   SafeAreaView, 
   ScrollView, 
   Animated, 
-  Dimensions 
+  Dimensions,
+  StatusBar,
+  Platform
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -45,44 +47,12 @@ export default function SeasonScreen() {
     if (foundSeason) {
       setSeason(foundSeason);
     }
-
-    // Start animations
-    const headerAnim = Animated.timing(headerAnimation, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    });
-
-    const contentAnim = Animated.timing(contentAnimation, {
-      toValue: 1,
-      duration: 1000,
-      delay: 200,
-      useNativeDriver: true,
-    });
-
-    // Floating animation loop
-    const floatingLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatingAnimation, {
-          toValue: 1,
-          duration: 3500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatingAnimation, {
-          toValue: 0,
-          duration: 3500,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    Animated.parallel([headerAnim, contentAnim]).start();
-    floatingLoop.start();
   }, []);
 
   if (!season) {
     return (
       <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
         <LinearGradient
           colors={['#667eea', '#764ba2']}
           style={styles.loadingGradient}
@@ -126,39 +96,11 @@ export default function SeasonScreen() {
         : ['#2196F3', '#42A5F5'];
 
     return (
-      <Animated.View
+      <View
         key={episode.id}
         style={[
           styles.episodeCard,
           {
-            opacity: contentAnimation,
-            transform: [
-              { perspective: 1000 },
-              {
-                translateY: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [30 + (index * 10), 0]
-                })
-              },
-              {
-                rotateX: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['8deg', '0deg']
-                })
-              },
-              {
-                scale: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.9, 1]
-                })
-              },
-              {
-                translateY: floatingAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, index % 2 === 0 ? -2 : 2]
-                })
-              }
-            ],
             shadowColor: episodeGradient[0],
             shadowOffset: { width: 0, height: 8 },
             shadowOpacity: 0.2,
@@ -178,8 +120,6 @@ export default function SeasonScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            {/* Card highlight */}
-            <View style={styles.episodeHighlight} />
             
             <View style={styles.episodeHeader}>
               <View style={styles.episodeNumber}>
@@ -220,93 +160,34 @@ export default function SeasonScreen() {
               </View>
               
               <View style={styles.episodeStat}>
-                <Target size={16} color="rgba(255,255,255,0.8)" />
-                <Text style={styles.episodeStatText}>
-                  {/* XP property not available on Episode type */}
-                </Text>
-              </View>
-              
-              <View style={styles.episodeStat}>
                 <BookOpen size={16} color="rgba(255,255,255,0.8)" />
                 <Text style={styles.episodeStatText}>
                   {episode.steps?.length || 0} Steps
                 </Text>
               </View>
             </View>
-
-            {/* Floating particles */}
-            <View style={styles.episodeParticles}>
-              {[...Array(3)].map((_, i) => (
-                <Animated.View
-                  key={i}
-                  style={[
-                    styles.episodeParticle,
-                    {
-                      opacity: floatingAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.3, 0.7]
-                      }),
-                      transform: [
-                        {
-                          translateX: floatingAnimation.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0, i * 4]
-                          })
-                        }
-                      ]
-                    }
-                  ]}
-                />
-              ))}
-            </View>
           </LinearGradient>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+      <StatusBar barStyle="light-content" />
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
         {/* Enhanced 3D Header */}
-        <Animated.View style={[
-          styles.header,
-          {
-            opacity: headerAnimation,
-            transform: [
-              { perspective: 1000 },
-              {
-                translateY: headerAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-40, 0]
-                })
-              },
-              {
-                rotateX: headerAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['12deg', '0deg']
-                })
-              },
-              {
-                scale: headerAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.9, 1]
-                })
-              }
-            ]
-          }
-        ]}>
+        <View style={styles.header}>
           <LinearGradient
-            colors={([...getSeasonGradient(), 'rgba(255,255,255,0.1)'] as unknown) as [import('react-native').ColorValue, import('react-native').ColorValue, ...import('react-native').ColorValue[]]}
+            colors={getSeasonGradient() as [import('react-native').ColorValue, import('react-native').ColorValue]}
             style={styles.headerGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
             {/* Header highlight */}
-            <View style={styles.headerHighlight} />
             
             <View style={styles.headerContent}>
               <TouchableOpacity 
@@ -324,77 +205,16 @@ export default function SeasonScreen() {
                 }]}>
                   Season {season.number}
                 </Text>
-                <Text style={styles.headerSubtitle}>
+                <Text style={styles.headerSubtitle} numberOfLines={1}>
                   {season.title}
                 </Text>
               </View>
-
-              <View style={styles.headerStats}>
-                <View style={styles.headerStat}>
-                  <Trophy size={20} color="#FFFFFF" />
-                  <Text style={styles.headerStatText}>
-                    {Math.round(progressPercentage)}%
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Floating decorative elements */}
-            <View style={styles.headerDecorative}>
-              {[...Array(6)].map((_, i) => (
-                <Animated.View
-                  key={i}
-                  style={[
-                    styles.headerDecorativeElement,
-                    {
-                      opacity: floatingAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.2, 0.6]
-                      }),
-                      transform: [
-                        {
-                          rotate: floatingAnimation.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['0deg', '360deg']
-                          })
-                        },
-                        {
-                          translateY: floatingAnimation.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0, -8 - (i * 2)]
-                          })
-                        }
-                      ]
-                    }
-                  ]}
-                />
-              ))}
             </View>
           </LinearGradient>
-        </Animated.View>
+        </View>
 
         {/* Enhanced Season Info */}
-        <Animated.View style={[
-          styles.seasonContainer,
-          {
-            opacity: contentAnimation,
-            transform: [
-              { perspective: 1000 },
-              {
-                translateY: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [50, 0]
-                })
-              },
-              {
-                rotateX: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['5deg', '0deg']
-                })
-              }
-            ]
-          }
-        ]}>
+        <View style={styles.seasonContainer}>
           <View style={[styles.seasonCard, {
             shadowColor: getSeasonGradient()[0],
             shadowOffset: { width: 0, height: 12 },
@@ -406,7 +226,6 @@ export default function SeasonScreen() {
               colors={['#FFFFFF', '#F8F8F8']}
               style={styles.seasonGradient}
             >
-              <View style={styles.seasonHighlight} />
               
               <Text style={styles.seasonTitle}>{season.title}</Text>
               <Text style={styles.seasonDescription}>{season.description}</Text>
@@ -435,14 +254,17 @@ export default function SeasonScreen() {
                 </View>
               </View>
 
+              {/* Setting Section */}
+              <View style={styles.settingSection}>
+              <Globe size={20} color={getSeasonGradient()[0]} />
+                <View style={styles.settingHeader}>
+                  <Text style={styles.settingLabel}>Setting</Text>
+                </View>
+                <Text style={styles.settingValue}>{season.setting}</Text>
+              </View>
+
               {/* Season Stats */}
               <View style={styles.seasonStats}>
-                <View style={styles.seasonStat}>
-                  <Globe size={20} color={getSeasonGradient()[0]} />
-                  <Text style={styles.seasonStatLabel}>Setting</Text>
-                  <Text style={styles.seasonStatValue}>{season.setting}</Text>
-                </View>
-                
                 <View style={styles.seasonStat}>
                   <Clock size={20} color={getSeasonGradient()[0]} />
                   <Text style={styles.seasonStatLabel}>Duration</Text>
@@ -461,30 +283,10 @@ export default function SeasonScreen() {
               </View>
             </LinearGradient>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Enhanced Learning Outcomes */}
-        <Animated.View style={[
-          styles.outcomesSection,
-          {
-            opacity: contentAnimation,
-            transform: [
-              { perspective: 1000 },
-              {
-                translateY: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [60, 0]
-                })
-              },
-              {
-                rotateX: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['3deg', '0deg']
-                })
-              }
-            ]
-          }
-        ]}>
+        <View style={styles.outcomesSection}>
           <Text style={[styles.sectionTitle, {
             textShadowColor: 'rgba(0,0,0,0.1)',
             textShadowOffset: { width: 1, height: 1 },
@@ -495,22 +297,11 @@ export default function SeasonScreen() {
           
           <View style={styles.outcomesGrid}>
             {season.learningOutcomes.map((outcome, index) => (
-              <Animated.View
+              <View
                 key={outcome.id}
                 style={[
                   styles.outcomeCard,
                   {
-                    transform: [
-                      { perspective: 800 },
-                      { rotateX: '2deg' },
-                      { scale: 1.02 },
-                      {
-                        translateY: floatingAnimation.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, index % 2 === 0 ? -1 : 1]
-                        })
-                      }
-                    ],
                     shadowColor: outcome.achieved ? '#4CAF50' : '#E0E0E0',
                     shadowOffset: { width: 0, height: 6 },
                     shadowOpacity: 0.15,
@@ -533,33 +324,13 @@ export default function SeasonScreen() {
                 ]}>
                   {outcome.description}
                 </Text>
-              </Animated.View>
+              </View>
             ))}
           </View>
-        </Animated.View>
+        </View>
 
         {/* Enhanced Episodes List */}
-        <Animated.View style={[
-          styles.episodesSection,
-          {
-            opacity: contentAnimation,
-            transform: [
-              { perspective: 1000 },
-              {
-                translateY: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [70, 0]
-                })
-              },
-              {
-                rotateX: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['2deg', '0deg']
-                })
-              }
-            ]
-          }
-        ]}>
+        <View style={styles.episodesSection}>
           <Text style={[styles.sectionTitle, {
             textShadowColor: 'rgba(0,0,0,0.1)',
             textShadowOffset: { width: 1, height: 1 },
@@ -577,7 +348,7 @@ export default function SeasonScreen() {
               renderEpisodeCard(episode, index)
             )}
           </View>
-        </Animated.View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -609,9 +380,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   headerGradient: {
-    padding: 24,
+    padding: 16,
     position: 'relative',
-    minHeight: 140,
+    minHeight: 100,
   },
   headerHighlight: {
     position: 'absolute',
@@ -641,7 +412,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 0,
   },
   headerInfo: {
     flex: 1,
@@ -722,6 +493,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     opacity: 0.8,
+    paddingHorizontal: 8, // Add padding to prevent overflow
   },
   progressContainer: {
     marginBottom: 24,
@@ -752,15 +524,20 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   seasonStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: 'column',
+    gap: 16,
   },
   seasonStat: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(0,0,0,0.02)',
+    borderRadius: 8,
   },
   seasonStatLabel: {
-    fontSize: 12,
+    fontSize: 14,
     color: Colors.light.text,
     fontFamily: 'OpenSans',
     opacity: 0.7,
@@ -768,7 +545,7 @@ const styles = StyleSheet.create({
   seasonStatValue: {
     fontSize: 16,
     color: Colors.light.text,
-    fontFamily: 'Cubano',
+    fontFamily: 'OpenSans-Bold',
   },
   outcomesSection: {
     paddingHorizontal: 20,
@@ -910,5 +687,32 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: 'rgba(255,255,255,0.5)',
     marginBottom: 4,
+  },
+  settingSection: {
+    marginTop: 16,
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: 'rgba(0,0,0,0.02)',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  settingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
+  settingLabel: {
+    fontSize: 20,
+    color: Colors.light.text,
+    fontFamily: 'Cubano',
+    opacity: 0.7,
+  },
+  settingValue: {
+    fontSize: 16,
+    color: Colors.light.text,
+    fontFamily: 'OpenSans-Bold',
+    textAlign: 'center',
   },
 });

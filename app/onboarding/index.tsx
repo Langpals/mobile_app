@@ -1,4 +1,4 @@
-// app/onboarding/index.tsx - Enhanced Onboarding Experience
+// app/onboarding/index.tsx - Simple fixes only
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
@@ -11,7 +11,8 @@ import {
   Platform,
   StatusBar,
   TextInput,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  Keyboard
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -117,7 +118,7 @@ const onboardingSteps: OnboardingStep[] = [
     subtitle: "Learning Buddy",
     description: "Give your Teddy bear a special name and get ready for an incredible Spanish learning journey!",
     icon: Sparkles,
-    gradient: ['#A8E6CF', '#7FB069']
+    gradient: ['#66BB6A', '#4CAF50'] // More green as requested
   }
 ];
 
@@ -125,6 +126,7 @@ export default function EnhancedOnboardingScreen() {
   const [currentStep, setCurrentStep] = useState(1);
   const [teddyName, setTeddyName] = useState('Teddy');
   const [isLoading, setIsLoading] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const { updateTeddy } = useTeddy();
   const { isAuthenticated } = useAuth();
 
@@ -143,6 +145,21 @@ export default function EnhancedOnboardingScreen() {
   useEffect(() => {
     animateStepEntrance();
   }, [currentStep]);
+
+  // Simple keyboard handling for step 3
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, []);
 
   const animateStepEntrance = () => {
     // Reset animations
@@ -301,54 +318,56 @@ export default function EnhancedOnboardingScreen() {
     if (currentStep === 3) {
       // Special teddy naming step
       return (
-        <Animated.View 
-          style={[
-            styles.stepContent,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.iconContainer}>
-            <LinearGradient colors={step.gradient} style={styles.iconGradient}>
-              <IconComponent size={48} color="#FFF" strokeWidth={2} />
-            </LinearGradient>
-          </View>
+        <View style={styles.teddyStepContainer}>
+          <Animated.View 
+            style={[
+              styles.stepContent,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <View style={styles.iconContainer}>
+              <LinearGradient colors={step.gradient} style={styles.iconGradient}>
+                <IconComponent size={48} color="#FFF" strokeWidth={2} />
+              </LinearGradient>
+            </View>
 
-          <View style={styles.textContainer}>
-            <Text style={styles.stepTitle}>
-              {step.title}
-            </Text>
-            <Text style={styles.stepSubtitle}>
-              {step.subtitle}
-            </Text>
-            <Text style={styles.stepDescription}>
-              {step.description}
-            </Text>
-          </View>
+            <View style={styles.textContainer}>
+              <Text style={styles.stepTitle}>
+                {step.title}
+              </Text>
+              <Text style={styles.stepSubtitle}>
+                {step.subtitle}
+              </Text>
+              <Text style={styles.stepDescription}>
+                {step.description}
+              </Text>
+            </View>
 
-          <View style={styles.teddyContainer}>
-            <TeddyMascot 
-              mood="excited" 
-              size="large"
-              message={`Hi! I'm ${teddyName}!`}
-            />
-          </View>
+            <View style={styles.teddyContainer}>
+              <TeddyMascot 
+                mood="excited" 
+                size="large"
+                message={`I'm ${teddyName}!`}
+              />
+            </View>
 
-          <View style={styles.nameInputContainer}>
-            <Text style={styles.nameInputLabel}>What should we call your Teddy?</Text>
-            <TextInput
-              style={styles.nameInput}
-              value={teddyName}
-              onChangeText={setTeddyName}
-              placeholder="Enter Teddy's name"
-              placeholderTextColor="#999"
-              maxLength={20}
-              autoCapitalize="words"
-            />
-          </View>
-        </Animated.View>
+            <View style={styles.nameInputContainer}>
+              <Text style={styles.nameInputLabel}>What should we call your Teddy?</Text>
+              <TextInput
+                style={styles.nameInput}
+                value={teddyName}
+                onChangeText={setTeddyName}
+                placeholder="Enter Teddy's name"
+                placeholderTextColor="#999"
+                maxLength={20}
+                autoCapitalize="words"
+              />
+            </View>
+          </Animated.View>
+        </View>
       );
     }
 
@@ -413,8 +432,9 @@ export default function EnhancedOnboardingScreen() {
           {renderStepContent()}
         </ScrollView>
 
+        {/* Fixed navigation - hide back button when keyboard is visible on step 3 */}
         <View style={styles.navigationContainer}>
-          {currentStep > 1 && (
+          {currentStep > 1 && !(keyboardVisible && currentStep === 3) && (
             <TouchableOpacity style={styles.backButton} onPress={handleBack}>
               <ArrowLeft size={20} color="#FFF" />
               <Text style={styles.backButtonText}>Back</Text>
@@ -489,6 +509,11 @@ const styles = StyleSheet.create({
   stepContent: {
     flex: 1,
     alignItems: 'center',
+  },
+  // Special container for step 3 to ensure no scrolling
+  teddyStepContainer: {
+    flex: 1,
+    minHeight: height - 200, // Ensure content fits without scrolling
   },
   iconContainer: {
     marginBottom: 32,
@@ -575,7 +600,22 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   teddyContainer: {
+    alignItems: 'center',
     marginVertical: 20,
+  },
+  // Simple greeting box
+  greetingBox: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  greetingText: {
+    fontFamily: 'Outfit-Medium',
+    fontSize: 16,
+    color: '#FFF',
+    textAlign: 'center',
   },
   nameInputContainer: {
     width: '100%',
@@ -634,7 +674,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 0,
   },
   nextButtonCentered: {
     position: 'absolute',

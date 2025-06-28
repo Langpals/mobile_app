@@ -339,7 +339,7 @@ By using the Service, you acknowledge that you have read and understood these Te
     profileName: {
       fontSize: 20,
       color: colors.text,
-      fontFamily: 'Cubano',
+      fontFamily: 'OpenSans-Bold',
       marginBottom: 4,
     },
     profileDetail: {
@@ -495,7 +495,7 @@ By using the Service, you acknowledge that you have read and understood these Te
       marginBottom: 16,
     },
     modalTitle: {
-      fontSize: 18,
+      fontSize: 30,
       color: colors.text,
       fontFamily: 'Cubano',
     },
@@ -596,7 +596,7 @@ By using the Service, you acknowledge that you have read and understood these Te
     },
     profileModalSectionTitle: {
       fontSize: 16,
-      color: colors.text,
+      color: colors.text + 90,
       fontFamily: 'Cubano',
       marginBottom: 12,
     },
@@ -743,7 +743,7 @@ By using the Service, you acknowledge that you have read and understood these Te
       >
         <View style={dynamicStyles.modalOverlay}>
           <View style={dynamicStyles.profileModalContent}>
-            <View style={dynamicStyles.modalHeader}>
+            <View style={[dynamicStyles.modalHeader, { paddingHorizontal: 20, paddingVertical: 16 }]}>
               <Text style={dynamicStyles.modalTitle}>Profile</Text>
               <TouchableOpacity onPress={() => setShowProfileModal(false)}>
                 <X size={24} color={colors.text} />

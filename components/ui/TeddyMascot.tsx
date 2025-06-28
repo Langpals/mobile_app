@@ -1,4 +1,4 @@
-// components/ui/TeddyMascot.tsx - Simplified Version
+// components/ui/TeddyMascot.tsx - Simple clean version
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -101,7 +101,7 @@ export default function TeddyMascot({
 
   return (
     <View style={styles.container}>
-      {/* Teddy Bear */}
+      {/* Simple Teddy Bear - just the emoji, no background */}
       <TouchableOpacity 
         style={styles.mascotContainer} 
         onPress={onPress}
@@ -110,29 +110,21 @@ export default function TeddyMascot({
         <Animated.View
           style={[
             styles.mascot,
-            sizeStyle,
             {
               transform: [{ scale: bounceAnim }]
             }
           ]}
         >
-          {/* Glow effect */}
-          <LinearGradient
-            colors={[moodColor + '30', moodColor + '10', 'transparent']}
-            style={[styles.mascotGlow, sizeStyle]}
-          />
+          {/* Clean teddy - just the emoji */}
+          <Text style={[styles.teddyEmoji, { fontSize: size === 'large' ? 
+            48 : size === 'medium' ? 36 : 24 }]}>
+            🧸
+          </Text>
           
-          {/* Simple Teddy representation */}
-          <View style={[styles.teddyBody, sizeStyle, { backgroundColor: '#D2691E' }]}>
-            <Text style={[styles.teddyEmoji, { fontSize: size === 'large' ? 48 : size === 'medium' ? 36 : 24 }]}>
-              🧸
-            </Text>
-          </View>
-          
-          {/* Mood indicator */}
-          <View style={[styles.moodIndicator, { backgroundColor: moodColor }]}>
+          {/* Small mood indicator */}
+          {/* <View style={[styles.moodIndicator, { backgroundColor: moodColor }]}>
             <Text style={styles.moodEmoji}>{getMoodEmoji()}</Text>
-          </View>
+          </View> */}
         </Animated.View>
       </TouchableOpacity>
       
@@ -160,10 +152,10 @@ export default function TeddyMascot({
               <Text style={styles.messageText}>{message}</Text>
               
               <TouchableOpacity 
-                style={[styles.speakButton, { backgroundColor: moodColor + '20' }]}
+                style={[styles.speakButton]}
               >
-                <Volume2 size={12} color={moodColor} />
-                <Text style={[styles.speakButtonText, { color: moodColor }]}>
+                <Volume2 size={12} />
+                <Text style={[styles.speakButtonText]}>
                   Listen
                 </Text>
               </TouchableOpacity>
@@ -190,20 +182,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-  },
-  mascotGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  teddyBody: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
   },
   teddyEmoji: {
     textAlign: 'center',
@@ -241,7 +219,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 0,
   },
   messageBubbleGradient: {
     padding: 16,

@@ -8,7 +8,9 @@ import {
   SafeAreaView, 
   ScrollView, 
   Animated, 
-  Dimensions 
+  Dimensions,
+  StatusBar,
+  Platform
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -50,39 +52,6 @@ export default function EpisodeScreen() {
         break;
       }
     }
-
-    // Start animations
-    const headerAnim = Animated.timing(headerAnimation, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    });
-
-    const contentAnim = Animated.timing(contentAnimation, {
-      toValue: 1,
-      duration: 1000,
-      delay: 200,
-      useNativeDriver: true,
-    });
-
-    // Floating animation loop
-    const floatingLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatingAnimation, {
-          toValue: 1,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatingAnimation, {
-          toValue: 0,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    Animated.parallel([headerAnim, contentAnim]).start();
-    floatingLoop.start();
   }, []);
 
   if (!episode) {
@@ -129,39 +98,11 @@ export default function EpisodeScreen() {
     const stepDelay = index * 100;
     
     return (
-      <Animated.View
+      <View
         key={step.id}
         style={[
           styles.stepCard,
           {
-            opacity: contentAnimation,
-            transform: [
-              { perspective: 1000 },
-              {
-                translateY: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [30, 0]
-                })
-              },
-              {
-                rotateX: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['8deg', '0deg']
-                })
-              },
-              {
-                scale: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.9, 1]
-                })
-              },
-              {
-                translateY: floatingAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, index % 2 === 0 ? -2 : 2]
-                })
-              }
-            ],
             shadowColor: step.completed ? '#4CAF50' : '#2196F3',
             shadowOffset: { width: 0, height: 8 },
             shadowOpacity: 0.2,
@@ -180,8 +121,6 @@ export default function EpisodeScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            {/* 3D Highlight */}
-            <View style={styles.stepHighlight} />
             
             <View style={styles.stepHeader}>
               <View style={styles.stepNumber}>
@@ -201,71 +140,24 @@ export default function EpisodeScreen() {
                 )}
               </View>
             </View>
-
-            {/* Floating particles */}
-            <View style={styles.stepParticles}>
-              {[...Array(3)].map((_, i) => (
-                <Animated.View
-                  key={i}
-                  style={[
-                    styles.stepParticle,
-                    {
-                      opacity: floatingAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.3, 0.8]
-                      }),
-                      transform: [
-                        {
-                          translateX: floatingAnimation.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0, i * 4]
-                          })
-                        }
-                      ]
-                    }
-                  ]}
-                />
-              ))}
-            </View>
           </LinearGradient>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+      <StatusBar barStyle="light-content" />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Enhanced 3D Header */}
-        <Animated.View style={[
-          styles.header,
-          {
-            opacity: headerAnimation,
-            transform: [
-              { perspective: 1000 },
-              {
-                translateY: headerAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-30, 0]
-                })
-              },
-              {
-                rotateX: headerAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['10deg', '0deg']
-                })
-              }
-            ]
-          }
-        ]}>
+        <View style={styles.header}>
           <LinearGradient
             colors={['#667eea', '#764ba2', '#f093fb']}
             style={styles.headerGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            {/* Header highlight */}
-            <View style={styles.headerHighlight} />
             
             <View style={styles.headerContent}>
               <TouchableOpacity 
@@ -295,78 +187,24 @@ export default function EpisodeScreen() {
                 </View>
               </View>
             </View>
-
-            {/* Floating decorative elements */}
-            <View style={styles.headerDecorative}>
-              {[...Array(4)].map((_, i) => (
-                <Animated.View
-                  key={i}
-                  style={[
-                    styles.headerDecorativeElement,
-                    {
-                      opacity: floatingAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.2, 0.6]
-                      }),
-                      transform: [
-                        {
-                          rotate: floatingAnimation.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ['0deg', '360deg']
-                          })
-                        },
-                        {
-                          translateY: floatingAnimation.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0, -8 - (i * 2)]
-                          })
-                        }
-                      ]
-                    }
-                  ]}
-                />
-              ))}
-            </View>
           </LinearGradient>
-        </Animated.View>
+        </View>
 
         {/* Enhanced 3D Episode Info */}
-        <Animated.View style={[
-          styles.episodeContainer,
-          {
-            opacity: contentAnimation,
-            transform: [
-              { perspective: 1000 },
-              {
-                translateY: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [40, 0]
-                })
-              },
-              {
-                rotateX: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['5deg', '0deg']
-                })
-              }
-            ]
-          }
-        ]}>
+        <View style={styles.episodeContainer}>
           <View style={[styles.episodeCard, {
-            shadowColor: getDifficultyColor()[0],
+            shadowColor: '#4CAF50',
             shadowOffset: { width: 0, height: 12 },
             shadowOpacity: 0.2,
             shadowRadius: 16,
             elevation: 12,
           }]}>
             <LinearGradient
-              colors={([...getDifficultyColor(), 'rgba(255,255,255,0.1)'] as unknown) as [import('react-native').ColorValue, import('react-native').ColorValue, ...import('react-native').ColorValue[]]}
+              colors={['#4CAF50', '#66BB6A', '#A5D6A7']}
               style={styles.episodeGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              {/* Card highlight */}
-              <View style={styles.episodeHighlight} />
               
               <Text style={[styles.episodeTitle, {
                 textShadowColor: 'rgba(0,0,0,0.3)',
@@ -395,13 +233,6 @@ export default function EpisodeScreen() {
                     {episode.difficulty.charAt(0).toUpperCase() + episode.difficulty.slice(1)}
                   </Text>
                 </View>
-                
-                <View style={styles.episodeStat}>
-                  <Trophy size={18} color="#FFFFFF" />
-                  <Text style={styles.episodeStatText}>
-                    {/* XP property not available on Episode type */}
-                  </Text>
-                </View>
               </View>
 
               {/* Enhanced Start Button */}
@@ -420,39 +251,19 @@ export default function EpisodeScreen() {
                   colors={['#FFFFFF', '#F5F5F5']}
                   style={styles.startButtonGradient}
                 >
-                  <Play size={24} color={getDifficultyColor()[0]} strokeWidth={2.5} />
-                  <Text style={[styles.startButtonText, { color: getDifficultyColor()[0] }]}>
+                  <Play size={24} color="#4CAF50" strokeWidth={2.5} />
+                  <Text style={[styles.startButtonText, { color: '#4CAF50' }]}>
                     {episode.completed ? 'REVIEW EPISODE' : 'START EPISODE'}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
             </LinearGradient>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Enhanced 3D Steps Preview */}
         {episode.steps && episode.steps.length > 0 && (
-          <Animated.View style={[
-            styles.stepsSection,
-            {
-              opacity: contentAnimation,
-              transform: [
-                { perspective: 1000 },
-                {
-                  translateY: contentAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [50, 0]
-                  })
-                },
-                {
-                  rotateX: contentAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['3deg', '0deg']
-                  })
-                }
-              ]
-            }
-          ]}>
+          <View style={styles.stepsSection}>
             <Text style={[styles.sectionTitle, {
               textShadowColor: 'rgba(0,0,0,0.1)',
               textShadowOffset: { width: 1, height: 1 },
@@ -478,31 +289,11 @@ export default function EpisodeScreen() {
                 </View>
               )}
             </View>
-          </Animated.View>
+          </View>
         )}
 
         {/* Learning Objectives with 3D effects */}
-        <Animated.View style={[
-          styles.objectivesSection,
-          {
-            opacity: contentAnimation,
-            transform: [
-              { perspective: 1000 },
-              {
-                translateY: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [60, 0]
-                })
-              },
-              {
-                rotateX: contentAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['2deg', '0deg']
-                })
-              }
-            ]
-          }
-        ]}>
+        <View style={styles.objectivesSection}>
           <View style={[styles.objectivesCard, {
             shadowColor: '#4CAF50',
             shadowOffset: { width: 0, height: 10 },
@@ -511,7 +302,7 @@ export default function EpisodeScreen() {
             elevation: 10,
           }]}>
             <LinearGradient
-              colors={['#4CAF50', '#66BB6A', 'rgba(255,255,255,0.1)']}
+              colors={['#4CAF50', '#66BB6A', '#A5D6A7']}
               style={styles.objectivesGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -537,7 +328,7 @@ export default function EpisodeScreen() {
               </Text>
             </LinearGradient>
           </View>
-        </Animated.View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -569,9 +360,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   headerGradient: {
-    padding: 20,
+    padding: 16,
     position: 'relative',
-    minHeight: 120,
+    minHeight: 100,
+    justifyContent: 'center',
   },
   headerHighlight: {
     position: 'absolute',

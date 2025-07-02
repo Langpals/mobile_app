@@ -21,6 +21,13 @@ import {
 } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import { mockChildProfile } from '@/data/mockData';
+import { 
+  ChevronRight,
+  Eye,
+  MoreHorizontal
+} from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+
 
 const learnedWords = [
   'Hola', 'Adiós', 'Gracias', 'Por favor', 'Sí', 'No', 'Agua', 'Casa',
@@ -46,7 +53,10 @@ const mockTranscripts = [
     duration: '12 minutes',
     episodeTitle: 'Meeting Bern',
     conversationCount: 15,
-    preview: 'Child: "Hola Bern!" | Bern: "¡Hola! ¿Cómo te llamas?"'
+    preview: 'Child: "Hola Bern!" | Bern: "¡Hola! ¿Cómo te llamas?"',
+    hasMore: true,
+    wordsLearned: ['Hola', 'Me llamo', 'Roja', 'Azul'],
+    highlights: ['First Spanish greeting', 'Name introduction', 'Color recognition']
   },
   {
     id: '2',
@@ -55,7 +65,10 @@ const mockTranscripts = [
     duration: '8 minutes',
     episodeTitle: 'Learning Colors',
     conversationCount: 12,
-    preview: 'Child: "The apple is red!" | Bern: "¡Muy bien! La manzana es roja."'
+    preview: 'Child: "The apple is red!" | Bern: "¡Muy bien! La manzana es roja."',
+    hasMore: true,
+    wordsLearned: ['Manzana', 'Plátano', 'Amarillo', 'Morado'],
+    highlights: ['Fruit vocabulary', 'Color combinations', 'Favorite colors']
   },
   {
     id: '3',
@@ -64,7 +77,10 @@ const mockTranscripts = [
     duration: '15 minutes',
     episodeTitle: 'Family Adventures',
     conversationCount: 18,
-    preview: 'Child: "This is my family!" | Bern: "¡Qué bonita familia! Tell me about them."'
+    preview: 'Child: "This is my family!" | Bern: "¡Qué bonita familia! Tell me about them."',
+    hasMore: true,
+    wordsLearned: ['Familia', 'Mamá', 'Papá', 'Hermano', 'Jugar', 'Juntos'],
+    highlights: ['Family members', 'Activities together', 'Personal sharing']
   }
 ];
 
@@ -72,6 +88,13 @@ export default function MetricsScreen() {
   const [showWordsModal, setShowWordsModal] = useState(false);
   const [showTopicsModal, setShowTopicsModal] = useState(false);
   const [showTranscriptsModal, setShowTranscriptsModal] = useState(false);
+
+  const router = useRouter();
+
+  const handleTranscriptPress = (transcriptId: string) => {
+    setShowTranscriptsModal(false);
+    router.push(`/transcript/${transcriptId}`);
+  };
 
   const renderWordsModal = () => (
     <Modal visible={showWordsModal} transparent animationType="slide">
@@ -134,23 +157,65 @@ export default function MetricsScreen() {
               <X size={24} color={Colors.light.text} />
             </TouchableOpacity>
           </View>
-          <ScrollView style={styles.modalScroll}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 32 }} style={styles.modalScroll}>
             <Text style={styles.transcriptsDescription}>
-              Here are your child's recent conversations with Bern:
+              Tap any conversation to view the full transcript:
             </Text>
             <View style={styles.transcriptsList}>
               {mockTranscripts.map((transcript) => (
-                <TouchableOpacity key={transcript.id} style={styles.transcriptCard}>
+                <TouchableOpacity 
+                  key={transcript.id} 
+                  style={styles.transcriptCard}
+                  onPress={() => handleTranscriptPress(transcript.id)}
+                  activeOpacity={0.7}
+                >
+                  {/* Card Header */}
                   <View style={styles.transcriptHeader}>
                     <Text style={styles.transcriptTitle}>{transcript.episodeTitle}</Text>
-                    <Text style={styles.transcriptDate}>{transcript.date}</Text>
+                    <View style={styles.transcriptHeaderRight}>
+                      <Text style={styles.transcriptDate}>{transcript.date}</Text>
+                      <ChevronRight size={16} color="#9B59B6" style={styles.chevronIcon} />
+                    </View>
                   </View>
+  
+                  {/* Meta Information */}
                   <View style={styles.transcriptMeta}>
                     <Text style={styles.transcriptTime}>{transcript.time}</Text>
                     <Text style={styles.transcriptDuration}>{transcript.duration}</Text>
                     <Text style={styles.transcriptCount}>{transcript.conversationCount} exchanges</Text>
                   </View>
-                  <Text style={styles.transcriptPreview}>{transcript.preview}</Text>
+  
+                  {/* Preview Section */}
+                  <View style={styles.previewSection}>
+                    <Text style={styles.transcriptPreview}>{transcript.preview}</Text>
+                    <View style={styles.moreIndicator}>
+                      <MoreHorizontal size={16} color="#9B59B6" />
+                      <Text style={styles.moreText}>Tap to view full conversation</Text>
+                    </View>
+                  </View>
+  
+                  {/* Words Learned Section */}
+                  <View style={styles.wordsLearnedSection}>
+                    <Text style={styles.wordsLearnedTitle}>New Words:</Text>
+                    <View style={styles.wordsLearnedContainer}>
+                      {transcript.wordsLearned.slice(0, 3).map((word, index) => (
+                        <View key={index} style={styles.wordLearnedChip}>
+                          <Text style={styles.wordLearnedText}>{word}</Text>
+                        </View>
+                      ))}
+                      {transcript.wordsLearned.length > 3 && (
+                        <View style={styles.moreWordsChip}>
+                          <Text style={styles.moreWordsText}>+{transcript.wordsLearned.length - 3}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+  
+                  {/* View Full Transcript Button */}
+                  <View style={styles.viewFullButton}>
+                    <Eye size={14} color="#9B59B6" />
+                    <Text style={styles.viewFullText}>View Full Transcript</Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
@@ -559,5 +624,82 @@ const styles = StyleSheet.create({
     fontFamily: 'OpenSans',
     fontStyle: 'italic',
     lineHeight: 18,
+  },
+  transcriptHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  chevronIcon: {
+    opacity: 0.7,
+  },
+  previewSection: {
+    marginBottom: 16,
+  },
+  moreIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  moreText: {
+    fontSize: 12,
+    color: '#9B59B6',
+    fontFamily: 'OpenSans-Bold',
+  },
+  wordsLearnedSection: {
+    marginBottom: 16,
+  },
+  wordsLearnedTitle: {
+    fontSize: 13,
+    color: Colors.light.text,
+    fontFamily: 'OpenSans-Bold',
+    marginBottom: 8,
+  },
+  wordsLearnedContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  wordLearnedChip: {
+    backgroundColor: '#F0E6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#9B59B6',
+  },
+  wordLearnedText: {
+    fontSize: 11,
+    color: '#9B59B6',
+    fontFamily: 'OpenSans-Bold',
+  },
+  moreWordsChip: {
+    backgroundColor: '#E8E8E8',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  moreWordsText: {
+    fontSize: 11,
+    color: Colors.light.text,
+    fontFamily: 'OpenSans-Bold',
+    opacity: 0.7,
+  },
+  viewFullButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#F8F6FF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E8DBFF',
+  },
+  viewFullText: {
+    fontSize: 13,
+    color: '#9B59B6',
+    fontFamily: 'OpenSans-Bold',
   },
 });

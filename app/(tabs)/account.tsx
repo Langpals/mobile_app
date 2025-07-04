@@ -1,121 +1,106 @@
-// app/(tabs)/account.tsx - Enhanced with Modern UI and Full Functionality
+// app/(tabs)/account.tsx - Complete Account Management Screen
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  TextInput,
-  Alert,
-  Modal,
   Platform,
   StatusBar,
-  Image,
+  ScrollView,
+  Alert,
+  Modal,
+  TextInput,
+  ActivityIndicator,
   Animated,
-  Dimensions,
-  ActivityIndicator
+  RefreshControl,
+  Image,
+  Dimensions
 } from 'react-native';
-import {
-  User,
-  Wifi,
-  WifiOff,
-  Battery,
-  Edit2,
-  Save,
-  X,
-  ChevronRight,
-  Smartphone,
-  Trophy,
-  Clock,
-  BookOpen,
-  Star,
-  TrendingUp,
-  Settings,
-  LogOut,
-  Plus,
-  Baby,
-  Bell,
-  Moon,
-  Sun
-} from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  User,
+  Settings,
+  Bell,
+  CreditCard,
+  HelpCircle,
+  LogOut,
+  Plus,
+  Edit2,
+  Trash2,
+  Wifi,
+  WifiOff,
+  Star,
+  Shield,
+  Calendar,
+  Clock
+} from 'lucide-react-native';
+
 import Colors from '@/constants/Colors';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useTeddy } from '@/contexts/TeddyContext';
-import { 
-  getAccountDetails, 
-  updateAccountInfo, 
+import {
+  getAccountDetails,
+  updateAccountInfo,
   addChildProfile,
   updateChildProfile,
-  getChildProfiles 
+  getChildProfiles,
+  updateNotificationSettings,
+  getSubscriptionStatus
 } from '@/api/accountService';
-import { getChildProgress } from '@/api/progressService';
-import { registerDevice, getStoredDeviceId } from '@/api/deviceService';
+import { DeviceService } from '@/api/deviceService';
+import DeviceRegistrationFlow from '@/components/DeviceRegisterationFlow';
 
 const { width, height } = Dimensions.get('window');
 
-interface ChildProfile {
-  id: string;
-  name: string;
-  age: number;
-  avatar: string;
-  progress: {
-    wordsLearnt: string[];
-    topicsLearnt: string[];
-    timeSpentWithBear: number;
-    currentSeason: number;
-    currentEpisode: number;
-    learningStreak: number;
-  };
-}
-
-export default function AccountScreen() {
-  const { currentUserDocument, logout, refreshUserDocument } = useAuth();
-  const { colors, activeTheme, toggleTheme } = useTheme();
-  const { teddy, isConnected, batteryLevel, connectTeddy, disconnectTeddy } = useTeddy();
+const CompleteAccountScreen = () => {
+  const { user, logout } = useAuth();
+  const [accountData, setAccountData] = useState({
+    displayName: '',
+    email: '',
+    phoneNumber: '',
+    subscription: 'free',
+    avatar: null
+  });
+  const [childProfiles, setChildProfiles] = useState([]);
+  const [deviceStatuses, setDeviceStatuses] = useState({});
+  const [subscriptionData, setSubscriptionData] = useState(null);
   
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  // Modal states
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showChildModal, setShowChildModal] = useState(false);
   const [showDeviceModal, setShowDeviceModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [selectedChild, setSelectedChild] = useState(null);
+  
+  // Form states
+  const [childFormData, setChildFormData] = useState({ name: '', age: '' });
   const [editingProfile, setEditingProfile] = useState(false);
-  const [selectedChild, setSelectedChild] = useState<ChildProfile | null>(null);
-  
-  // Account data
-  const [accountData, setAccountData] = useState({
-    displayName: currentUserDocument?.displayName || '',
-    email: currentUserDocument?.email || '',
-    phoneNumber: '',
-    deviceId: '',
-    subscription: 'free'
+  const [notificationSettings, setNotificationSettings] = useState({
+    dailyProgress: true,
+    weeklyReports: true,
+    milestones: true,
+    deviceStatus: true
   });
   
-  const [childProfiles, setChildProfiles] = useState<ChildProfile[]>([]);
-  const [deviceId, setDeviceId] = useState('');
-  const [tempDeviceId, setTempDeviceId] = useState('');
-  
-  // Child form data
-  const [childFormData, setChildFormData] = useState({
-    name: '',
-    age: ''
-  });
+  // UI states
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
-  const cardAnimations = useRef([...Array(5)].map(() => new Animated.Value(0))).current;
-  
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+
   useEffect(() => {
     loadAccountData();
-    animateEntry();
+    animateIn();
   }, []);
-  
-  const animateEntry = () => {
+
+  const animateIn = () => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -127,139 +112,180 @@ export default function AccountScreen() {
         tension: 100,
         friction: 8,
         useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
       })
     ]).start();
-    
-    // Animate cards
-    cardAnimations.forEach((anim, index) => {
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: 500,
-        delay: index * 100,
-        useNativeDriver: true,
-      }).start();
-    });
   };
-  
+
   const loadAccountData = async () => {
     setLoading(true);
     try {
-      // Load device ID
-      const storedDeviceId = await getStoredDeviceId();
-      if (storedDeviceId) {
-        setDeviceId(storedDeviceId);
-        setAccountData(prev => ({ ...prev, deviceId: storedDeviceId }));
-      }
-      
-      // Load child profiles
-      const profiles = await getChildProfiles();
-      
-      // Load progress for each child
-      const profilesWithProgress = await Promise.all(
-        profiles.map(async (child) => {
-          const progress = await getChildProgress(child.id);
-          return { ...child, progress };
-        })
-      );
-      
-      setChildProfiles(profilesWithProgress);
+      const [account, children, subscription] = await Promise.all([
+        getAccountDetails(),
+        getChildProfiles(),
+        getSubscriptionStatus()
+      ]);
+
+      setAccountData(account);
+      setChildProfiles(children);
+      setSubscriptionData(subscription);
+
+      // Load device statuses for children with devices
+      await loadDeviceStatuses(children);
     } catch (error) {
       console.error('Error loading account data:', error);
+      Alert.alert('Error', 'Failed to load account data');
     } finally {
       setLoading(false);
     }
   };
-  
+
+  const loadDeviceStatuses = async (children) => {
+    const statusPromises = children
+      .filter(child => child.deviceId)
+      .map(async (child) => {
+        try {
+          const status = await DeviceService.getDeviceStatus(child.deviceId);
+          return { [child.id]: status };
+        } catch (error) {
+          return { [child.id]: { connected: false, lastSeen: null } };
+        }
+      });
+
+    const statuses = await Promise.all(statusPromises);
+    setDeviceStatuses(Object.assign({}, ...statuses));
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadAccountData();
+    setRefreshing(false);
+  };
+
   const handleUpdateProfile = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setLoading(true);
-    
+    setActionLoading(true);
     try {
       await updateAccountInfo({
         displayName: accountData.displayName,
         phoneNumber: accountData.phoneNumber
       });
       
-      await refreshUserDocument();
-      
+      Haptics.successAsync();
       Alert.alert('Success', 'Profile updated successfully!');
       setEditingProfile(false);
     } catch (error) {
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      Haptics.errorAsync();
+      Alert.alert('Error', 'Failed to update profile');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
-  
-  const handleRegisterDevice = async () => {
-    if (!tempDeviceId || tempDeviceId.length !== 8) {
-      Alert.alert('Invalid Device ID', 'Please enter a valid 8-character device ID (e.g., ABCD1234)');
-      return;
-    }
-    
-    if (!/^[A-Z]{4}[0-9]{4}$/.test(tempDeviceId)) {
-      Alert.alert('Invalid Format', 'Device ID must be 4 uppercase letters followed by 4 numbers');
-      return;
-    }
-    
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setLoading(true);
-    
-    try {
-      await registerDevice(tempDeviceId);
-      setDeviceId(tempDeviceId);
-      setAccountData(prev => ({ ...prev, deviceId: tempDeviceId }));
-      
-      // Try to connect to teddy
-      await connectTeddy();
-      
-      Alert.alert('Success', 'Device registered successfully!');
-      setShowDeviceModal(false);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to register device. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+
   const handleAddChild = async () => {
     if (!childFormData.name || !childFormData.age) {
       Alert.alert('Missing Information', 'Please enter both name and age');
       return;
     }
-    
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setLoading(true);
-    
+
+    setActionLoading(true);
     try {
       const newChild = await addChildProfile({
         name: childFormData.name,
         age: parseInt(childFormData.age),
-        avatar: 'bear' // Default avatar
+        avatar: 'bear'
       });
-      
-      await loadAccountData();
-      
-      Alert.alert('Success', 'Child profile added successfully!');
-      setShowChildModal(false);
+
+      setChildProfiles([...childProfiles, newChild]);
       setChildFormData({ name: '', age: '' });
+      setShowChildModal(false);
+      
+      Haptics.successAsync();
+      Alert.alert('Success', 'Child profile added successfully!');
     } catch (error) {
-      Alert.alert('Error', 'Failed to add child profile. Please try again.');
+      Haptics.errorAsync();
+      Alert.alert('Error', 'Failed to add child profile');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
-  
+
+  const handleDeleteChild = (child) => {
+    Alert.alert(
+      'Delete Child Profile',
+      `Are you sure you want to delete ${child.name}'s profile? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // If child has a device, disconnect it first
+              if (child.deviceId) {
+                await DeviceService.disconnectDevice(child.deviceId);
+              }
+              
+              // Remove from local state (you'd call API here)
+              setChildProfiles(childProfiles.filter(c => c.id !== child.id));
+              Haptics.successAsync();
+            } catch (error) {
+              Haptics.errorAsync();
+              Alert.alert('Error', 'Failed to delete child profile');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleDeviceRegistrationSuccess = (deviceId) => {
+    // Update the child with the new device ID
+    const updatedChildren = childProfiles.map(child =>
+      child.id === selectedChild.id ? { ...child, deviceId } : child
+    );
+    setChildProfiles(updatedChildren);
+    setShowDeviceModal(false);
+    setSelectedChild(null);
+    
+    // Refresh device statuses
+    loadDeviceStatuses(updatedChildren);
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logout();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to sign out');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderHeader = () => (
     <Animated.View style={[styles.header, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
       <LinearGradient
-        colors={[colors.primary + '20', colors.secondary + '10']}
+        colors={[Colors.light.primary + '20', Colors.light.secondary + '10']}
         style={styles.headerGradient}
       >
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image
-              source={require('../../assets/icon.png')}
+              source={accountData.avatar ? { uri: accountData.avatar } : require('../../assets/icon.png')}
               style={styles.avatar}
             />
             <TouchableOpacity 
@@ -271,16 +297,18 @@ export default function AccountScreen() {
           </View>
           
           <View style={styles.profileInfo}>
-            <Text style={[styles.userName, { color: colors.text }]}>
+            <Text style={styles.userName}>
               {accountData.displayName || 'Parent'}
             </Text>
-            <Text style={[styles.userEmail, { color: colors.text + '80' }]}>
+            <Text style={styles.userEmail}>
               {accountData.email}
             </Text>
             <View style={styles.subscriptionBadge}>
-              <Star size={12} color={colors.warning} />
-              <Text style={[styles.subscriptionText, { color: colors.warning }]}>
-                {accountData.subscription === 'premium' ? 'Premium' : 'Free Plan'}
+              <Star size={12} color={subscriptionData?.status === 'premium' ? '#FFD700' : '#999'} />
+              <Text style={[styles.subscriptionText, { 
+                color: subscriptionData?.status === 'premium' ? '#FFD700' : '#999' 
+              }]}>
+                {subscriptionData?.status === 'premium' ? 'Premium' : 'Free Plan'}
               </Text>
             </View>
           </View>
@@ -288,571 +316,363 @@ export default function AccountScreen() {
       </LinearGradient>
     </Animated.View>
   );
-  
-  const renderDeviceSection = () => (
-    <Animated.View 
-      style={[
-        styles.section, 
-        { 
-          opacity: cardAnimations[0],
-          transform: [{ translateY: cardAnimations[0].interpolate({
-            inputRange: [0, 1],
-            outputRange: [20, 0]
-          })}]
-        }
-      ]}
-    >
-      <View style={styles.sectionHeader}>
-        <View style={styles.sectionTitleRow}>
-          <Smartphone size={20} color={colors.primary} />
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Device & Teddy Bear</Text>
-        </View>
-        {!deviceId && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => setShowDeviceModal(true)}
-          >
-            <Plus size={16} color="#fff" />
-          </TouchableOpacity>
-        )}
-      </View>
-      
-      <View style={[styles.card, { backgroundColor: colors.card }]}>
-        {deviceId ? (
-          <>
-            <View style={styles.deviceInfo}>
-              <Text style={[styles.deviceLabel, { color: colors.text + '80' }]}>Device ID</Text>
-              <Text style={[styles.deviceId, { color: colors.text }]}>{deviceId}</Text>
-            </View>
-            
-            <View style={styles.connectionStatus}>
-              <View style={styles.statusRow}>
-                {isConnected ? (
-                  <>
-                    <Wifi size={20} color={colors.success} />
-                    <Text style={[styles.statusText, { color: colors.success }]}>Connected</Text>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff size={20} color={colors.error} />
-                    <Text style={[styles.statusText, { color: colors.error }]}>Disconnected</Text>
-                  </>
-                )}
-              </View>
-              
-              {isConnected && (
-                <View style={styles.batteryRow}>
-                  <Battery size={20} color={batteryLevel > 20 ? colors.success : colors.error} />
-                  <Text style={[styles.batteryText, { color: colors.text }]}>{batteryLevel}%</Text>
-                </View>
-              )}
-            </View>
-            
-            <TouchableOpacity
-              style={[
-                styles.connectionButton,
-                { backgroundColor: isConnected ? colors.error + '20' : colors.primary }
-              ]}
-              onPress={isConnected ? disconnectTeddy : connectTeddy}
-            >
-              <Text style={[
-                styles.connectionButtonText,
-                { color: isConnected ? colors.error : '#fff' }
-              ]}>
-                {isConnected ? 'Disconnect' : 'Connect'}
-              </Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <TouchableOpacity
-            style={styles.registerDevicePrompt}
-            onPress={() => setShowDeviceModal(true)}
-          >
-            <Smartphone size={32} color={colors.primary + '40'} />
-            <Text style={[styles.registerPromptText, { color: colors.text }]}>
-              Register your device to connect with Teddy
-            </Text>
-            <View style={[styles.registerButton, { backgroundColor: colors.primary }]}>
-              <Text style={styles.registerButtonText}>Register Device</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      </View>
-    </Animated.View>
-  );
-  
+
   const renderChildrenSection = () => (
-    <Animated.View 
-      style={[
-        styles.section, 
-        { 
-          opacity: cardAnimations[1],
-          transform: [{ translateY: cardAnimations[1].interpolate({
-            inputRange: [0, 1],
-            outputRange: [20, 0]
-          })}]
-        }
-      ]}
-    >
+    <Animated.View style={[styles.section, { transform: [{ translateY: slideAnim }] }]}>
       <View style={styles.sectionHeader}>
-        <View style={styles.sectionTitleRow}>
-          <Baby size={20} color={colors.primary} />
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Children</Text>
-        </View>
+        <Text style={styles.sectionTitle}>Children</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setShowChildModal(true)}
         >
-          <Plus size={16} color="#fff" />
+          <Plus size={20} color="white" />
         </TouchableOpacity>
       </View>
-      
-      {childProfiles.length > 0 ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {childProfiles.map((child, index) => (
-            <TouchableOpacity
-              key={child.id}
-              style={[styles.childCard, { backgroundColor: colors.card }]}
-              onPress={() => setSelectedChild(child)}
-            >
-              <LinearGradient
-                colors={[colors.primary + '20', colors.secondary + '10']}
-                style={styles.childCardGradient}
-              >
-                <View style={styles.childAvatar}>
-                  <Text style={styles.childAvatarText}>{child.name[0]}</Text>
-                </View>
-                <Text style={[styles.childName, { color: colors.text }]}>{child.name}</Text>
-                <Text style={[styles.childAge, { color: colors.text + '80' }]}>Age {child.age}</Text>
-                
-                <View style={styles.childStats}>
-                  <View style={styles.statItem}>
-                    <BookOpen size={14} color={colors.primary} />
-                    <Text style={[styles.statValue, { color: colors.text }]}>
-                      {child.progress.wordsLearnt.length}
-                    </Text>
-                    <Text style={[styles.statLabel, { color: colors.text + '60' }]}>Words</Text>
-                  </View>
-                  
-                  <View style={styles.statDivider} />
-                  
-                  <View style={styles.statItem}>
-                    <Trophy size={14} color={colors.warning} />
-                    <Text style={[styles.statValue, { color: colors.text }]}>
-                      {child.progress.currentEpisode}
-                    </Text>
-                    <Text style={[styles.statLabel, { color: colors.text + '60' }]}>Episode</Text>
-                  </View>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      ) : (
-        <TouchableOpacity
-          style={[styles.emptyCard, { backgroundColor: colors.card }]}
-          onPress={() => setShowChildModal(true)}
+
+      {childProfiles.map((child, index) => (
+        <Animated.View
+          key={child.id}
+          style={[
+            styles.childCard,
+            {
+              opacity: fadeAnim,
+              transform: [{
+                translateY: slideAnim.interpolate({
+                  inputRange: [0, 50],
+                  outputRange: [0, 50 * (index + 1)]
+                })
+              }]
+            }
+          ]}
         >
-          <Baby size={32} color={colors.primary + '40'} />
-          <Text style={[styles.emptyText, { color: colors.text }]}>
-            Add your child's profile to track progress
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.childHeader}>
+            <View style={styles.childInfo}>
+              <Text style={styles.childName}>{child.name}</Text>
+              <Text style={styles.childAge}>{child.age} years old</Text>
+            </View>
+            
+            <View style={styles.childActions}>
+              {child.deviceId ? (
+                <View style={styles.deviceStatus}>
+                  {deviceStatuses[child.id]?.connected ? (
+                    <Wifi size={20} color="#4CAF50" />
+                  ) : (
+                    <WifiOff size={20} color="#FF5722" />
+                  )}
+                  <Text style={[styles.deviceStatusText, {
+                    color: deviceStatuses[child.id]?.connected ? '#4CAF50' : '#FF5722'
+                  }]}>
+                    {deviceStatuses[child.id]?.connected ? 'Online' : 'Offline'}
+                  </Text>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.connectDeviceButton}
+                  onPress={() => {
+                    setSelectedChild(child);
+                    setShowDeviceModal(true);
+                  }}
+                >
+                  <Text style={styles.connectDeviceText}>Connect Teddy</Text>
+                </TouchableOpacity>
+              )}
+              
+              <TouchableOpacity
+                style={styles.deleteChildButton}
+                onPress={() => handleDeleteChild(child)}
+              >
+                <Trash2 size={18} color="#FF5722" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {child.deviceId && (
+            <View style={styles.deviceInfo}>
+              <Text style={styles.deviceId}>Device: {child.deviceId}</Text>
+              {deviceStatuses[child.id]?.lastSeen && (
+                <Text style={styles.lastSeen}>
+                  Last seen: {new Date(deviceStatuses[child.id].lastSeen).toLocaleString()}
+                </Text>
+              )}
+            </View>
+          )}
+        </Animated.View>
+      ))}
+
+      {childProfiles.length === 0 && (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>No children added yet</Text>
+          <Text style={styles.emptyStateSubtext}>Add your first child to get started</Text>
+        </View>
       )}
     </Animated.View>
   );
-  
+
   const renderSettingsSection = () => (
-    <Animated.View 
-      style={[
-        styles.section, 
-        { 
-          opacity: cardAnimations[2],
-          transform: [{ translateY: cardAnimations[2].interpolate({
-            inputRange: [0, 1],
-            outputRange: [20, 0]
-          })}]
-        }
-      ]}
-    >
-      <View style={styles.sectionHeader}>
-        <View style={styles.sectionTitleRow}>
-          <Settings size={20} color={colors.primary} />
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Settings</Text>
-        </View>
-      </View>
+    <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+      <Text style={styles.sectionTitle}>Settings</Text>
       
-      <View style={[styles.card, { backgroundColor: colors.card }]}>
-        <TouchableOpacity 
-          style={styles.settingItem}
-          onPress={() => setShowProfileModal(true)}
-        >
-          <User size={20} color={colors.primary} />
-          <Text style={[styles.settingText, { color: colors.text }]}>Edit Profile</Text>
-          <ChevronRight size={20} color={colors.text + '40'} />
-        </TouchableOpacity>
-        
-        <View style={styles.settingDivider} />
-        
-        <TouchableOpacity 
-          style={styles.settingItem}
-          onPress={() => {/* Handle notifications */}}
-        >
-          <Bell size={20} color={colors.primary} />
-          <Text style={[styles.settingText, { color: colors.text }]}>Notifications</Text>
-          <ChevronRight size={20} color={colors.text + '40'} />
-        </TouchableOpacity>
-        
-        <View style={styles.settingDivider} />
-        
-        <TouchableOpacity 
-          style={styles.settingItem}
-          onPress={toggleTheme}
-        >
-          {activeTheme === 'light' ? (
-            <Moon size={20} color={colors.primary} />
-          ) : (
-            <Sun size={20} color={colors.primary} />
-          )}
-          <Text style={[styles.settingText, { color: colors.text }]}>
-            {activeTheme === 'light' ? 'Dark Mode' : 'Light Mode'}
+      <TouchableOpacity style={styles.settingItem} onPress={() => setEditingProfile(true)}>
+        <User size={24} color={Colors.light.primary} />
+        <View style={styles.settingContent}>
+          <Text style={styles.settingTitle}>Edit Profile</Text>
+          <Text style={styles.settingSubtitle}>Update your personal information</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#999" />
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.settingItem} onPress={() => setShowSettingsModal(true)}>
+        <Bell size={24} color={Colors.light.primary} />
+        <View style={styles.settingContent}>
+          <Text style={styles.settingTitle}>Notifications</Text>
+          <Text style={styles.settingSubtitle}>Manage your notification preferences</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#999" />
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.settingItem}>
+        <CreditCard size={24} color={Colors.light.primary} />
+        <View style={styles.settingContent}>
+          <Text style={styles.settingTitle}>Subscription</Text>
+          <Text style={styles.settingSubtitle}>
+            {subscriptionData?.status === 'premium' ? 'Manage premium plan' : 'Upgrade to premium'}
           </Text>
-          <ChevronRight size={20} color={colors.text + '40'} />
-        </TouchableOpacity>
-        
-        <View style={styles.settingDivider} />
-        
-        <TouchableOpacity 
-          style={styles.settingItem}
-          onPress={logout}
-        >
-          <LogOut size={20} color={colors.error} />
-          <Text style={[styles.settingText, { color: colors.error }]}>Logout</Text>
-          <ChevronRight size={20} color={colors.error + '40'} />
-        </TouchableOpacity>
-      </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#999" />
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.settingItem}>
+        <Shield size={24} color={Colors.light.primary} />
+        <View style={styles.settingContent}>
+          <Text style={styles.settingTitle}>Privacy & Security</Text>
+          <Text style={styles.settingSubtitle}>Manage your data and security settings</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#999" />
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.settingItem}>
+        <HelpCircle size={24} color={Colors.light.primary} />
+        <View style={styles.settingContent}>
+          <Text style={styles.settingTitle}>Help & Support</Text>
+          <Text style={styles.settingSubtitle}>Get help and contact support</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#999" />
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.settingItem} onPress={handleLogout}>
+        <LogOut size={24} color="#FF5722" />
+        <View style={styles.settingContent}>
+          <Text style={[styles.settingTitle, { color: '#FF5722' }]}>Sign Out</Text>
+          <Text style={styles.settingSubtitle}>Sign out of your account</Text>
+        </View>
+      </TouchableOpacity>
     </Animated.View>
   );
-  
-  const renderChildProgressModal = () => (
-    <Modal
-      visible={!!selectedChild}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={() => setSelectedChild(null)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
-              {selectedChild?.name}'s Progress
-            </Text>
-            <TouchableOpacity onPress={() => setSelectedChild(null)}>
-              <X size={24} color={colors.text} />
-            </TouchableOpacity>
+
+  const renderProfileEditModal = () => (
+    <Modal visible={editingProfile} animationType="slide" presentationStyle="pageSheet">
+      <SafeAreaView style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => setEditingProfile(false)}>
+            <Text style={styles.modalCancelText}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Edit Profile</Text>
+          <TouchableOpacity onPress={handleUpdateProfile} disabled={actionLoading}>
+            {actionLoading ? (
+              <ActivityIndicator size="small" color={Colors.light.primary} />
+            ) : (
+              <Text style={styles.modalSaveText}>Save</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.modalContent}>
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>Display Name</Text>
+            <TextInput
+              style={styles.formInput}
+              value={accountData.displayName}
+              onChangeText={(text) => setAccountData({ ...accountData, displayName: text })}
+              placeholder="Enter your name"
+            />
           </View>
-          
-          {selectedChild && (
-            <ScrollView style={styles.modalBody}>
-              <View style={styles.progressGrid}>
-                <View style={[styles.progressCard, { backgroundColor: colors.card }]}>
-                  <BookOpen size={24} color={colors.primary} />
-                  <Text style={[styles.progressValue, { color: colors.text }]}>
-                    {selectedChild.progress.wordsLearnt.length}
-                  </Text>
-                  <Text style={[styles.progressLabel, { color: colors.text + '80' }]}>
-                    Words Learnt
-                  </Text>
-                </View>
-                
-                <View style={[styles.progressCard, { backgroundColor: colors.card }]}>
-                  <Trophy size={24} color={colors.warning} />
-                  <Text style={[styles.progressValue, { color: colors.text }]}>
-                    {selectedChild.progress.topicsLearnt.length}
-                  </Text>
-                  <Text style={[styles.progressLabel, { color: colors.text + '80' }]}>
-                    Topics Mastered
-                  </Text>
-                </View>
-                
-                <View style={[styles.progressCard, { backgroundColor: colors.card }]}>
-                  <Clock size={24} color={colors.secondary} />
-                  <Text style={[styles.progressValue, { color: colors.text }]}>
-                    {Math.floor(selectedChild.progress.timeSpentWithBear / 60)}h
-                  </Text>
-                  <Text style={[styles.progressLabel, { color: colors.text + '80' }]}>
-                    Time with Teddy
-                  </Text>
-                </View>
-                
-                <View style={[styles.progressCard, { backgroundColor: colors.card }]}>
-                  <TrendingUp size={24} color={colors.success} />
-                  <Text style={[styles.progressValue, { color: colors.text }]}>
-                    {selectedChild.progress.learningStreak}
-                  </Text>
-                  <Text style={[styles.progressLabel, { color: colors.text + '80' }]}>
-                    Day Streak
-                  </Text>
-                </View>
-              </View>
-              
-              <View style={styles.currentProgress}>
-                <Text style={[styles.progressSectionTitle, { color: colors.text }]}>
-                  Current Progress
+
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>Email</Text>
+            <TextInput
+              style={[styles.formInput, styles.formInputDisabled]}
+              value={accountData.email}
+              editable={false}
+            />
+            <Text style={styles.formHint}>Email cannot be changed</Text>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>Phone Number</Text>
+            <TextInput
+              style={styles.formInput}
+              value={accountData.phoneNumber}
+              onChangeText={(text) => setAccountData({ ...accountData, phoneNumber: text })}
+              placeholder="Enter your phone number"
+              keyboardType="phone-pad"
+            />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+
+  const renderAddChildModal = () => (
+    <Modal visible={showChildModal} animationType="slide" presentationStyle="pageSheet">
+      <SafeAreaView style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => setShowChildModal(false)}>
+            <Text style={styles.modalCancelText}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Add Child</Text>
+          <TouchableOpacity onPress={handleAddChild} disabled={actionLoading}>
+            {actionLoading ? (
+              <ActivityIndicator size="small" color={Colors.light.primary} />
+            ) : (
+              <Text style={styles.modalSaveText}>Add</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.modalContent}>
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>Child's Name</Text>
+            <TextInput
+              style={styles.formInput}
+              value={childFormData.name}
+              onChangeText={(text) => setChildFormData({ ...childFormData, name: text })}
+              placeholder="Enter child's name"
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.formLabel}>Age</Text>
+            <TextInput
+              style={styles.formInput}
+              value={childFormData.age}
+              onChangeText={(text) => setChildFormData({ ...childFormData, age: text })}
+              placeholder="Enter age"
+              keyboardType="number-pad"
+            />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+
+  const renderNotificationSettingsModal = () => (
+    <Modal visible={showSettingsModal} animationType="slide" presentationStyle="pageSheet">
+      <SafeAreaView style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => setShowSettingsModal(false)}>
+            <Text style={styles.modalCancelText}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Notifications</Text>
+          <TouchableOpacity onPress={() => setShowSettingsModal(false)}>
+            <Text style={styles.modalSaveText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.modalContent}>
+          {Object.entries(notificationSettings).map(([key, value]) => (
+            <TouchableOpacity
+              key={key}
+              style={styles.notificationItem}
+              onPress={() => setNotificationSettings({
+                ...notificationSettings,
+                [key]: !value
+              })}
+            >
+              <View style={styles.notificationInfo}>
+                <Text style={styles.notificationTitle}>
+                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                 </Text>
-                <View style={[styles.seasonCard, { backgroundColor: colors.card }]}>
-                  <Text style={[styles.seasonText, { color: colors.text }]}>
-                    Season {selectedChild.progress.currentSeason}
-                  </Text>
-                  <Text style={[styles.episodeText, { color: colors.primary }]}>
-                    Episode {selectedChild.progress.currentEpisode}
-                  </Text>
-                </View>
               </View>
-              
-              {selectedChild.progress.wordsLearnt.length > 0 && (
-                <View style={styles.recentWords}>
-                  <Text style={[styles.progressSectionTitle, { color: colors.text }]}>
-                    Recent Words
-                  </Text>
-                  <View style={styles.wordsList}>
-                    {selectedChild.progress.wordsLearnt.slice(-6).map((word, index) => (
-                      <View key={index} style={[styles.wordChip, { backgroundColor: colors.primary + '20' }]}>
-                        <Text style={[styles.wordText, { color: colors.primary }]}>{word}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              )}
-            </ScrollView>
-          )}
-        </View>
-      </View>
+              <View style={[styles.toggle, value && styles.toggleActive]}>
+                <View style={[styles.toggleThumb, value && styles.toggleThumbActive]} />
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </SafeAreaView>
     </Modal>
   );
-  
-  const renderProfileModal = () => (
-    <Modal
-      visible={showProfileModal}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={() => setShowProfileModal(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Edit Profile</Text>
-            <TouchableOpacity onPress={() => setShowProfileModal(false)}>
-              <X size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.modalBody}>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: colors.text }]}>Name</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
-                value={accountData.displayName}
-                onChangeText={(text) => setAccountData(prev => ({ ...prev, displayName: text }))}
-                placeholder="Enter your name"
-                placeholderTextColor={colors.text + '60'}
-              />
-            </View>
-            
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: colors.text }]}>Phone Number</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
-                value={accountData.phoneNumber}
-                onChangeText={(text) => setAccountData(prev => ({ ...prev, phoneNumber: text }))}
-                placeholder="Enter phone number"
-                placeholderTextColor={colors.text + '60'}
-                keyboardType="phone-pad"
-              />
-            </View>
-            
-            <TouchableOpacity
-              style={[styles.saveButton, { backgroundColor: colors.primary }]}
-              onPress={handleUpdateProfile}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Save size={20} color="#fff" />
-                  <Text style={styles.saveButtonText}>Save Changes</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.light.primary} />
+          <Text style={styles.loadingText}>Loading account...</Text>
         </View>
-      </View>
-    </Modal>
-  );
-  
-  const renderDeviceModal = () => (
-    <Modal
-      visible={showDeviceModal}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={() => setShowDeviceModal(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Register Device</Text>
-            <TouchableOpacity onPress={() => setShowDeviceModal(false)}>
-              <X size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.modalBody}>
-            <Text style={[styles.deviceInstructions, { color: colors.text + '80' }]}>
-              Enter the 8-character device ID found on your Teddy Bear
-            </Text>
-            
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: colors.text }]}>Device ID</Text>
-              <TextInput
-                style={[styles.input, styles.deviceInput, { backgroundColor: colors.card, color: colors.text }]}
-                value={tempDeviceId}
-                onChangeText={(text) => setTempDeviceId(text.toUpperCase())}
-                placeholder="ABCD1234"
-                placeholderTextColor={colors.text + '60'}
-                maxLength={8}
-                autoCapitalize="characters"
-              />
-              <Text style={[styles.deviceFormat, { color: colors.text + '60' }]}>
-                Format: 4 letters + 4 numbers
-              </Text>
-            </View>
-            
-            <TouchableOpacity
-              style={[styles.saveButton, { backgroundColor: colors.primary }]}
-              onPress={handleRegisterDevice}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Smartphone size={20} color="#fff" />
-                  <Text style={styles.saveButtonText}>Register Device</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-  
-  const renderChildModal = () => (
-    <Modal
-      visible={showChildModal}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={() => setShowChildModal(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Add Child Profile</Text>
-            <TouchableOpacity onPress={() => setShowChildModal(false)}>
-              <X size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.modalBody}>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: colors.text }]}>Child's Name</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
-                value={childFormData.name}
-                onChangeText={(text) => setChildFormData(prev => ({ ...prev, name: text }))}
-                placeholder="Enter child's name"
-                placeholderTextColor={colors.text + '60'}
-              />
-            </View>
-            
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { color: colors.text }]}>Age</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
-                value={childFormData.age}
-                onChangeText={(text) => setChildFormData(prev => ({ ...prev, age: text }))}
-                placeholder="Enter age"
-                placeholderTextColor={colors.text + '60'}
-                keyboardType="number-pad"
-              />
-            </View>
-            
-            <TouchableOpacity
-              style={[styles.saveButton, { backgroundColor: colors.primary }]}
-              onPress={handleAddChild}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Baby size={20} color="#fff" />
-                  <Text style={styles.saveButtonText}>Add Child</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-  
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar 
-        backgroundColor={colors.background} 
-        barStyle={activeTheme === 'dark' ? 'light-content' : 'dark-content'} 
-      />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.light.background} />
       
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
-        refreshing={refreshing}
-        onRefresh={loadAccountData}
       >
         {renderHeader()}
-        {renderDeviceSection()}
         {renderChildrenSection()}
         {renderSettingsSection()}
-        
-        <View style={styles.bottomPadding} />
       </ScrollView>
-      
-      {renderProfileModal()}
-      {renderDeviceModal()}
-      {renderChildModal()}
-      {renderChildProgressModal()}
+
+      {/* Modals */}
+      {renderProfileEditModal()}
+      {renderAddChildModal()}
+      {renderNotificationSettingsModal()}
+
+      {/* Device Registration Flow */}
+      <DeviceRegistrationFlow
+        visible={showDeviceModal}
+        child={selectedChild}
+        onSuccess={handleDeviceRegistrationSuccess}
+        onCancel={() => {
+          setShowDeviceModal(false);
+          setSelectedChild(null);
+        }}
+      />
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.light.background,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   scrollView: {
     flex: 1,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
   header: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   headerGradient: {
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 20 : 20,
+    paddingTop: 20,
+    paddingBottom: 30,
     paddingHorizontal: 20,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
   },
   profileSection: {
     flexDirection: 'row',
@@ -860,58 +680,67 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     position: 'relative',
+    marginRight: 16,
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    borderWidth: 3,
-    borderColor: '#fff',
+    backgroundColor: '#f0f0f0',
   },
   editAvatarButton: {
     position: 'absolute',
     bottom: 0,
     right: 0,
     backgroundColor: Colors.light.primary,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
+    borderRadius: 16,
+    width: 32,
+    height: 32,
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'white',
   },
   profileInfo: {
     flex: 1,
-    marginLeft: 20,
   },
   userName: {
     fontSize: 24,
-    fontFamily: 'Outfit-Bold',
+    fontWeight: 'bold',
+    color: Colors.light.text,
     marginBottom: 4,
   },
   userEmail: {
-    fontSize: 14,
-    fontFamily: 'Outfit-Regular',
+    fontSize: 16,
+    color: Colors.light.text,
+    opacity: 0.8,
     marginBottom: 8,
   },
   subscriptionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.warning + '20',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
     alignSelf: 'flex-start',
   },
   subscriptionText: {
-    fontSize: 12,
-    fontFamily: 'Outfit-Medium',
-    marginLeft: 4,
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   section: {
-    marginHorizontal: 20,
-    marginBottom: 24,
+    backgroundColor: 'white',
+    marginHorizontal: 16,
+    marginBottom: 20,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -919,334 +748,225 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   sectionTitle: {
-    fontSize: 18,
-    fontFamily: 'Outfit-Bold',
-    marginLeft: 8,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.light.text,
   },
   addButton: {
     backgroundColor: Colors.light.primary,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  card: {
     borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  deviceInfo: {
-    marginBottom: 16,
+  childCard: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
   },
-  deviceLabel: {
-    fontSize: 12,
-    fontFamily: 'Outfit-Regular',
-    marginBottom: 4,
-  },
-  deviceId: {
-    fontSize: 20,
-    fontFamily: 'Outfit-Bold',
-    letterSpacing: 1,
-  },
-  connectionStatus: {
+  childHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
   },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusText: {
-    fontSize: 14,
-    fontFamily: 'Outfit-Medium',
-    marginLeft: 8,
-  },
-  batteryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  batteryText: {
-    fontSize: 14,
-    fontFamily: 'Outfit-Medium',
-    marginLeft: 8,
-  },
-  connectionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  connectionButtonText: {
-    fontSize: 16,
-    fontFamily: 'Outfit-Bold',
-  },
-  registerDevicePrompt: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  registerPromptText: {
-    fontSize: 16,
-    fontFamily: 'Outfit-Regular',
-    textAlign: 'center',
-    marginTop: 12,
-    marginBottom: 20,
-  },
-  registerButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-  },
-  registerButtonText: {
-    fontSize: 16,
-    fontFamily: 'Outfit-Bold',
-    color: '#fff',
-  },
-  childCard: {
-    width: 160,
-    marginRight: 12,
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  childCardGradient: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  childAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.light.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  childAvatarText: {
-    fontSize: 24,
-    fontFamily: 'Outfit-Bold',
-    color: '#fff',
+  childInfo: {
+    flex: 1,
   },
   childName: {
-    fontSize: 16,
-    fontFamily: 'Outfit-Bold',
-    marginBottom: 4,
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.light.text,
+    marginBottom: 2,
   },
   childAge: {
-    fontSize: 12,
-    fontFamily: 'Outfit-Regular',
-    marginBottom: 16,
+    fontSize: 14,
+    color: '#666',
   },
-  childStats: {
+  childActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
   },
-  statItem: {
-    flex: 1,
+  deviceStatus: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 18,
-    fontFamily: 'Outfit-Bold',
-    marginTop: 4,
-  },
-  statLabel: {
-    fontSize: 10,
-    fontFamily: 'Outfit-Regular',
-  },
-  statDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: Colors.light.border,
-    marginHorizontal: 8,
-  },
-  emptyCard: {
+    marginRight: 12,
+    backgroundColor: 'white',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
+  },
+  deviceStatusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  connectDeviceButton: {
+    backgroundColor: Colors.light.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 12,
+  },
+  connectDeviceText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  deleteChildButton: {
+    padding: 8,
+  },
+  deviceInfo: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  deviceId: {
+    fontSize: 12,
+    color: '#666',
+    fontFamily: 'monospace',
+  },
+  lastSeen: {
+    fontSize: 11,
+    color: '#999',
+    marginTop: 2,
+  },
+  emptyState: {
     padding: 40,
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
   },
-  emptyText: {
-    fontSize: 16,
-    fontFamily: 'Outfit-Regular',
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.light.text,
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#666',
     textAlign: 'center',
-    marginTop: 16,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  settingText: {
+  settingContent: {
     flex: 1,
-    fontSize: 16,
-    fontFamily: 'Outfit-Medium',
     marginLeft: 16,
   },
-  settingDivider: {
-    height: 1,
-    backgroundColor: Colors.light.border,
-    marginVertical: 8,
+  settingTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.text,
+    marginBottom: 2,
   },
-  modalOverlay: {
+  settingSubtitle: {
+    fontSize: 14,
+    color: '#666',
+  },
+  modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    paddingTop: 20,
-    maxHeight: height * 0.9,
+    backgroundColor: 'white',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    borderBottomColor: '#e0e0e0',
   },
   modalTitle: {
-    fontSize: 20,
-    fontFamily: 'Outfit-Bold',
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.light.text,
   },
-  modalBody: {
+  modalCancelText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  modalSaveText: {
+    fontSize: 16,
+    color: Colors.light.primary,
+    fontWeight: '600',
+  },
+  modalContent: {
+    flex: 1,
     padding: 20,
   },
-  inputGroup: {
-    marginBottom: 20,
+  formGroup: {
+    marginBottom: 24,
   },
-  inputLabel: {
-    fontSize: 14,
-    fontFamily: 'Outfit-Medium',
+  formLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.light.text,
     marginBottom: 8,
   },
-  input: {
+  formInput: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    fontFamily: 'Outfit-Regular',
+    backgroundColor: 'white',
   },
-  deviceInput: {
-    fontSize: 20,
-    fontFamily: 'Outfit-Bold',
-    letterSpacing: 2,
-    textAlign: 'center',
+  formInputDisabled: {
+    backgroundColor: '#f5f5f5',
+    color: '#999',
   },
-  deviceFormat: {
+  formHint: {
     fontSize: 12,
-    fontFamily: 'Outfit-Regular',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  deviceInstructions: {
-    fontSize: 14,
-    fontFamily: 'Outfit-Regular',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  saveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginTop: 20,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontFamily: 'Outfit-Bold',
-    color: '#fff',
-    marginLeft: 8,
-  },
-  progressGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 24,
-  },
-  progressCard: {
-    width: '48%',
-    margin: '1%',
-    padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  progressValue: {
-    fontSize: 28,
-    fontFamily: 'Outfit-Bold',
-    marginTop: 8,
-  },
-  progressLabel: {
-    fontSize: 12,
-    fontFamily: 'Outfit-Regular',
+    color: '#666',
     marginTop: 4,
   },
-  currentProgress: {
-    marginBottom: 24,
-  },
-  progressSectionTitle: {
-    fontSize: 16,
-    fontFamily: 'Outfit-Bold',
-    marginBottom: 12,
-  },
-  seasonCard: {
-    padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  seasonText: {
-    fontSize: 16,
-    fontFamily: 'Outfit-Medium',
-    marginBottom: 4,
-  },
-  episodeText: {
-    fontSize: 24,
-    fontFamily: 'Outfit-Bold',
-  },
-  recentWords: {
-    marginBottom: 24,
-  },
-  wordsList: {
+  notificationItem: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  wordChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-    marginBottom: 8,
+  notificationInfo: {
+    flex: 1,
   },
-  wordText: {
-    fontSize: 14,
-    fontFamily: 'Outfit-Medium',
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: Colors.light.text,
   },
-  bottomPadding: {
-    height: 40,
+  toggle: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  toggleActive: {
+    backgroundColor: Colors.light.primary,
+  },
+  toggleThumb: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  toggleThumbActive: {
+    marginLeft: 'auto',
   },
 });
+
+export default CompleteAccountScreen;

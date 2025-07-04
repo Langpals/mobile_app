@@ -1,65 +1,72 @@
-// contexts/AuthContext.js
-import React, { createContext, useState, useEffect, useContext } from 'react';
+// contexts/AuthContext.js - Updated to work with new backend
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import * as SecureStore from 'expo-secure-store';
-import { auth } from '../firebase/firebaseConfig';
+import { auth } from '../config/firebase';
 import { 
-  registerUser, 
-  loginUser, 
-  logoutUser, 
-  resetPassword,
-  getCurrentUser,
-  getCurrentUserDocument
+  registerUser as firebaseRegister, 
+  loginUser as firebaseLogin, 
+  logoutUser as firebaseLogout,
+  resetPassword as firebaseResetPassword 
 } from '../api/authService';
+import { ensureUserDocument } from '../api/userService';
 
-// Create context
-const AuthContext = createContext();
+const AuthContext = createContext({});
 
-// Provider component
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null); // Firebase user
-  const [currentUserDocument, setCurrentUserDocument] = useState(null); // Firestore user document
+  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUserDocument, setCurrentUserDocument] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Listen for auth state changes
   useEffect(() => {
     console.log('🔄 Setting up auth state listener...');
+    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('🔥 Auth state changed:', user ? user.uid : 'No user');
       
-      if (user) {
-        // User is signed in, get fresh token
-        try {
-          const token = await user.getIdToken(true);
+      try {
+        if (user) {
+          // User is signed in
+          setCurrentUser(user);
+          
+          // Get and store the auth token
+          const token = await user.getIdToken();
           await SecureStore.setItemAsync('auth_token', token);
           console.log('✅ Token saved to secure storage');
           
-          // Get user's Firestore document
+          // Ensure user document exists in backend
           try {
-            const userDocument = await getCurrentUserDocument();
+            console.log('🔄 Ensuring user document exists...');
+            const userDocument = await ensureUserDocument();
             setCurrentUserDocument(userDocument);
-            console.log('✅ User document loaded:', userDocument.id);
-          } catch (error) {
-            console.error('❌ Error loading user document:', error);
-            // Don't set error state here, as the user is still authenticated
+            console.log('✅ User document ready');
+          } catch (docError) {
+            console.error('❌ Error loading user document:', docError);
+            // Don't block authentication for this
           }
-        } catch (error) {
-          console.error('❌ Error saving token:', error);
-        }
-      } else {
-        // User is signed out, remove token and clear user document
-        try {
+        } else {
+          // User is signed out
+          setCurrentUser(null);
+          setCurrentUserDocument(null);
+          
+          // Remove token
           await SecureStore.deleteItemAsync('auth_token');
           console.log('🗑️ Token removed from secure storage');
-        } catch (error) {
-          console.error('❌ Error removing token:', error);
         }
-        setCurrentUserDocument(null);
+      } catch (error) {
+        console.error('❌ Error in auth state change:', error);
+      } finally {
+        setLoading(false);
       }
-      
-      setCurrentUser(user);
-      setLoading(false);
     });
 
     return unsubscribe;
@@ -72,12 +79,10 @@ export const AuthProvider = ({ children }) => {
     
     try {
       console.log('📝 Registering user:', email);
-      const result = await registerUser(email, password, displayName);
+      const result = await firebaseRegister(email, password, displayName);
       console.log('✅ User registered successfully:', result.firebaseUser.uid);
       
-      // Set the Firestore user document
-      setCurrentUserDocument(result.firestoreUser);
-      
+      // User document will be created automatically by onAuthStateChanged
       setLoading(false);
       return result;
     } catch (err) {
@@ -95,12 +100,10 @@ export const AuthProvider = ({ children }) => {
     
     try {
       console.log('🔑 Logging in user:', email);
-      const result = await loginUser(email, password);
+      const result = await firebaseLogin(email, password);
       console.log('✅ User logged in successfully:', result.firebaseUser.uid);
       
-      // Set the Firestore user document
-      setCurrentUserDocument(result.firestoreUser);
-      
+      // User document will be loaded automatically by onAuthStateChanged
       setLoading(false);
       return result;
     } catch (err) {
@@ -117,9 +120,8 @@ export const AuthProvider = ({ children }) => {
     
     try {
       console.log('🚪 Logging out user');
-      await logoutUser();
-      setCurrentUser(null);
-      setCurrentUserDocument(null);
+      await firebaseLogout();
+      // State will be updated automatically by onAuthStateChanged
       console.log('✅ User logged out successfully');
     } catch (err) {
       console.error('❌ Logout error:', err.message);
@@ -135,7 +137,7 @@ export const AuthProvider = ({ children }) => {
     
     try {
       console.log('🔄 Resetting password for:', email);
-      await resetPassword(email);
+      await firebaseResetPassword(email);
       setLoading(false);
       console.log('✅ Password reset email sent');
     } catch (err) {
@@ -153,20 +155,22 @@ export const AuthProvider = ({ children }) => {
       const hasToken = !!token;
       console.log('🔍 Checking authentication:', hasToken ? 'Has token' : 'No token');
       return hasToken;
-    } catch (err) {
-      console.error('Error checking authentication:', err);
+    } catch (error) {
+      console.error('❌ Error checking authentication:', error);
       return false;
     }
   };
 
-  // Refresh user document from Firestore
+  // Refresh user document
   const refreshUserDocument = async () => {
-    if (!currentUser) return null;
-    
     try {
-      const userDocument = await getCurrentUserDocument();
-      setCurrentUserDocument(userDocument);
-      return userDocument;
+      if (currentUser) {
+        console.log('🔄 Refreshing user document...');
+        const userDocument = await ensureUserDocument();
+        setCurrentUserDocument(userDocument);
+        console.log('✅ User document refreshed');
+        return userDocument;
+      }
     } catch (error) {
       console.error('❌ Error refreshing user document:', error);
       throw error;
@@ -186,14 +190,9 @@ export const AuthProvider = ({ children }) => {
     refreshUserDocument
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-// Create a hook to use the auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
